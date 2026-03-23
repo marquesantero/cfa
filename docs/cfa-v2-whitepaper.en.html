@@ -1,763 +1,2330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CFA v2 — Contextual Flux Architecture (English Translation)</title>
-  <style>
-    :root {
-      --bg: #07090f;
-      --surface: #0d1018;
-      --surface2: #121520;
-      --surface3: #171c28;
-      --border: #1a2035;
-      --border2: #222840;
-      --green: #3dffa0;
-      --green-dim: rgba(61,255,160,0.12);
-      --indigo: #818cf8;
-      --amber: #fbbf24;
-      --red: #f87171;
-      --cyan: #22d3ee;
-      --text: #e2e8f0;
-      --text2: #94a3b8;
-      --text3: #64748b;
-      --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
-      --sans: "Segoe UI", system-ui, sans-serif;
-      --display: "Segoe UI", system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 15px;
-      line-height: 1.75;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(61,255,160,0.012) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(61,255,160,0.012) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
-    nav {
-      width: 260px;
-      flex-shrink: 0;
-      position: fixed;
-      inset: 0 auto 0 0;
-      overflow-y: auto;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 32px 0 40px;
-    }
-    .nav-logo {
-      padding: 0 24px 28px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 20px;
-    }
-    .nav-logo-tag {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      color: var(--green);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .nav-logo-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.3;
-    }
-    .nav-logo-version {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--text3);
-      margin-top: 6px;
-    }
-    .nav-section-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 0.2em;
-      color: var(--text3);
-      text-transform: uppercase;
-      padding: 12px 24px 6px;
-    }
-    nav a {
-      display: block;
-      padding: 6px 24px;
-      font-size: 12.5px;
-      color: var(--text2);
-      text-decoration: none;
-      border-left: 2px solid transparent;
-      line-height: 1.45;
-    }
-    nav a:hover {
-      color: var(--text);
-      background: rgba(61,255,160,0.04);
-      border-left-color: var(--green);
-    }
-    main {
-      margin-left: 260px;
-      flex: 1;
-      max-width: 960px;
-      padding: 64px 56px 120px;
-    }
-    .doc-header {
-      padding-bottom: 48px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 64px;
-    }
-    .doc-eyebrow {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      color: var(--green);
-      text-transform: uppercase;
-      margin-bottom: 18px;
-    }
-    h1 {
-      font-family: var(--display);
-      font-size: clamp(34px, 5vw, 56px);
-      font-weight: 800;
-      line-height: 1.08;
-      letter-spacing: -0.03em;
-      margin-bottom: 18px;
-      background: linear-gradient(140deg, #ffffff 0%, var(--green) 58%, var(--indigo) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .doc-subtitle {
-      font-size: 18px;
-      color: var(--text2);
-      max-width: 760px;
-      margin-bottom: 28px;
-    }
-    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
-    .badge {
-      font-family: var(--mono);
-      font-size: 10px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      background: var(--surface2);
-    }
-    .badge-green { color: var(--green); border-color: rgba(61,255,160,0.3); }
-    .badge-indigo { color: var(--indigo); border-color: rgba(129,140,248,0.3); }
-    .badge-amber { color: var(--amber); border-color: rgba(251,191,36,0.3); }
-    .lang-links { margin-top: 18px; font-size: 14px; }
-    .lang-links a { color: var(--cyan); text-decoration: none; margin-right: 16px; }
-    section { margin-bottom: 70px; scroll-margin-top: 30px; }
-    h2 { font-size: 28px; margin-bottom: 18px; color: #fff; }
-    h3 { font-size: 20px; margin: 30px 0 12px; color: #fff; }
-    h4 { font-size: 16px; margin: 22px 0 10px; color: #fff; }
-    p { margin-bottom: 14px; color: var(--text); }
-    ul, ol { margin: 8px 0 18px 22px; color: var(--text); }
-    li { margin-bottom: 8px; }
-    .note, .panel {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin: 18px 0;
-    }
-    .note strong, .panel strong { color: #fff; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      margin-top: 18px;
-    }
-    .card {
-      background: linear-gradient(180deg, var(--surface2), var(--surface3));
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
-    }
-    .card h4 { margin-top: 0; }
-    .card p { color: var(--text2); margin-bottom: 0; font-size: 14px; }
-    code, pre { font-family: var(--mono); }
-    code {
-      background: rgba(255,255,255,0.06);
-      padding: 2px 6px;
-      border-radius: 6px;
-    }
-    pre {
-      background: #0b1120;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      overflow-x: auto;
-      margin: 16px 0;
-      color: #dbeafe;
-      white-space: pre-wrap;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 18px 0;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      color: #fff;
-      font-size: 13px;
-      background: rgba(129,140,248,0.08);
-    }
-    td { color: var(--text2); }
-    @media (max-width: 980px) {
-      nav {
-        position: static;
-        width: 100%;
-        border-right: 0;
-        border-bottom: 1px solid var(--border);
-      }
-      .shell { display: block; }
-      main {
-        margin-left: 0;
-        padding: 40px 20px 80px;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFA v2 — Contextual Flux Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090f;
+  --surface: #0d1018;
+  --surface2: #121520;
+  --surface3: #171c28;
+  --border: #1a2035;
+  --border2: #222840;
+  --green: #3dffa0;
+  --green-dim: rgba(61,255,160,0.12);
+  --green-glow: rgba(61,255,160,0.04);
+  --indigo: #818cf8;
+  --indigo-dim: rgba(129,140,248,0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.1);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.1);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.1);
+  --text: #e2e8f0;
+  --text2: #8892a4;
+  --text3: #4a5568;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.75;
+  overflow-x: hidden;
+}
+
+/* Subtle grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(61,255,160,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,255,160,0.012) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── LAYOUT ─── */
+.shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+nav {
+  width: 240px;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 32px 0 40px;
+}
+
+nav::-webkit-scrollbar { width: 4px; }
+nav::-webkit-scrollbar-track { background: transparent; }
+nav::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.nav-logo {
+  padding: 0 24px 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.nav-logo-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.nav-logo-title {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.nav-logo-version {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+.nav-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding: 12px 24px 6px;
+}
+
+nav a {
+  display: block;
+  padding: 5px 24px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text2);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+  line-height: 1.5;
+}
+
+nav a:hover { color: var(--text); background: var(--green-glow); border-left-color: var(--border2); }
+nav a.active { color: var(--green); border-left-color: var(--green); background: var(--green-glow); }
+
+nav a.sub { padding-left: 36px; font-size: 12px; color: var(--text3); }
+nav a.sub:hover { color: var(--text2); }
+
+main {
+  margin-left: 240px;
+  flex: 1;
+  max-width: 860px;
+  padding: 64px 56px 120px;
+}
+
+/* ─── HEADER ─── */
+.doc-header {
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 64px;
+}
+
+.doc-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--green);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-eyebrow::before {
+  content: '';
+  width: 20px; height: 1px;
+  background: var(--green);
+  display: block;
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: clamp(32px, 5vw, 52px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  background: linear-gradient(140deg, #ffffff 0%, var(--green) 55%, var(--indigo) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 18px;
+}
+
+.doc-subtitle {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--text2);
+  max-width: 560px;
+  line-height: 1.65;
+  margin-bottom: 32px;
+}
+
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.badge-green { border: 1px solid rgba(61,255,160,0.3); color: var(--green); background: var(--green-dim); }
+.badge-indigo { border: 1px solid rgba(129,140,248,0.3); color: var(--indigo); background: var(--indigo-dim); }
+.badge-amber { border: 1px solid rgba(251,191,36,0.3); color: var(--amber); background: var(--amber-dim); }
+.badge-gray { border: 1px solid var(--border2); color: var(--text3); background: var(--surface2); }
+
+/* ─── SECTIONS ─── */
+section { margin-bottom: 72px; scroll-margin-top: 40px; }
+
+.section-eyebrow {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+h2 {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.sec-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 400;
+}
+
+h3 {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 28px 0 10px;
+  letter-spacing: 0.01em;
+}
+
+h4 {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green);
+  margin: 20px 0 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+p { color: var(--text2); margin-bottom: 14px; line-height: 1.75; }
+p:last-child { margin-bottom: 0; }
+strong { color: var(--text); font-weight: 500; }
+
+/* ─── CALLOUTS ─── */
+.callout {
+  border-left: 3px solid;
+  padding: 16px 20px;
+  margin: 20px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.callout-green { border-color: var(--green); background: var(--green-glow); color: #a7f3d0; }
+.callout-amber { border-color: var(--amber); background: var(--amber-dim); color: #fde68a; }
+.callout-indigo { border-color: var(--indigo); background: var(--indigo-dim); color: #c7d2fe; }
+.callout-red { border-color: var(--red); background: var(--red-dim); color: #fecaca; }
+
+.callout-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 6px;
+}
+
+/* ─── CODE ─── */
+pre {
+  background: #050709;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--indigo);
+  padding: 20px 22px;
+  overflow-x: auto;
+  margin: 14px 0;
+  border-radius: 0 0 4px 4px;
+  position: relative;
+}
+
+.code-header {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 7px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 4px 4px 0 0;
+  margin-top: 14px;
+}
+
+.code-lang {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--indigo);
+  text-transform: uppercase;
+}
+
+.code-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.75;
+  color: #94a3b8;
+}
+
+.ck { color: #6ee7b7; }   /* key */
+.cv { color: #fcd34d; }   /* value/number */
+.cs { color: #fb923c; }   /* string */
+.cc { color: #374151; font-style: italic; }  /* comment */
+.co { color: var(--green); }  /* operator / accent */
+.cp { color: var(--indigo); } /* property */
+.ce { color: var(--red); }    /* error */
+.cm { color: var(--amber); }  /* method */
+
+/* ─── TABLES ─── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text3);
+  text-align: left;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--surface2);
+  font-weight: 400;
+}
+
+td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  vertical-align: top;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+
+td code { font-size: 11px; color: var(--indigo); background: var(--indigo-dim); padding: 2px 6px; border-radius: 2px; }
+td strong { color: var(--text); }
+
+/* ─── FLOW DIAGRAM ─── */
+.flow-diagram {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 32px 28px;
+  margin: 20px 0;
+  position: relative;
+}
+
+.flow-diagram::before {
+  content: 'EXECUTION PIPELINE';
+  position: absolute;
+  top: 12px; right: 16px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+}
+
+.flow-step-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 44px;
+}
+
+.flow-left {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px 8px 0;
+  border-right: 1px solid var(--border2);
+  position: relative;
+}
+
+.flow-left::after {
+  content: '▸';
+  position: absolute;
+  right: -7px;
+  font-size: 9px;
+  color: var(--green);
+  background: var(--surface);
+  padding: 1px 0;
+  opacity: 0.6;
+}
+
+.flow-step-row:last-child .flow-left::after { display: none; }
+
+.fn { font-family: var(--mono); font-size: 9px; color: var(--text3); width: 16px; text-align: right; flex-shrink: 0; }
+.fl { font-family: var(--mono); font-size: 11.5px; font-weight: 500; }
+.fl-g { color: var(--green); }
+.fl-i { color: var(--indigo); }
+.fl-a { color: var(--amber); }
+.fl-r { color: var(--red); }
+.fl-c { color: var(--cyan); }
+.fl-w { color: #fff; }
+
+.flow-right {
+  padding: 8px 0 8px 18px;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.flow-right p { font-size: 12px; color: var(--text3); margin: 0; line-height: 1.5; }
+
+.flow-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+  opacity: 0.4;
+}
+
+.flow-group-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 8px 0 4px;
+  color: var(--text3);
+}
+
+/* ─── COMPONENT CARD ─── */
+.component-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.cc-header {
+  background: var(--surface2);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cc-id {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--green);
+  background: var(--green-dim);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+
+.cc-name {
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cc-role {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+.cc-body { padding: 18px 20px; }
+
+/* ─── INVARIANT ─── */
+.invariant {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin: 8px 0;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.invariant:hover { border-color: var(--border2); }
+
+.inv-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  background: var(--green-dim);
+  border-right: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.inv-body { padding: 14px 18px; }
+
+.inv-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.inv-desc { font-size: 12.5px; color: var(--text2); margin: 0; line-height: 1.6; }
+
+.inv-precedence {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--amber);
+  background: var(--amber-dim);
+  padding: 3px 10px;
+  display: inline-block;
+}
+
+/* ─── FAULT TABLE ─── */
+.fault-row-semantic td:first-child { border-left: 3px solid var(--indigo); }
+.fault-row-static td:first-child { border-left: 3px solid var(--amber); }
+.fault-row-runtime td:first-child { border-left: 3px solid var(--red); }
+
+/* ─── SKILL STATES ─── */
+.state-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  align-items: center;
+}
+
+.state-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.sp-jit { border-color: rgba(34,211,238,0.3); color: var(--cyan); background: var(--cyan-dim); }
+.sp-active { border-color: rgba(61,255,160,0.3); color: var(--green); background: var(--green-dim); }
+.sp-watch { border-color: rgba(251,191,36,0.3); color: var(--amber); background: var(--amber-dim); }
+.sp-dep { border-color: var(--border2); color: var(--text3); background: var(--surface2); }
+.sp-ret { border-color: rgba(248,113,113,0.2); color: #f87171; background: var(--red-dim); }
+
+.state-arrow { color: var(--text3); font-size: 12px; }
+
+/* ─── IF FORMULA ─── */
+.formula-block {
+  background: #050709;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  padding: 18px 22px;
+  margin: 14px 0;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.formula-name { color: var(--green); font-weight: 600; margin-bottom: 6px; display: block; }
+.formula-eq { color: var(--text); }
+.formula-desc { margin-top: 10px; }
+.formula-desc li { color: var(--text2); font-size: 12px; list-style: none; padding: 2px 0; }
+.formula-desc li::before { content: '·  '; color: var(--text3); }
+
+/* ─── GRID ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 16px 18px;
+}
+
+.info-card-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.info-card-value {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ─── DEFINITION BOX ─── */
+.definition-box {
+  background: linear-gradient(135deg, rgba(61,255,160,0.04) 0%, rgba(129,140,248,0.04) 100%);
+  border: 1px solid rgba(61,255,160,0.2);
+  padding: 24px 28px;
+  margin: 24px 0;
+  position: relative;
+}
+
+.definition-box::before {
+  content: 'FORMAL DEFINITION';
+  position: absolute;
+  top: -1px; left: 20px;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--green);
+  background: var(--bg);
+  padding: 0 8px;
+}
+
+.definition-box p {
+  font-size: 15px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ─── PROBLEM GRID ─── */
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.problem-card {
+  background: var(--surface);
+  padding: 18px;
+}
+
+.pc-tag {
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pc-title {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.pc-body { font-size: 12px; color: var(--text3); line-height: 1.6; margin: 0; }
+
+/* ─── PRINCIPLES ─── */
+.principles-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); margin: 16px 0; }
+
+.principle-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  background: var(--surface);
+}
+
+.pr-num {
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  border-right: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.pr-body { padding: 14px 18px; }
+.pr-title { font-family: var(--display); font-size: 13.5px; font-weight: 600; color: #fff; margin-bottom: 5px; }
+.pr-desc { font-size: 12.5px; color: var(--text3); margin: 0; line-height: 1.6; }
+
+/* ─── PRECEDENCE TABLE ─── */
+.precedence-note {
+  background: rgba(251,191,36,0.05);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-left: 3px solid var(--amber);
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: #fde68a;
+  line-height: 1.65;
+}
+
+/* ─── HR ─── */
+hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  nav { display: none; }
+  main { margin-left: 0; padding: 32px 24px 80px; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <nav>
-      <div class="nav-logo">
-        <div class="nav-logo-tag">Architecture Reference</div>
-        <div class="nav-logo-title">Contextual Flux Architecture</div>
-        <div class="nav-logo-version">English translation aligned to the Portuguese whitepaper</div>
-      </div>
-      <div class="nav-section-label">Sections</div>
-      <a href="#s1">1. Introduction</a>
-      <a href="#s2">2. The Problem CFA Solves</a>
-      <a href="#s3">3. Foundational Principles</a>
-      <a href="#s4">4. General Architecture</a>
-      <a href="#s51">5.1 Intent Normalizer + Semantic Resolution</a>
-      <a href="#s51b">5.1b Confirmation Orchestrator</a>
-      <a href="#s52">5.2 State Signature</a>
-      <a href="#s53">5.3 Policy Engine</a>
-      <a href="#s54">5.4 Composite Intent Model</a>
-      <a href="#s55">5.5 Execution Planner</a>
-      <a href="#s56">5.6 Static Validation</a>
-      <a href="#s57">5.7 Runtime Validation</a>
-      <a href="#s58">5.8 Partial Execution State</a>
-      <a href="#s59">5.9 Context Registry</a>
-      <a href="#s510">5.10 State Projection Protocol</a>
-      <a href="#s511">5.11 Evaluation Indices</a>
-      <a href="#s512">5.12 Skill Lifecycle Management</a>
-      <a href="#s513">5.13 Fault Model</a>
-      <a href="#s514">5.14 Decision Engine</a>
-      <a href="#s515">5.15 Audit Trail</a>
-      <a href="#s6">6. System Invariants</a>
-      <a href="#s7">7. End-to-End Flow</a>
-      <a href="#s8">8. Benefits</a>
-      <a href="#s9">9. Extension Points</a>
-      <a href="#s10">10. Execution Scope (v2)</a>
-      <a href="#s11">11. Limitations</a>
-      <a href="#s12">12. Non-Goals</a>
-      <a href="#s13">13. Conclusion</a>
-    </nav>
 
-    <main>
-      <header class="doc-header">
-        <div class="doc-eyebrow">CFA v2</div>
-        <h1>Contextual Flux Architecture</h1>
-        <p class="doc-subtitle">
-          An architectural model for AI-native systems that replaces static agents and skills with governed intent resolution, constrained execution, explicit environment state, and evidence-based lifecycle management.
-        </p>
-        <div class="badge-row">
-          <span class="badge badge-green">Architecture</span>
-          <span class="badge badge-indigo">English Translation</span>
-          <span class="badge badge-amber">Section-by-section edition</span>
-        </div>
-        <div class="lang-links">
-          <a href="./cfa-v2-whitepaper.html">Original Portuguese edition</a>
-          <a href="./index.html">Back to docs index</a>
-        </div>
-      </header>
+<div class="shell">
 
-      <section id="s1">
-        <h2>1. Introduction</h2>
-        <p>
-          The <strong>Contextual Flux Architecture (CFA)</strong> is an architecture for AI-oriented systems that replaces the traditional paradigm of <em>agents plus static tools or skills</em> with a model in which intent resolution is treated as a first-class architectural entity.
-        </p>
-        <h4>Formal Definition of Intention</h4>
-        <p>
-          Within CFA, an intention is not merely a textual request. It is the formalizable representation of a desired state transition, conditioned by explicit constraints, environmental assumptions, and governance requirements. That means the system is not designed around “what tool should be called next,” but around “what state transition is being requested, under which conditions, and with what admissibility guarantees.”
-        </p>
-        <div class="panel">
-          <strong>Pipeline summary.</strong><br>
-          Semantic Resolution → Governed Planning → Validated Execution → State Management → Adaptive Evolution
-        </div>
-      </section>
-
-      <section id="s2">
-        <h2>2. The Problem CFA Solves</h2>
-        <p>
-          CFA emerges from the observation that conventional agent stacks are structurally under-specified for high-consequence execution. They may be acceptable for lightweight assistance, but they do not provide sufficient rigor for systems that must operate with policy, auditability, and persistent environmental awareness.
-        </p>
-        <div class="grid">
-          <div class="card"><h4>Silent ambiguity</h4><p>The model resolves intent incorrectly, yet with sufficient confidence that the downstream stack executes the wrong outcome with deterministic precision.</p></div>
-          <div class="card"><h4>Weak governance</h4><p>PII, cost, mutability, schema, and write-safety constraints are often enforced too late or not enforced at all.</p></div>
-          <div class="card"><h4>No environmental memory</h4><p>The system knows what it attempted, but not reliably what state the world was left in after partial failure, quarantine, or rollback.</p></div>
-          <div class="card"><h4>Fragile reuse</h4><p>Reusable capabilities are curated manually rather than promoted from evidence about fidelity, governance, and operational stability.</p></div>
-        </div>
-      </section>
-
-      <section id="s3">
-        <h2>3. Foundational Principles</h2>
-        <ul>
-          <li><strong>Intent before execution.</strong> Natural language must first become a typed contract.</li>
-          <li><strong>Policy before freedom.</strong> Plans are not creative artifacts; they are governed instantiations.</li>
-          <li><strong>Environment as system input.</strong> The state of the world is part of decision correctness.</li>
-          <li><strong>Structured failure.</strong> Partial execution is representable and governable.</li>
-          <li><strong>Evidence-based evolution.</strong> Promotion and demotion derive from observed behavior over time.</li>
-        </ul>
-      </section>
-
-      <section id="s4">
-        <h2>4. General Architecture</h2>
-        <p>
-          The CFA architecture can be understood as a staged system in which each layer narrows the space of permitted outcomes.
-        </p>
-        <pre>Natural language
-  -> Intent Normalizer
-  -> Confirmation Orchestrator
-  -> State Signature
-  -> Policy Engine
-  -> Composite Intent / Planner
-  -> Static Validation
-  -> Runtime Validation
-  -> Partial Execution State
-  -> Context Registry
-  -> State Projection
-  -> Evaluation Indices / Lifecycle
-  -> Decision Engine
-  -> Audit Trail</pre>
-        <p>
-          The architecture is deliberately ordered: semantic correctness precedes governance, governance precedes planning, planning precedes execution, execution precedes state projection, and projected state precedes future intent processing.
-        </p>
-      </section>
-      <section id="s51">
-        <h2>5.1 Intent Normalizer + Semantic Resolution</h2>
-        <p>
-          The Intent Normalizer is the most critical stage of the pipeline. A malformed signature generated here contaminates all downstream components: the Policy Engine governs the wrong problem, the Planner builds the wrong DAG, and the generated code becomes deterministically incorrect without necessarily looking hallucinated.
-        </p>
-        <h4>Component Input</h4>
-        <p>The normalizer must receive, at minimum:</p>
-        <ul>
-          <li>the raw user intention in natural language</li>
-          <li>the environment state provided by the Context Registry</li>
-          <li>the data catalog or equivalent operational catalog</li>
-        </ul>
-        <h4>Semantic Resolution</h4>
-        <p>
-          Semantic Resolution transforms the raw request into a typed interpretation composed of domain, intended action, target layer, referenced datasets, declared constraints, ambiguity level, confidence score, and competing interpretations when present.
-        </p>
-        <h4>Confirmation Modes</h4>
-        <p>
-          Resolution does not stop at a semantic guess. It also derives the proper confirmation mode according to risk:
-        </p>
-        <ul>
-          <li><code>auto</code> for low-risk, high-confidence cases</li>
-          <li><code>soft</code> for moderate ambiguity</li>
-          <li><code>hard</code> for protected writes with elevated risk</li>
-          <li><code>human_escalation</code> for high-consequence cases such as Gold publication or unresolved ambiguity</li>
-        </ul>
-        <h4>Integration with the Context Registry</h4>
-        <p>
-          The normalizer must query the Context Registry before generating the final signature. If the registry indicates, for example, that a target scope is <code>partially_committed</code>, the interpretation may need to be adjusted, additional constraints must be injected, or the intent may need to be blocked entirely. Without this consultation, the system plans on top of false premises about the world state.
-        </p>
-      </section>
-
-      <section id="s51b">
-        <h2>5.1b Confirmation Orchestrator</h2>
-        <p>
-          The Confirmation Orchestrator exists because the normalizer is also the most dangerous single point of semantic failure. It introduces a risk-aware escalation layer between semantic resolution and policy evaluation.
-        </p>
-        <p>
-          Its role is not to confirm everything indiscriminately, but to selectively increase friction when the semantic or operational risk profile requires it.
-        </p>
-      </section>
-
-      <section id="s52">
-        <h2>5.2 State Signature</h2>
-        <p>
-          The State Signature is the formal contract of intent. It captures the desired state change, target layer, datasets, execution constraints, and a versioned execution context. It is the normative object that the rest of the architecture acts upon.
-        </p>
-        <h4>Why <code>execution_context</code> belongs to the Signature</h4>
-        <p>
-          Reproducibility cannot depend on logs alone. The execution context must be part of the signature because policy version, catalog snapshot, and context-registry version are all constitutive of what was approved. Without them, later reproduction becomes approximate rather than exact.
-        </p>
-      </section>
-
-      <section id="s53">
-        <h2>5.3 Policy Engine</h2>
-        <p>
-          The Policy Engine evaluates the approved signature before execution planning. Its output is always one of three actions:
-        </p>
-        <ul>
-          <li><code>approve</code></li>
-          <li><code>replan</code></li>
-          <li><code>block</code></li>
-        </ul>
-        <p>
-          Policy covers governance, FinOps, data contracts, and explicit execution safety assumptions.
-        </p>
-        <h4>Declarative Rule Contract</h4>
-        <p>
-          Policy rules are intended to be declarative: condition plus action, versioned by policy bundle. The whitepaper does not prescribe a single implementation DSL, but it does prescribe the contract that any policy rule must satisfy.
-        </p>
-        <h4>Replanning Limit</h4>
-        <p>
-          Replanning is bounded. If the system repeatedly fails to converge through policy-guided replanning, the result must become a terminal block rather than an infinite loop disguised as adaptive planning.
-        </p>
-      </section>
-
-      <section id="s54">
-        <h2>5.4 Composite Intent Model</h2>
-        <p>
-          Composite intentions are decomposed into sub-intentions with explicit dependencies. Conceptually, this is an <strong>Intent Graph</strong>. In implementation terms, the Execution Planner may internalize this capability as long as the dependency structure remains explicit and governable.
-        </p>
-      </section>
-
-      <section id="s55">
-        <h2>5.5 Execution Planner</h2>
-        <p>
-          The Execution Planner generates the execution DAG from an approved signature. It is not free to invent arbitrary workflows. It fills governed templates, follows the approved contract, and respects every declared constraint.
-        </p>
-        <h4>Pre-cost Estimator</h4>
-        <p>
-          The whitepaper distinguishes between a FinOps guard and a pre-cost estimator. The FinOps guard blocks excessive cost based on heuristic policy, while the pre-cost estimator blocks based on historical evidence for the same signature hash. One is rule-based anticipation; the other is empirical anticipation.
-        </p>
-        <p>
-          Every execution plan must also be idempotent. In retry or replay scenarios, the system must not duplicate records or produce divergent results simply because the execution path was repeated.
-        </p>
-        <h4>Consistency Unit — Closed Enum</h4>
-        <p>
-          The notion of consistency must be explicit and bounded. The whitepaper defines a closed set of allowed consistency units such as partition, dataset, DAG branch, or time window. This prevents “partial success” from becoming semantically vague.
-        </p>
-      </section>
-
-      <section id="s56">
-        <h2>5.6 Static Validation</h2>
-        <p>
-          Static Validation analyzes the generated artifact prior to execution. Its task is to detect dangerous or contract-breaking patterns that can be rejected without running the plan.
-        </p>
-      </section>
-
-      <section id="s57">
-        <h2>5.7 Runtime Validation</h2>
-        <p>
-          Runtime Validation evaluates actual behavior after or during execution. It is responsible for detecting cost overruns, schema deviations, behavioral drift, and other faults that only become knowable once the artifact runs.
-        </p>
-      </section>
-
-      <section id="s58">
-        <h2>5.8 Partial Execution State</h2>
-        <p>
-          Without Partial Execution State, the system may govern inputs well but remain semantically loose at the output boundary: some of the plan was materialized, some was not, and the system lacks a governed representation of that fact.
-        </p>
-        <h4>Consistency Unit</h4>
-        <p>
-          Partial execution semantics are evaluated in relation to an explicit consistency unit. This is the granularity at which rollback, quarantine, or retry decisions make sense.
-        </p>
-        <h4>Partial Failure Policy</h4>
-        <p>
-          The whitepaper defines a deterministic sequence for handling partial failure: retry if policy allows, apply the declared failure policy, and only then determine what can be projected into environment state.
-        </p>
-        <h4>Retry Policy</h4>
-        <p>
-          Retries should target failed units where possible instead of replaying entire plans indiscriminately. This preserves idempotence assumptions and prevents recovery from degenerating into brute-force repetition.
-        </p>
-        <h4>Publish Semantics</h4>
-        <p>
-          Commit and publication are not the same thing. A system may commit successfully produced units while still withholding publication due to degraded integrity, unresolved quarantine, or policy constraints.
-        </p>
-        <h4>Panic Rollback — Environment Change During Execution</h4>
-        <p>
-          A change in the external environment during execution is not merely an execution failure; it is an invalidation of the premises under which that execution was authorized. This case requires its own protocol. Crucially, a panic rollback should not project unreliable state into the Context Registry.
-        </p>
-      </section>
-
-      <section id="s59">
-        <h2>5.9 Context Registry</h2>
-        <p>
-          The Context Registry is the cognitive infrastructure of the system. It is not an execution log. It is the live model of environment state on which future intentions depend.
-        </p>
-        <h4>Registry Versioning</h4>
-        <p>
-          The registry requires explicit versioning. Without versioning, there is no temporal consistency, and the reproducibility promised by the execution context becomes illusory.
-        </p>
-        <h4>Pre-execution Revalidation (TOCTOU)</h4>
-        <p>
-          There is a temporal gap between consulting the registry during normalization and executing the approved plan. During that interval, another execution may update the same target scope. The architecture therefore requires pre-execution revalidation to guard against stale assumptions and TOCTOU-style hazards.
-        </p>
-        <h4>TTL and Obsolete State Policy</h4>
-        <p>
-          The registry cannot accumulate stale state indefinitely. Without TTL or explicit obsolescence policy, the environment model becomes progressively contaminated by states that were once relevant but are no longer active.
-        </p>
-      </section>
-
-      <section id="s510">
-        <h2>5.10 State Projection Protocol</h2>
-        <p>
-          State Projection closes the execution loop. It updates the Context Registry so that future intent processing sees the environment as it now is, not as it was before execution.
-        </p>
-        <h4>Mandatory Properties</h4>
-        <p>
-          Projection must be atomic from the perspective of the registry, versioned for reproducibility, and constrained by invariant precedence. It is mandatory when projection is admissible, but must be suppressed when projecting would contaminate the environment model with invalid state.
-        </p>
-      </section>
-
-      <section id="s511">
-        <h2>5.11 Evaluation Indices</h2>
-        <p>
-          CFA defines four principal evaluation indices to reason about operational quality and reuse:
-        </p>
-        <ul>
-          <li><strong>IFo</strong>: operational fluidity</li>
-          <li><strong>IFs</strong>: semantic fidelity</li>
-          <li><strong>IFg</strong>: governance integrity</li>
-          <li><strong>IDI</strong>: intent drift index</li>
-        </ul>
-        <p>
-          IFg is intentionally binary in spirit: a value below 1 indicates a governance failure that should trigger systemic review rather than merely local suppression.
-        </p>
-        <h4>Promotion Criterion</h4>
-        <p>
-          Promotion should require sufficient execution count, strong operational performance, strong semantic fidelity, and uncompromised governance integrity.
-        </p>
-        <h4>IDI — Intent Drift Index</h4>
-        <p>
-          IDI measures the stability of the same signature over time, especially how often it requires replanning or exhibits drift.
-        </p>
-        <h4>Configurable Evaluation Window</h4>
-        <p>
-          Evaluation windows should be configurable by operational context. The same time horizon is unlikely to make sense for all domains.
-        </p>
-      </section>
-
-      <section id="s512">
-        <h2>5.12 Skill Lifecycle Management</h2>
-        <p>
-          Although CFA is a move away from static skill-centric architecture, it still recognizes that reusable capabilities may emerge. The point is that they should emerge from evidence, not from assumption.
-        </p>
-        <h4>States</h4>
-        <p>
-          Lifecycle states include candidate, active, watchlist, deprecated, retired, and demoted. State transitions should be caused by measured behavior, policy change, or environmental incompatibility.
-        </p>
-        <h4>Promotion Criterion</h4>
-        <p>
-          Promotion depends on the indices defined above and on minimum execution evidence. The system must be able to justify why a signature hash deserves reuse.
-        </p>
-        <h4>Skill Generation Metadata</h4>
-        <p>
-          Promoted artifacts must carry provenance: the system version that promoted them, the policy bundle in effect at the time, catalog snapshot, evaluation scores, and related execution evidence.
-        </p>
-      </section>
-
-      <section id="s513">
-        <h2>5.13 Fault Model</h2>
-        <p>
-          In CFA, failures are structured as typed fault events rather than being left as unclassified exceptions. This creates a coherent grammar of failure across semantic resolution, policy, execution, runtime, and environmental invalidation.
-        </p>
-        <h4>Structure of a Fault Event</h4>
-        <p>
-          A fault should identify its code, family, severity, detection stage, mandatory action, and remediation guidance where relevant. The architecture depends on typed failure because typed failure is governable failure.
-        </p>
-      </section>
-
-      <section id="s514">
-        <h2>5.14 Decision Engine</h2>
-        <p>
-          The Decision Engine consolidates the outputs of policy, validation, partial execution policy, and environmental status into the final state of the intent.
-        </p>
-        <h4>Decision Precedence</h4>
-        <p>
-          When components disagree, the system needs explicit precedence rules. For example, a runtime interruption with environmental invalidation may outrank an otherwise successful plan. Without such precedence, the implementation becomes ambiguous exactly where rigor is most needed.
-        </p>
-        <h4>Conflict Resolution Between Authorities</h4>
-        <p>
-          The Decision Engine is where conflicting authorities are resolved into a single final state such as approved, approved with warnings, replanned, blocked, partially committed, quarantined, or rolled back.
-        </p>
-        <h4>Possible States</h4>
-        <p>
-          The architecture explicitly enumerates possible outcomes rather than leaving them implicit in runtime behavior.
-        </p>
-      </section>
-
-      <section id="s515">
-        <h2>5.15 Audit Trail</h2>
-        <p>
-          The Audit Trail is the append-only, causally ordered record of all major decision events.
-        </p>
-        <h4>Consumption Modes</h4>
-        <p>
-          The whitepaper distinguishes between at least two modes of audit consumption: an operational mode for engineering diagnosis and tuning, and a regulatory mode for normalized, traceable review.
-        </p>
-        <h4>Properties of the Record</h4>
-        <p>
-          The record should be immutable after write, causally ordered per intent, complete enough to reconstruct critical decisions, and resistant to tampering through cryptographic chaining or equivalent integrity mechanisms.
-        </p>
-      </section>
-
-      <section id="s6">
-        <h2>6. System Invariants</h2>
-        <p>
-          CFA depends on explicit invariants. These are not implementation preferences; they are correctness boundaries.
-        </p>
-        <ol>
-          <li>No protected write proceeds without governance approval.</li>
-          <li>No intention is processed without consulting environment state.</li>
-          <li>Every partial execution outcome must be represented structurally before the next intention proceeds.</li>
-          <li>Projection is mandatory whenever projection is admissible.</li>
-          <li>Execution context must remain reproducible through explicit version references.</li>
-          <li>Unsafe runtime behavior must interrupt execution immediately.</li>
-          <li>Invariant precedence must prevent contaminated state from being projected under the excuse of completeness.</li>
-        </ol>
-        <h3>Precedence Between Invariants</h3>
-        <p>
-          Invariants have priority relationships. A straightforward example is that execution safety outranks mandatory projection whenever projecting the resulting state would register contamination as fact.
-        </p>
-      </section>
-
-      <section id="s7">
-        <h2>7. End-to-End Flow</h2>
-        <p>
-          The complete CFA flow can be described as a sequence:
-        </p>
-        <ol>
-          <li>Receive natural-language intention</li>
-          <li>Consult the current environment snapshot</li>
-          <li>Resolve semantic intent</li>
-          <li>Apply confirmation policy if required</li>
-          <li>Generate the State Signature</li>
-          <li>Apply the Policy Engine</li>
-          <li>Replan if policy requires it and bounded replanning allows it</li>
-          <li>Generate the execution DAG</li>
-          <li>Acquire execution lock or equivalent exclusivity where required</li>
-          <li>Perform pre-execution revalidation</li>
-          <li>Execute in the sandbox</li>
-          <li>Apply runtime validation</li>
-          <li>Apply partial execution policy and retry policy</li>
-          <li>Project the resulting state when admissible</li>
-          <li>Persist audit events and update lifecycle evidence</li>
-        </ol>
-      </section>
-
-      <section id="s8">
-        <h2>8. Benefits</h2>
-        <ul>
-          <li>Semantic ambiguity becomes governable rather than merely tolerated.</li>
-          <li>Execution is constrained before it becomes expensive or unsafe.</li>
-          <li>Environment state becomes a first-class input to decision-making.</li>
-          <li>Partial failure is representable and auditable.</li>
-          <li>Reuse can emerge through evidence rather than intuition.</li>
-          <li>The architecture is modular enough for phased adoption.</li>
-        </ul>
-      </section>
-
-      <section id="s9">
-        <h2>9. Extension Points</h2>
-        <p>
-          CFA is not defined by a single implementation stack. It exposes extension points such as:
-        </p>
-        <ul>
-          <li>semantic resolution backends</li>
-          <li>policy bundles and rule DSLs</li>
-          <li>execution planners</li>
-          <li>code generation targets</li>
-          <li>runtime validators</li>
-          <li>context storage backends</li>
-          <li>audit persistence backends</li>
-          <li>promotion and lifecycle policies</li>
-        </ul>
-      </section>
-
-      <section id="s10">
-        <h2>10. Execution Scope (v2)</h2>
-        <p>
-          CFA v2 is scoped deliberately. It assumes a controlled execution environment and conservative concurrency semantics, especially around single active intent per target scope.
-        </p>
-        <h4>Why batch and micro-batch instead of streaming</h4>
-        <p>
-          The whitepaper limits v2 to batch and micro-batch semantics because continuous multi-writer streaming would require a more sophisticated redesign of Partial Execution State, State Projection, and Context Registry semantics.
-        </p>
-        <h4>Concurrency Control</h4>
-        <p>
-          v2 assumes that conflicting writes to the same target scope are not processed concurrently without additional coordination. Violating that assumption undermines the reliability of both projection and revalidation.
-        </p>
-        <h4>Snapshot Selection</h4>
-        <p>
-          Snapshot selection must be explicit. The registry must not serve ambiguous or implicit temporal state to the normalizer or to the pre-execution revalidation step.
-        </p>
-        <h4>Scope Roadmap</h4>
-        <p>
-          Future versions may extend the architecture toward stronger concurrency, continuous processing, and richer revalidation protocols, but such changes require architectural rather than merely local implementation adjustments.
-        </p>
-      </section>
-
-      <section id="s11">
-        <h2>11. Limitations</h2>
-        <p>
-          CFA deliberately accepts some limitations in exchange for architectural rigor:
-        </p>
-        <ul>
-          <li>policy complexity grows with real-world governance needs</li>
-          <li>semantic quality still depends on the quality of normalization backends</li>
-          <li>state management adds architectural weight compared with lightweight agent stacks</li>
-          <li>conservative concurrency assumptions limit some execution scenarios in v2</li>
-        </ul>
-        <h3>Phased Implementation Strategy</h3>
-        <p>
-          The architecture is designed to be adopted incrementally: begin with intent normalization and policy, then add planning, then execution and validation, then state projection, and finally lifecycle evidence.
-        </p>
-      </section>
-
-      <section id="s12">
-        <h2>12. Non-Goals</h2>
-        <p>
-          CFA v2 explicitly does not aim to be:
-        </p>
-        <ul>
-          <li>a generic distributed multi-writer transaction framework</li>
-          <li>a prompt-only orchestration layer</li>
-          <li>a replacement for all workflow engines</li>
-          <li>a guarantee of perfect semantic interpretation</li>
-        </ul>
-      </section>
-
-      <section id="s13">
-        <h2>13. Conclusion</h2>
-        <p>
-          CFA is an attempt to give AI-native systems a stronger execution grammar. Rather than assuming that prompts, agents, and tools are sufficient, it formalizes intent, governs planning, validates execution, models world state explicitly, and lets reuse emerge through evidence.
-        </p>
-        <p>
-          Its core promise is not only safer execution. It is the possibility of building systems that can explain themselves, evolve deliberately, and reason about what the environment now permits them to do next.
-        </p>
-        <div class="note">
-          <strong>Repository note.</strong> For implementation details, examples, and the current Python kernel, return to the repository README and docs index. For the current canonical source text, refer to the original Portuguese HTML whitepaper.
-        </div>
-      </section>
-    </main>
+<!-- ─── NAV ─── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-tag">Technical Whitepaper</div>
+    <div class="nav-logo-title">Contextual Flux Architecture</div>
+    <div class="nav-logo-version">v2.0 — Final</div>
   </div>
+
+  <div class="nav-section-label">Fundamentos</div>
+  <a href="#intro">1. Introduction</a>
+  <a href="#problema">2. Problema</a>
+  <a href="#principios">3. Principles</a>
+  <a href="#arquitetura">4. General Architecture</a>
+
+  <div class="nav-section-label">Componentes</div>
+  <a href="#normalizer">5.1 Intent Normalizer</a>
+  <a href="#confirmation">5.1b Confirmation Orchestrator</a>
+  <a href="#signature">5.2 State Signature</a>
+  <a href="#policy">5.3 Policy Engine</a>
+  <a href="#composite">5.4 Composite Intent</a>
+  <a href="#planner">5.5 Execution Planner</a>
+  <a href="#static-val">5.6 Static Validation</a>
+  <a href="#runtime-val">5.7 Runtime Validation</a>
+  <a href="#partial">5.8 Partial Execution State</a>
+  <a href="#context">5.9 Context Registry</a>
+  <a href="#projection">5.10 State Projection</a>
+  <a href="#indices">5.11 Evaluation Indices</a>
+  <a href="#lifecycle">5.12 Skill Lifecycle</a>
+  <a href="#faults">5.13 Fault Model</a>
+  <a href="#decision">5.14 Decision Engine</a>
+  <a href="#audit">5.15 Audit Trail</a>
+
+  <div class="nav-section-label">Contrato</div>
+  <a href="#invariants">6. Invariantes</a>
+  <a href="#fluxo">7. End-to-End Flow</a>
+  <a href="#beneficios">8. Benefits</a>
+  <a href="#extensions">9. Extension Points</a>
+  <a href="#escopo">10. Execution Scope</a>
+  <a href="#limitacoes">11. Limitations</a>
+  <a href="#nongoals">12. Non-Goals</a>
+  <a href="#conclusao">13. Conclusion</a>
+</nav>
+
+<!-- ─── MAIN ─── -->
+<main>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-eyebrow">Technical Whitepaper</div>
+  <h1>Contextual Flux<br>Architecture v2</h1>
+  <p class="doc-subtitle">Architecture for context-oriented semantic resolution, governed planning, validated execution, explicit environmental state management, and adaptive evolution based on invariants and auditable observability.</p>
+  <div class="doc-meta">
+    <span class="badge badge-green">v2.1 Final</span>
+    <span class="badge badge-indigo">Technical Whitepaper</span>
+    <span class="badge badge-amber">Architecture Reference</span>
+    <span class="badge badge-gray">Co-authored by AI Architects</span>
+  </div>
+</div>
+
+<!-- ─── 1. INTRODUCTION ─── -->
+<section id="intro">
+  <div class="section-eyebrow">Section 01</div>
+  <h2><span class="sec-num">1.</span> Introduction</h2>
+
+  <p>The <strong>Contextual Flux Architecture (CFA)</strong> is an architecture for AI-oriented systems that replaces the traditional paradigm of Agents + static Tools/Skills with a model in which intent resolution is treated as a first-class architectural entity.</p>
+
+  <p>CFA treats execution not as an immediate act, but as a <strong>grounded decision</strong> conditioned by understood intent, governance policies, cost constraints (FinOps), data contracts, and the current state of the environment.</p>
+
+  <div class="definition-box">
+    <p>CFA is an architecture of context-oriented semantic resolution, governed planning, validated execution, explicit environmental state management, and adaptive evolution based on invariants and auditable observability.</p>
+  </div>
+
+  <h4>Formal Definition of Intention</h4>
+  <p>The term <em>intent</em> is used with technical precision in CFA, not as a synonym for instruction or command:</p>
+  <div class="callout callout-indigo">
+    <div class="callout-label">Intent — Formal Definition</div>
+    An <strong>intent</strong> is the description of a desired state transformation over datasets, under declared constraints, with a verifiable outcome. It does not specify how; it specifies what, over what, and under which conditions it is valid.
+  </div>
+
+  <p>The fundamental CFA flow is:</p>
+
+  <div class="callout callout-green">
+    <div class="callout-label">Core Flow</div>
+    Semantic Resolution → Governed Planning → Validated Execution → State Management → Adaptive Evolution
+  </div>
+</section>
+
+<!-- ─── 2. PROBLEMA ─── -->
+<section id="problema">
+  <div class="section-eyebrow">Section 02</div>
+  <h2><span class="sec-num">2.</span> The Problem CFA Solves</h2>
+
+  <p>Traditional agent architectures built around static tools present four structural limitations that CFA was designed to solve:</p>
+
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="pc-tag">P1</div>
+      <div class="pc-title">Fragile Routing</div>
+      <p class="pc-body">Dependence on embedding matching. Failure under complex compositions. Apparent understanding without real understanding.</p>
+    </div>
+    <div class="problem-card">
+      <div class="pc-tag">P2</div>
+      <div class="pc-title">Static Catalog</div>
+      <p class="pc-body">Uncontrolled growth of tools. Difficult versioning. Low adaptability to novel scenarios.</p>
+    </div>
+    <div class="problem-card">
+      <div class="pc-tag">P3</div>
+      <div class="pc-title">Missing Enforcement</div>
+      <p class="pc-body">Execution before deep validation. Risk of excessive cost, PII violations, and broken data contracts.</p>
+    </div>
+    <div class="problem-card">
+      <div class="pc-tag">P4</div>
+      <div class="pc-title">Implicit State</div>
+      <p class="pc-body">Systems do not know the state of the environment after execution. Structured auditability is missing. Context is lost between intents.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Root Problem</div>
+    In traditional architectures, AI operates as a glorified router: it receives natural language, performs embedding matching, and executes a tool. There is no formalization of intent, no real enforcement before execution, and no model of environmental state after execution.
+  </div>
+</section>
+
+<!-- ─── 3. PRINCIPLES ─── -->
+<section id="principios">
+  <div class="section-eyebrow">Section 03</div>
+  <h2><span class="sec-num">3.</span> Foundational Principles</h2>
+
+  <div class="principles-list">
+    <div class="principle-row">
+      <div class="pr-num">P1</div>
+      <div class="pr-body">
+        <div class="pr-title">Intent as the Primary Entity</div>
+        <p class="pr-desc">Every execution begins with the formalization of intent. The system never starts from code; it starts from a structured understanding of what must happen.</p>
+      </div>
+    </div>
+    <div class="principle-row">
+      <div class="pr-num">P2</div>
+      <div class="pr-body">
+        <div class="pr-title">Mandatory Semantic Typing</div>
+        <p class="pr-desc">The intent is converted into a structured, typed signature before any planning occurs. Raw text is not a valid planner input.</p>
+      </div>
+    </div>
+    <div class="principle-row">
+      <div class="pr-num">P3</div>
+      <div class="pr-body">
+        <div class="pr-title">Enforcement before Execution</div>
+        <p class="pr-desc">No plan is executed without validation against governance policies, FinOps constraints, and data contracts. The cost of blocking early is always lower than the cost of reversing later.</p>
+      </div>
+    </div>
+    <div class="principle-row">
+      <div class="pr-num">P4</div>
+      <div class="pr-body">
+        <div class="pr-title">Separation between Discovery and Industrialization</div>
+        <p class="pr-desc">Initial executions are ephemeral (JIT). Only executions that prove repeatable value and compliance are promoted to persistent artifacts.</p>
+      </div>
+    </div>
+    <div class="principle-row">
+      <div class="pr-num">P5</div>
+      <div class="pr-body">
+        <div class="pr-title">Explicit Environmental State</div>
+        <p class="pr-desc">The system maintains and consults a continuous model of data state. No intent is processed without that context.</p>
+      </div>
+    </div>
+    <div class="principle-row">
+      <div class="pr-num">P6</div>
+      <div class="pr-body">
+        <div class="pr-title">Native Observability</div>
+        <p class="pr-desc">Each decision is recorded as a typed, auditable event. Governance without explainability is not real governance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 4. ARCHITECTURE ─── -->
+<section id="arquitetura">
+  <div class="section-eyebrow">Section 04</div>
+  <h2><span class="sec-num">4.</span> General Architecture</h2>
+
+  <div class="flow-diagram">
+    <div class="flow-group-label">Resolution</div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">01</span><span class="fl fl-w">User Intent</span></div>
+      <div class="flow-right"><p>Natural language. System entry point.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">02</span><span class="fl fl-g">Intent Normalizer</span></div>
+      <div class="flow-right"><p>Converts natural language into a formal structure. Consults the Context Registry before generating the signature.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">03</span><span class="fl fl-g">Semantic Resolution</span></div>
+      <div class="flow-right"><p>Confidence score, ambiguity, and confirmation modes.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">04</span><span class="fl fl-i">Confirmation Orchestrator</span></div>
+      <div class="flow-right"><p>auto / soft / hard / human_escalation. PII + gold_write + high cost -> escalation. Timeout -> block + notify.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">05</span><span class="fl fl-g">State Signature</span></div>
+      <div class="flow-right"><p>Typed signature plus execution_context. Immutable formal contract of the intent.</p></div>
+    </div>
+
+    <div class="flow-divider"></div>
+    <div class="flow-group-label">Governance</div>
+
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">06</span><span class="fl fl-i">Policy Engine</span></div>
+      <div class="flow-right"><p>Applies governance, FinOps, and contract rules. Max 3 replans. approve / replan / block.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">07</span><span class="fl fl-a">Pre-cost Estimator</span></div>
+      <div class="flow-right"><p>Estimates cost by signature_hash (30 days). Forces replan if above the ceiling. Automatic feedback loop.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">08</span><span class="fl fl-i">Execution Planner</span></div>
+      <div class="flow-right"><p>Generates a governed DAG plus idempotence. Supports Composite Intent.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">09</span><span class="fl fl-a">Static Validation</span></div>
+      <div class="flow-right"><p>Analyzes code before execution. Detects forbidden tokens and contract violations.</p></div>
+    </div>
+
+    <div class="flow-divider"></div>
+    <div class="flow-group-label">Execution</div>
+
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">10</span><span class="fl fl-a">Acquire Execution Lock</span></div>
+      <div class="flow-right"><p>Acquires an exclusive lock over the target_scope. Holds it until after State Projection. Conflict -> queue or reject.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">11</span><span class="fl fl-g">Pre-exec Revalidation</span></div>
+      <div class="flow-right"><p>Revalidates version_id, policy_bundle_version, and catalog_snapshot_version. Closes TOCTOU. Mismatch -> replan.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">12</span><span class="fl fl-c">Execution (Sandbox)</span></div>
+      <div class="flow-right"><p>Isolated and monitored execution. Immediate interruption on a forbidden operation or Environmental Fault.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">13</span><span class="fl fl-c">Runtime Validation</span></div>
+      <div class="flow-right"><p>Validates cardinality, real cost, final schema, and null ratio.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">14</span><span class="fl fl-a">Partial Execution State</span></div>
+      <div class="flow-right"><p>Sequence: retry -> partial_failure_policy -> project_state. Granular by consistency_unit.</p></div>
+    </div>
+
+    <div class="flow-divider"></div>
+    <div class="flow-group-label">State and Evolution</div>
+
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">15</span><span class="fl fl-g">State Projection</span></div>
+      <div class="flow-right"><p>Updates the Context Registry. Atomic, versioned. Lock released after confirmed projection.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">16</span><span class="fl fl-g">Context Registry</span></div>
+      <div class="flow-right"><p>Current state of the environment. Snapshot by latest_committed_before_intent_resolution.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">17</span><span class="fl fl-i">Decision Engine</span></div>
+      <div class="flow-right"><p>veto_absolute -> ordered_authority. Conflict -> strictest_outcome.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">18</span><span class="fl fl-i">Promotion / Demotion</span></div>
+      <div class="flow-right"><p>IFo + IFs + IFg + IDI by intent_signature_hash. Window by domain. generation_metadata.</p></div>
+    </div>
+    <div class="flow-step-row">
+      <div class="flow-left"><span class="fn">19</span><span class="fl fl-r">Audit Trail</span></div>
+      <div class="flow-right"><p>append_only, causal order. I8 — verifiable reproducibility.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 5. COMPONENTES ─── -->
+<section id="normalizer">
+  <div class="section-eyebrow">Section 05 — Components</div>
+  <h2><span class="sec-num">5.1</span> Intent Normalizer + Semantic Resolution</h2>
+
+  <p>The Intent Normalizer is the most critical component in the pipeline. An incorrect signature generated here contaminates every downstream component — the Policy Engine will govern the wrong problem, the Planner will build the wrong DAG, and the generated code will be deterministically incorrect without any apparent hallucination.</p>
+
+  <div class="callout callout-red">
+    <div class="callout-label">Central Risk</div>
+    The Intent Normalizer performs the system's first controlled act of violence: transforming natural language into an operational contract. An error here is an elegant error — the system proceeds with bureaucratic perfection over a false premise.
+  </div>
+
+  <h4>Component Input</h4>
+  <p>The Normalizer <strong>must</strong> consult the Context Registry before generating the signature. This is an architectural input, not an optional one:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">intent_normalizer.inputs</span></div>
+  <pre><code><span class="ck">intent_normalizer</span>:
+  <span class="ck">inputs</span>:
+    - <span class="cs">user_intent</span>                           <span class="cc"># linguagem natural</span>
+    - <span class="cs">context_registry.environment_state</span>   <span class="cc"># current state of the environment</span>
+    - <span class="cs">data_catalog</span>                          <span class="cc"># metadata and classifications</span>
+  <span class="ck">outputs</span>:
+    - <span class="cs">semantic_resolution</span></code></pre>
+
+  <h4>Semantic Resolution</h4>
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">semantic_resolution.output</span></div>
+  <pre><code><span class="ck">semantic_resolution</span>:
+  <span class="ck">signature</span>: <span class="cc">{...}</span>                       <span class="cc"># generated State Signature</span>
+  <span class="ck">confidence_score</span>: <span class="cv">0.82</span>                <span class="cc"># [0.0 - 1.0]</span>
+  <span class="ck">ambiguity_level</span>: <span class="cs">medium</span>              <span class="cc"># low | medium | high</span>
+  <span class="ck">competing_interpretations</span>:
+    - <span class="cs">join_nfe_clientes_silver</span>
+    - <span class="cs">enrich_nfe_with_master_data</span>
+  <span class="ck">confirmation_mode</span>: <span class="cs">hard_required</span>     <span class="cc"># auto | soft | hard_required</span>
+  <span class="ck">environment_constraints_injected</span>:    <span class="cc"># constraints injected from the Context Registry</span>
+    - <span class="cs">silver_documentos.state = partially_committed</span>
+    - <span class="cs">silver_documentos.publish_allowed = false</span></code></pre>
+
+  <h4>Confirmation Modes</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Criterion</th><th>Behavior</th></tr></thead>
+      <tbody>
+        <tr><td><code>auto</code></td><td>High confidence, low risk, no PII</td><td>Proceeds without interruption</td></tr>
+        <tr><td><code>soft</code></td><td>Medium confidence, read intent</td><td>Displays the signature and proceeds if there is no conflict</td></tr>
+        <tr><td><code>hard_required</code></td><td>PII detected, write to Silver/Gold, high estimated cost, relevant semantic ambiguity, multiple compatible datasets</td><td>Explicit confirmation required before proceeding</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Integration with the Context Registry</h4>
+  <p>If the Context Registry indicates <code>silver_documentos.state = partially_committed</code>, the Normalizer must adjust the interpretation of the intent, inject the constraint into the plan, or block intents that depend on publication of the affected dataset. Without that consultation, the system proposes plans over invalid assumptions about the state of the world.</p>
+</section>
+
+<section id="confirmation">
+  <h2><span class="sec-num">5.1b</span> Confirmation Orchestrator</h2>
+  <p>The Intent Normalizer is the most dangerous single point of failure in the system — a wrong signature contaminates the entire pipeline with deterministic perfection. The Confirmation Orchestrator is the structural mitigation: it inserts an escalation layer between semantic resolution and the Policy Engine, activated selectively by risk.</p>
+
+  <p>It does not add friction in 90% of cases. In the 10% where risk is real — PII, ambiguity, writes to critical layers — it is mandatory.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">confirmation_orchestrator</span></div>
+  <pre><code><span class="ck">confirmation_orchestrator</span>:
+  <span class="ck">modes</span>:
+    - <span class="co">auto</span>              <span class="cc"># high confidence, low risk — proceeds without interruption</span>
+    - <span class="cs">soft</span>              <span class="cc"># displays the signature and proceeds without conflict</span>
+    - <span class="cs">hard</span>              <span class="cc"># explicit confirmation required</span>
+    - <span class="ce">human_escalation</span>  <span class="cc"># escalation to human review</span>
+
+  <span class="ck">escalation_triggers</span>:
+    - <span class="cs">confidence_score &lt; 0.65 AND contains_pii == true</span>
+    - <span class="cs">competing_interpretations &gt; 1</span>
+    - <span class="cs">silver_write AND context_registry.publish_allowed == false</span>
+    - <span class="cs">gold_write</span>                                  <span class="cc"># always escalated</span>
+    - <span class="cs">estimated_cost &gt; cost_ceiling_dbu * 0.8</span>    <span class="cc"># pre-cost above 80% of the ceiling</span>
+
+  <span class="ck">human_timeout_seconds</span>: <span class="cv">300</span>
+  <span class="ck">fallback_on_timeout</span>:
+    <span class="ck">action</span>: <span class="cs">block</span>
+    <span class="ck">reason</span>: <span class="cs">human_confirmation_timeout</span>
+    <span class="ck">notify</span>: <span class="cs">governance_team</span>
+    <span class="ck">audit_event</span>: <span class="cs">HUMAN_ESCALATION_TIMEOUT</span></code></pre>
+
+  <div class="callout callout-red">
+    <div class="callout-label">Why human_escalation is architectural</div>
+    Purely automated systems tend to optimize for what is expressible in code. There are classes of ambiguity — interpretation of regulatory context, undocumented business intent, conflict between domains — that no confidence score captures adequately. The <code>human_escalation</code> mode is not a weakness of the system: it is explicit recognition of its limits.
+  </div>
+</section>
+  <h2><span class="sec-num">5.2</span> State Signature</h2>
+  <p>Typed and enriched representation of the intent. It is the formal contract that governs the entire remainder of the pipeline. Once generated and confirmed, the Signature is immutable — any replanning generates a new Signature.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">state_signature.example</span></div>
+  <pre><code><span class="ck">signature</span>:
+  <span class="ck">domain</span>: <span class="cs">fiscal_data_processing</span>
+  <span class="ck">intent</span>: <span class="cs">reconciliation_and_persist</span>
+  <span class="ck">source_type</span>: <span class="cs">nested_json</span>
+  <span class="ck">target_layer</span>: <span class="cs">bronze_to_silver</span>
+  <span class="ck">datasets</span>:
+    - <span class="ck">name</span>: <span class="cs">nfe</span>
+      <span class="ck">size</span>: <span class="cs">4TB</span>
+      <span class="ck">classification</span>: <span class="cs">high_volume</span>
+    - <span class="ck">name</span>: <span class="cs">clientes</span>
+      <span class="ck">size</span>: <span class="cs">500MB</span>
+      <span class="ck">classification</span>: <span class="cs">sensitive</span>
+      <span class="ck">pii</span>: [<span class="cs">cpf</span>, <span class="cs">email</span>]
+  <span class="ck">constraints</span>:
+    <span class="ck">no_pii_raw</span>: <span class="cp">true</span>
+    <span class="ck">partition_by</span>: [<span class="cs">processing_date</span>]
+    <span class="ck">enforce_types</span>: <span class="cp">true</span>
+    <span class="ck">merge_key_required</span>: <span class="cp">true</span>
+  <span class="ck">execution_context</span>:                        <span class="cc"># normative context of the execution</span>
+    <span class="ck">policy_bundle_version</span>: <span class="cs">"v4.2"</span>          <span class="cc"># policies in force at that moment</span>
+    <span class="ck">catalog_snapshot_version</span>: <span class="cs">"catalog_2026_03_22"</span>  <span class="cc"># state of the catalog</span></code></pre>
+
+  <h4>Why execution_context belongs to the Signature</h4>
+  <p>The <code>execution_context</code> is not audit metadata — it is part of the execution contract. With it embedded in the Signature, the system can <strong>reproduce</strong> any historical execution with the policies and catalog that were in force at that moment, not merely explain what happened. Without it, the Audit Trail records the past but does not make it reproducible. The three elements — formalized intent, state of the environment, and normative context — form the complete contract of an execution.</p>
+</section>
+
+<section id="policy">
+  <h2><span class="sec-num">5.3</span> Policy Engine</h2>
+  <p>Applies all governance, safety, and FinOps rules <strong>before execution</strong>. It is the layer that guarantees that the system never executes what it should not.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Policy Type</th><th>Detects</th><th>Possible Action</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Privacy Wall</strong></td><td>Untreated PII usage, joins with sensitive data</td><td>Requires anonymization or blocks</td></tr>
+        <tr><td><strong>FinOps Guard</strong></td><td>Full scans on large volumes, joins without a temporal filter</td><td>Requires a filter or blocks</td></tr>
+        <tr><td><strong>Contract Enforcement</strong></td><td>Append to Silver without a merge key, write outside the proper layer</td><td>Converts the operation or blocks</td></tr>
+        <tr><td><strong>Execution Safety</strong></td><td>Forbidden imports in the Signature, declared dangerous code patterns</td><td>Blocks immediately</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Possible Policy Engine outcomes: <code>approve</code>, <code>replan</code> (with declared mandatory interventions), or <code>block</code>.</p>
+
+  <h4>Declarative Rule Contract</h4>
+  <p>Policy Engine rules are expressed declaratively — condition plus action — and versioned with the <code>policy_bundle_version</code>. The whitepaper does not specify the implementation DSL, but it defines the minimum contract that any rule must satisfy:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">policy_rule.contract</span></div>
+  <pre><code><span class="ck">policy_rule</span>:
+  <span class="ck">name</span>: <span class="cs">forbid_raw_pii_in_silver</span>
+  <span class="ck">condition</span>: <span class="cs">target_layer == "silver" AND contains_pii_raw == true</span>
+  <span class="ck">action</span>: <span class="cs">block</span>                       <span class="cc"># approve | replan | block</span>
+  <span class="ck">severity</span>: <span class="cs">critical</span>
+  <span class="ck">fault_code</span>: <span class="ce">GOVERNANCE_RAW_PII_IN_SILVER</span></code></pre>
+
+  <h4>Replanning Limit</h4>
+  <p>The replanning cycle cannot be unlimited. A loop of replans is as problematic in production as a stuck execution, and it has no terminal state without this declared limit:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">replan_policy</span></div>
+  <pre><code><span class="ck">replan_policy</span>:
+  <span class="ck">max_attempts</span>: <span class="cv">3</span>
+  <span class="ck">on_max_exceeded</span>:
+    <span class="ck">action</span>: <span class="cs">block</span>
+    <span class="ck">decision_state</span>: <span class="ce">blocked</span>
+    <span class="ck">reason</span>: <span class="cs">max_replan_attempts_exceeded</span>
+    <span class="ck">audit_required</span>: <span class="cp">true</span></code></pre>
+</section>
+
+<section id="composite">
+  <h2><span class="sec-num">5.4</span> Composite Intent Model</h2>
+  <p>Composite intents are decomposed into sub-intents with explicit dependencies. In the conceptual model this is represented as an <strong>Intent Graph</strong>; in implementation, this capability may be absorbed internally by the Execution Planner.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">intent_graph.example</span></div>
+  <pre><code><span class="ck">intent_graph</span>:
+  <span class="ck">root_intent</span>: <span class="cs">fiscal_reconciliation_publish</span>
+  <span class="ck">sub_intents</span>:
+    - <span class="ck">id</span>: <span class="cs">ingest_nfe</span>
+    - <span class="ck">id</span>: <span class="cs">anonymize_client_master</span>
+    - <span class="ck">id</span>: <span class="cs">reconcile_documents</span>
+    - <span class="ck">id</span>: <span class="cs">aggregate_by_state</span>
+    - <span class="ck">id</span>: <span class="cs">publish_audit_view</span>
+  <span class="ck">dependencies</span>:
+    - <span class="cs">ingest_nfe</span> <span class="co">-></span> <span class="cs">reconcile_documents</span>
+    - <span class="cs">anonymize_client_master</span> <span class="co">-></span> <span class="cs">reconcile_documents</span>
+    - <span class="cs">reconcile_documents</span> <span class="co">-></span> <span class="cs">aggregate_by_state</span>
+    - <span class="cs">aggregate_by_state</span> <span class="co">-></span> <span class="cs">publish_audit_view</span>
+  <span class="ck">shared_context</span>:
+    <span class="ck">consistency_unit</span>: <span class="cs">partition</span>
+    <span class="ck">key</span>: <span class="cs">processing_date</span></code></pre>
+</section>
+
+<section id="planner">
+  <h2><span class="sec-num">5.5</span> Execution Planner</h2>
+  <p>Generates the execution DAG from the approved Signature. The Planner is <strong>not free</strong> — it fills templates, follows the plan approved by the Policy Engine, and respects every constraint declared in the Signature.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">execution_plan.example</span></div>
+  <pre><code><span class="ck">execution_plan</span>:
+  - <span class="ck">step</span>: <span class="cs">extract</span>
+    <span class="ck">source</span>: <span class="cs">nfe</span>
+    <span class="ck">filter</span>: <span class="cs">processing_date >= '2026-01-01'</span>     <span class="cc"># required by FinOps</span>
+
+  - <span class="ck">step</span>: <span class="cs">anonymize</span>
+    <span class="ck">source</span>: <span class="cs">clientes</span>
+    <span class="ck">transform</span>:
+      - <span class="cm">sha256</span>(<span class="cs">cpf</span>) <span class="co">as</span> <span class="cs">cpf_hash</span>
+      - <span class="cm">drop</span>(<span class="cs">email</span>)
+
+  - <span class="ck">step</span>: <span class="cs">join</span>
+    <span class="ck">type</span>: <span class="cs">broadcast</span>
+    <span class="ck">condition</span>: <span class="cs">nfe.cpf = clientes.cpf_hash</span>
+
+  - <span class="ck">step</span>: <span class="cs">load</span>
+    <span class="ck">type</span>: <span class="cs">merge</span>
+    <span class="ck">target</span>: <span class="cs">silver_documentos</span>
+    <span class="ck">key</span>: <span class="cs">nfe_id</span>                              <span class="cc"># required by Contract</span></code></pre>
+
+  <h4>Pre-cost Estimator</h4>
+  <p>The FinOps Guard blocks excessive cost after the Policy Engine evaluates the Signature. The Pre-cost Estimator anticipates that evaluation — it estimates cost <em>before</em> the Signature is approved, using execution history for the same <code>intent_signature_hash</code>. This closes the gap between "estimated cost" and "real cost" with an automatic feedback loop.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">pre_cost_estimator</span></div>
+  <pre><code><span class="ck">pre_cost_estimator</span>:
+  <span class="ck">inputs</span>:
+    - <span class="cs">signature</span>
+    - <span class="cs">context_registry.environment_state</span>
+    - <span class="cs">execution_history_by_signature_hash</span>   <span class="cc"># last 30 days</span>
+
+  <span class="ck">outputs</span>:
+    <span class="ck">estimated_dbu</span>: <span class="cv">float</span>
+    <span class="ck">estimated_shuffle_gb</span>: <span class="cv">float</span>
+    <span class="ck">cost_risk_score</span>: <span class="cv">float</span>               <span class="cc"># [0.0 - 1.0]</span>
+    <span class="ck">confidence</span>: <span class="cv">float</span>                    <span class="cc"># based on N historical executions</span>
+
+  <span class="ck">threshold_policy</span>:
+    - <span class="cp">if</span> <span class="cs">estimated_dbu &gt; cost_ceiling_dbu</span>:
+        <span class="ck">action</span>: <span class="cs">force_replan_with_filter</span>
+        <span class="ck">reason</span>: <span class="cs">PRE_COST_CEILING_EXCEEDED</span>
+    - <span class="cp">if</span> <span class="cs">estimated_dbu &gt; cost_ceiling_dbu * 0.8</span>:
+        <span class="ck">action</span>: <span class="cs">escalate_to_confirmation_orchestrator</span>
+        <span class="ck">mode</span>: <span class="cs">human_escalation</span>
+
+  <span class="ck">feedback_loop</span>:
+    <span class="ck">update_on</span>: <span class="cs">post_execution</span>
+    <span class="ck">key</span>: <span class="cs">intent_signature_hash</span>
+    <span class="ck">window</span>: <span class="cs">last_30_days</span>
+    <span class="ck">model</span>: <span class="cs">rolling_weighted_average</span></code></pre>
+
+  <div class="callout callout-green">
+    <div class="callout-label">Timing Difference</div>
+    FinOps Guard (Policy Engine) blocks based on heuristics in the Signature. Pre-cost Estimator blocks based on historical evidence for the same hash. The two are complementary — the first is proactive by rule, the second is proactive by learning.
+  </div>
+  <p>Every execution generated by the Planner must be idempotent. On retry or re-execution after partial failure, the system must not duplicate data, create duplicate records, or produce a result different from what it would have produced on the first successful execution.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">execution_semantics</span></div>
+  <pre><code><span class="ck">execution_semantics</span>:
+  <span class="ck">idempotency</span>:
+    <span class="ck">required</span>: <span class="cp">true</span>
+    <span class="ck">strategy</span>:
+      - <span class="cs">merge_with_deterministic_key</span>   <span class="cc"># merge usa merge_key da Signature</span>
+      - <span class="cs">partition_overwrite_safe</span>        <span class="cc"># overwriting an entire partition is idempotent</span>
+    <span class="ck">forbidden</span>:
+      - <span class="cs">append_without_dedup</span>            <span class="cc"># append puro gera duplicatas em retry</span></code></pre>
+
+  <h4>Consistency Unit — Enum Fechado</h4>
+  <p>The <code>consistency_unit</code> type is not free-form — it is selected by rule based on the execution context:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">consistency_unit.definition</span></div>
+  <pre><code><span class="ck">consistency_unit</span>:
+  <span class="ck">allowed_types</span>:
+    - <span class="co">partition</span>          <span class="cc"># standard for partitioned batch</span>
+    - <span class="co">dataset</span>            <span class="cc"># for atomic cross-dataset operations</span>
+    - <span class="co">dag_branch</span>         <span class="cc"># for composite intents with independent branches</span>
+    - <span class="co">time_window</span>        <span class="cc"># for micro-batch with a time window</span>
+
+  <span class="ck">selection_rules</span>:
+    - <span class="cp">if</span> <span class="cs">execution_mode == batch</span>:           <span class="co">partition</span>
+    - <span class="cp">if</span> <span class="cs">cross_dataset_atomic == true</span>:      <span class="co">dataset</span>
+    - <span class="cp">if</span> <span class="cs">composite_intent == true</span>:         <span class="co">dag_branch</span>
+    - <span class="cp">if</span> <span class="cs">execution_mode == micro_batch</span>:    <span class="co">time_window</span></code></pre>
+</section>
+
+<section id="static-val">
+  <h2><span class="sec-num">5.6</span> Static Validation</h2>
+  <p>Analysis of the generated code before execution. Detects violations that can be identified without running the job. Belongs to the <strong>Static Safety Faults</strong> family.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">static_analysis.manifest</span></div>
+  <pre><code><span class="ck">static_analysis</span>:
+  <span class="ck">forbidden_tokens</span>:
+    - <span class="ce">collect()</span>
+    - <span class="ce">toPandas()</span>
+    - <span class="ce">crossJoin()</span>
+    - <span class="ce">cpf</span>                   <span class="cc"># PII raw</span>
+    - <span class="ce">email</span>                 <span class="cc"># PII raw</span>
+  <span class="ck">required_patterns</span>:
+    - <span class="cs">filter(</span>               <span class="cc"># mandatory temporal predicate</span>
+    - <span class="cs">merge(</span>                <span class="cc"># append direto proibido em Silver</span>
+  <span class="ck">schema_contract</span>:
+    <span class="ck">expected_columns</span>: [<span class="cs">nfe_id</span>, <span class="cs">cpf_hash</span>, <span class="cs">processing_date</span>]
+    <span class="ck">forbidden_columns</span>: [<span class="cs">cpf</span>, <span class="cs">email</span>]</code></pre>
+</section>
+
+<section id="runtime-val">
+  <h2><span class="sec-num">5.7</span> Runtime Validation</h2>
+  <p>Validates the actual runtime behavior of the execution in the Sandbox. Detects violations that are only visible with real data. Belongs to the <strong>Runtime Behavioral Faults</strong> family.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">runtime_metrics</span></div>
+  <pre><code><span class="ck">runtime_metrics</span>:
+  <span class="ck">max_rows_output</span>: <span class="cv">10_000_000</span>
+  <span class="ck">max_shuffle_size_mb</span>: <span class="cv">500</span>
+  <span class="ck">max_null_ratio</span>: <span class="cv">0.05</span>             <span class="cc"># 5%</span>
+  <span class="ck">expected_output_range</span>:
+    <span class="ck">min</span>: <span class="cv">1_000</span>
+    <span class="ck">max</span>: <span class="cv">10_000_000</span>
+  <span class="ck">schema_drift_detection</span>: <span class="cp">true</span>
+  <span class="ck">cost_ceiling_dbu</span>: <span class="cv">50</span></code></pre>
+</section>
+
+<section id="partial">
+  <h2><span class="sec-num">5.8</span> Partial Execution State</h2>
+
+  <p>In real data systems, total and clean failure is rare. The common case is partial failure: 80% of partitions processed, one branch of the DAG materialized, three out of four datasets conformant. CFA has explicit semantics for this.</p>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Architectural Gap Resolved</div>
+    Without Partial Execution State, the system governs the input well but becomes semantically loose at the output — part of the plan was materialized, part was not, and the system has no governed way to represent that fact.
+  </div>
+
+  <h4>Consistency Unit</h4>
+  <p>The system must declare the minimum granularity of governance. Without that, "partial" is a vague word.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">partial_execution_state</span></div>
+  <pre><code><span class="ck">partial_execution_state</span>:
+  <span class="ck">overall_state</span>: <span class="cs">partially_committed</span>
+
+  <span class="ck">consistency_unit</span>:
+    <span class="ck">type</span>: <span class="cs">partition</span>             <span class="cc"># partition | dataset | dag_branch | time_window</span>
+    <span class="ck">key</span>: <span class="cs">processing_date</span>
+
+  <span class="ck">successful_units</span>:
+    - <span class="ck">dataset</span>: <span class="cs">nfe</span>
+      <span class="ck">partitions</span>: [<span class="cs">"2026-01-01"</span>, <span class="cs">"2026-01-02"</span>]
+    - <span class="ck">dataset</span>: <span class="cs">clientes_anon</span>
+      <span class="ck">partitions</span>: [<span class="cs">"2026-01-01"</span>, <span class="cs">"2026-01-02"</span>]
+
+  <span class="ck">failed_units</span>:
+    - <span class="ck">dataset</span>: <span class="cs">nfe</span>
+      <span class="ck">partitions</span>: [<span class="cs">"2026-01-03"</span>]
+      <span class="ck">error_code</span>: <span class="ce">RUNTIME_SHUFFLE_LIMIT_EXCEEDED</span>
+      <span class="ck">fault_family</span>: <span class="cs">runtime_behavioral</span>
+
+  <span class="ck">consistency_policy</span>:
+    <span class="ck">mode</span>: <span class="cs">selective_quarantine</span>
+    <span class="ck">rollback_required</span>: <span class="cp">false</span>
+    <span class="ck">publish_allowed</span>: <span class="cp">false</span></code></pre>
+
+  <h4>Partial Failure Policy</h4>
+
+  <p>The internal sequence of Partial Execution State is deterministic and cannot be reordered:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">partial_execution_flow</span></div>
+  <pre><code><span class="ck">partial_execution_flow</span>:
+  <span class="ck">sequence</span>:
+    - <span class="co">retry_failed_units</span>          <span class="cc"># attempts recovery of failed units before any decision</span>
+    - <span class="co">apply_partial_failure_policy</span> <span class="cc"># determina modo (rollback / quarantine / commit / degraded)</span>
+    - <span class="co">project_state</span>               <span class="cc"># projects into the Context Registry only after policy is applied</span></code></pre>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">partial_failure_policy</span></div>
+  <pre><code><span class="ck">partial_failure_policy</span>:
+  <span class="ck">mode</span>: <span class="cs">selective_quarantine</span>
+  <span class="ck">allowed_partial_commit</span>: <span class="cp">true</span>
+  <span class="ck">publish_on_partial_success</span>: <span class="cp">false</span>
+  <span class="ck">rollback_scope</span>: <span class="cs">failed_consistency_unit_only</span>
+  <span class="ck">promotion_eligible</span>: <span class="cp">false</span></code></pre>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mode</th><th>Behavior</th><th>Quando usar</th></tr></thead>
+      <tbody>
+        <tr><td><code>full_rollback</code></td><td>Any failure invalidates everything</td><td>Atomic pipelines, critical data</td></tr>
+        <tr><td><code>selective_quarantine</code></td><td>Isolates failed units, preserves valid ones</td><td>Partitioned batch processing</td></tr>
+        <tr><td><code>partial_commit_no_publish</code></td><td>Writes partially, does not publish the layer</td><td>Tolerant ingestion pipelines</td></tr>
+        <tr><td><code>degraded_publish</code></td><td>Allows restricted use with degraded status</td><td>Cases with declared relaxed SLA</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Retry Policy</h4>
+  <p>Failures of individual consistency units are eligible for automatic retry within the same execution. Retry operates on the <code>failed_units</code>, not on the entire execution — preserving what has already been successfully committed.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">retry_policy</span></div>
+  <pre><code><span class="ck">retry_policy</span>:
+  <span class="ck">enabled</span>: <span class="cp">true</span>
+  <span class="ck">max_attempts</span>: <span class="cv">3</span>
+  <span class="ck">retry_scope</span>: <span class="cs">failed_consistency_units_only</span>   <span class="cc"># nunca re-executa unidades bem-sucedidas</span>
+  <span class="ck">backoff</span>:
+    <span class="ck">strategy</span>: <span class="cs">exponential</span>
+    <span class="ck">base_seconds</span>: <span class="cv">30</span>
+  <span class="ck">on_max_exceeded</span>:
+    <span class="ck">action</span>: <span class="cs">quarantine_failed_units</span>
+    <span class="ck">state</span>: <span class="cs">quarantined</span></code></pre>
+
+  <h4>Publish Semantics</h4>
+  <p>The <code>publish_allowed</code> flag has precise semantics. "Publishing" is not synonymous with "writing" — it means making the dataset available for downstream consumption as trusted data.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">publish_semantics</span></div>
+  <pre><code><span class="ck">publish_semantics</span>:
+  <span class="ck">definition</span>: <span class="cs">dataset_visible_and_trusted_for_downstream_consumption</span>
+
+  <span class="ck">states</span>:
+    - <span class="co">committed_not_published</span>   <span class="cc"># data written, not available downstream</span>
+    - <span class="co">published</span>                 <span class="cc"># data available and trusted</span>
+    - <span class="co">degraded</span>                  <span class="cc"># available with declared restrictions (degraded_publish)</span>
+
+  <span class="ck">write_vs_publish</span>:
+    <span class="ck">write</span>: <span class="cs">data written to storage</span>
+    <span class="ck">publish</span>: <span class="cs">data declared trustworthy for consumption</span>
+    <span class="ck">distinction</span>: <span class="cs">it is possible to have write without publish — never publish without write</span></code></pre>
+
+  <h4>Panic Rollback — Environment Change During Execution</h4>
+  <p>Partial Execution State handles failure <em>of the execution</em>. There is a distinct case: a change in the <em>external environment</em> during execution — a cluster losing nodes, IAM permission revoked, storage quota exceeded. These events are not execution errors — they are invalidations of the context in which execution was authorized. They require their own protocol.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">panic_rollback</span></div>
+  <pre><code><span class="ck">panic_rollback</span>:
+  <span class="ck">triggers</span>:
+    - <span class="cs">external_permission_revoked</span>      <span class="cc"># IAM, ACL, credencial expirada em runtime</span>
+    - <span class="cs">compute_resource_unavailable</span>     <span class="cc"># cluster loses nodes beyond the threshold</span>
+    - <span class="cs">storage_quota_exceeded</span>           <span class="cc"># storage unavailable in the middle of the write</span>
+    - <span class="cs">policy_bundle_changed_mid_exec</span>   <span class="cc"># policy changed while the job was running</span>
+
+  <span class="ck">action</span>: <span class="cs">immediate_interrupt_and_isolate</span>
+  <span class="ck">scope</span>: <span class="cs">all_in_flight_consistency_units</span>
+
+  <span class="ck">post_panic</span>:
+    <span class="ck">state</span>: <span class="cs">quarantined</span>
+    <span class="ck">projection_allowed</span>: <span class="cp">false</span>          <span class="cc"># Context Registry is not updated</span>
+    <span class="ck">audit_event</span>: <span class="cs">PANIC_ROLLBACK_TRIGGERED</span>
+    <span class="ck">reason_required</span>: <span class="cp">true</span>
+
+  <span class="ck">distinction_from_partial_execution_state</span>:
+    <span class="cs">"Partial Execution State: execution failed for an internal reason"</span>
+    <span class="cs">"Panic Rollback: the external environment invalidated the premises of the execution"</span></code></pre>
+
+  <div class="callout callout-red">
+    <div class="callout-label">Critical Distinction</div>
+    Panic Rollback does not project state into the Context Registry. The environment that changed externally makes the generated partial state unreliable — projecting it would mean recording as fact the result of an execution whose premises were invalidated midstream.
+  </div>
+</section>
+
+<section id="context">
+  <h2><span class="sec-num">5.9</span> Context Registry</h2>
+  <p>The Context Registry is the cognitive infrastructure of the system. It is not an execution log — it is a <strong>living model of the state of the environment</strong>. It represents not only "what was done" but also "what state what was done is now in".</p>
+
+  <p>It is consulted by the Intent Normalizer before each new intent, and updated by the State Projection Protocol after each execution.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">context_registry</span></div>
+  <pre><code><span class="ck">context_registry</span>:
+  <span class="ck">environment_state</span>:
+    <span class="ck">datasets</span>:
+      - <span class="ck">name</span>: <span class="cs">silver_documentos</span>
+        <span class="ck">state</span>: <span class="cs">partially_committed</span>
+        <span class="ck">last_successful_partition</span>: <span class="cs">"2026-01-02"</span>
+        <span class="ck">pending_partitions</span>: [<span class="cs">"2026-01-03"</span>]
+        <span class="ck">publish_allowed</span>: <span class="cp">false</span>
+        <span class="ck">quarantined_units</span>: [<span class="cs">"2026-01-03"</span>]
+
+      - <span class="ck">name</span>: <span class="cs">clientes_anon</span>
+        <span class="ck">state</span>: <span class="cs">committed</span>
+        <span class="ck">publish_allowed</span>: <span class="cp">true</span>
+
+  <span class="ck">execution_history</span>:
+    - <span class="ck">intent_id</span>: <span class="cs">fiscal_reconciliation_001</span>
+      <span class="ck">outcome</span>: <span class="cs">partially_committed</span>
+      <span class="ck">consistency_unit</span>: <span class="cs">partition</span>
+      <span class="ck">timestamp</span>: <span class="cs">"2026-03-22T14:30:00Z"</span>
+      <span class="ck">policy_bundle_version</span>: <span class="cs">"v4.2"</span></code></pre>
+
+  <div class="callout callout-indigo">
+    <div class="callout-label">Critical Protocol</div>
+    A Context Registry with environment_state is useless if the Intent Normalizer does not consult it. Without that integration, the system proposes plans over false premises about the state of the world — violating Invariant 3.
+  </div>
+
+  <h4>Registry Versioning</h4>
+  <p>The Context Registry requires explicit versioning. Without it, there is no temporal consistency — and the reproducibility guaranteed by the <code>execution_context</code> in the Signature becomes illusory if the state of the environment at execution time cannot be recovered.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">context_registry.versioning</span></div>
+  <pre><code><span class="ck">context_registry</span>:
+  <span class="ck">versioning</span>:
+    <span class="ck">model</span>: <span class="cs">snapshot</span>
+    <span class="ck">version_id</span>: <span class="cs">uuid</span>                 <span class="cc"># generated at each atomic write</span>
+    <span class="ck">timestamp</span>: <span class="cs">iso8601</span>
+
+  <span class="ck">read_mode</span>:
+    <span class="ck">type</span>: <span class="cs">snapshot_consistent</span>        <span class="cc"># read always from a stable snapshot</span>
+
+  <span class="ck">write_mode</span>:
+    <span class="ck">type</span>: <span class="cs">atomic_commit</span>              <span class="cc"># atomic write through State Projection</span></code></pre>
+
+  <h4>Pre-execution Revalidation (TOCTOU)</h4>
+  <p>There is a window between the query to the Context Registry by the Intent Normalizer (step 2) and the actual execution (step 9). During that interval, another execution may project new state onto the same dataset. Without revalidation, the system executes on a stale premise — silently violating Invariant 3.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">pre_execution_revalidation</span></div>
+  <pre><code><span class="ck">pre_execution_revalidation</span>:
+  <span class="ck">trigger</span>: <span class="cs">immediately_before_execution</span>   <span class="cc"># after the lock is acquired, before the Sandbox</span>
+  <span class="ck">checks</span>:
+    - <span class="cs">context_registry.version_id</span>          <span class="cc"># is the consulted snapshot still the latest_committed?</span>
+    - <span class="cs">policy_bundle_version</span>                 <span class="cc"># has policy not changed since the Signature?</span>
+    - <span class="cs">catalog_snapshot_version</span>              <span class="cc"># has the catalog not changed since the Signature?</span>
+  <span class="ck">on_mismatch</span>:
+    <span class="ck">action</span>: <span class="cs">replan_or_abort</span>
+    <span class="ck">reason</span>: <span class="cs">stale_environment_state</span>
+    <span class="ck">counts_as_replan_attempt</span>: <span class="cp">true</span>         <span class="cc"># counts toward the Policy Engine max_replan_attempts</span></code></pre>
+
+  <h4>TTL and Obsolete State Policy</h4>
+  <p>The Context Registry may accumulate obsolete state indefinitely. A dataset marked as <code>partially_committed</code> for weeks, with no new execution over it, continues to block publication without ever being resolved — silently poisoning future intents. An explicit expiration and stale-state transition policy is required.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">context_registry.ttl_policy</span></div>
+  <pre><code><span class="ck">ttl_policy</span>:
+  <span class="ck">partially_committed</span>:
+    <span class="ck">ttl_days</span>: <span class="cv">7</span>                          <span class="cc"># after 7 days without resolution</span>
+    <span class="ck">on_expiry</span>:
+      <span class="ck">action</span>: <span class="cs">transition_to_stale</span>
+      <span class="ck">notify</span>: <span class="cp">true</span>                       <span class="cc"># gera evento no Audit Trail</span>
+
+  <span class="ck">quarantined</span>:
+    <span class="ck">ttl_days</span>: <span class="cv">30</span>                         <span class="cc"># long quarantine — requires manual review</span>
+    <span class="ck">on_expiry</span>:
+      <span class="ck">action</span>: <span class="cs">escalate_to_manual_review</span>
+      <span class="ck">block_dependent_intents</span>: <span class="cp">true</span>
+
+  <span class="ck">stale</span>:
+    <span class="ck">definition</span>: <span class="cs">state not updated beyond the TTL without declared resolution</span>
+    <span class="ck">behavior</span>:
+      <span class="ck">new_intent_on_stale_dataset</span>: <span class="cs">hard_confirmation_required</span>
+      <span class="ck">publish_blocked</span>: <span class="cp">true</span>
+      <span class="ck">audit_event</span>: <span class="cs">CONTEXT_STATE_STALE</span></code></pre>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Why TTL is architectural, not operational</div>
+    Without TTL, the Context Registry is not a model of the current state of the world — it is an accumulation of past states that never expire. Over time, every new intent would operate over an environment increasingly contaminated by resolved states that the system still treats as active. TTL is the hygiene layer of the Context Registry.
+  </div>
+</section>
+
+<section id="projection">
+  <h2><span class="sec-num">5.10</span> State Projection Protocol</h2>
+  <p>The bridge between execution and context. It guarantees that the result of each execution becomes system knowledge before any new intent is processed.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">state_projection</span></div>
+  <pre><code><span class="ck">state_projection</span>:
+  <span class="ck">trigger</span>: <span class="cs">post_runtime_validation</span>      <span class="cc"># occurs after validation, before the next intent</span>
+
+  <span class="ck">inputs</span>:
+    - <span class="cs">partial_execution_state</span>
+    - <span class="cs">execution_metadata</span>
+
+  <span class="ck">scope</span>:
+    - <span class="cs">dataset_state</span>
+    - <span class="cs">partition_availability</span>
+    - <span class="cs">publish_allowed</span>
+    - <span class="cs">quarantined_units</span>
+    - <span class="cs">pending_partitions</span>
+
+  <span class="ck">rules</span>:
+    - <span class="cp">if</span> <span class="cs">overall_state == "partially_committed"</span>:
+        <span class="cs">dataset.state = "partially_committed"</span>
+        <span class="cs">publish_allowed = false</span>
+    - <span class="cp">if</span> <span class="cs">failed_units exist</span>:
+        <span class="cs">dataset.pending_units = failed_units</span>
+    - <span class="cp">if</span> <span class="cs">policy.mode == "selective_quarantine"</span>:
+        <span class="cs">dataset.quarantined_units = failed_units</span>
+
+  <span class="ck">atomicity</span>: <span class="cp">required</span>
+
+  <span class="ck">on_projection_failure</span>:
+    <span class="ck">action</span>: <span class="cs">block_next_intent</span>
+    <span class="ck">reason</span>: <span class="cs">environment_state_uncertain</span></code></pre>
+
+  <h4>Mandatory Properties</h4>
+  <div class="three-col">
+    <div class="info-card">
+      <div class="info-card-label">Deterministic</div>
+      <div class="info-card-value">The same input always produces the same projected state</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Idempotent</div>
+      <div class="info-card-value">Re-execution does not corrupt the state of the environment</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Atomic</div>
+      <div class="info-card-value">Partial projection is treated as projection failure</div>
+    </div>
+  </div>
+</section>
+
+<section id="indices">
+  <h2><span class="sec-num">5.11</span> Evaluation Indices</h2>
+  <p>Three distinct indices capture different dimensions of execution quality. Each is independent and measurable.</p>
+
+  <div class="formula-block">
+    <span class="formula-name">IFo — Operational Fluidity Index</span>
+    <span class="formula-eq">IFo = (1 − normalized_latency) × (1 − normalized_cost) × execution_stability</span>
+    <ul class="formula-desc">
+      <li>normalized_latency ∈ [0,1] — compared to the historical baseline by workload type</li>
+      <li>normalized_cost ∈ [0,1] — DBUs, scanned GB, consumed shuffle</li>
+      <li>execution_stability ∈ [0,1] — success rate, retries, absence of critical failures</li>
+    </ul>
+  </div>
+
+  <div class="formula-block">
+    <span class="formula-name">IFs — Semantic Fidelity Index</span>
+    <span class="formula-eq">IFs = output_contract_adherence × semantic_drift_absence × domain_invariant_preservation</span>
+    <ul class="formula-desc">
+      <li>output_contract_adherence — delivered schema versus expected schema, types, required columns</li>
+      <li>semantic_drift_absence — expected cardinality, consistent distribution</li>
+      <li>domain_invariant_preservation — key uniqueness, business rules preserved</li>
+    </ul>
+  </div>
+
+  <div class="formula-block">
+    <span class="formula-name">IFg — Governance Index</span>
+    <span class="formula-eq">IFg = policy_compliance × absence_of_pii_exposure × layer_adherence</span>
+    <ul class="formula-desc">
+      <li>policy_compliance — no active policy violation detected post-execution</li>
+      <li>absence_of_pii_exposure — PII handled according to rule throughout the output</li>
+      <li>layer_adherence — writes respect Bronze/Silver/Gold as declared</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">IFg Is Binary by Design</div>
+    IFg = 1 is the only acceptable value for an approved execution. Any value below 1 indicates a governance-invariant violation — something that should not be possible if the Policy Engine worked correctly. If IFg &lt; 1 post-execution, the event should trigger a <strong>Policy Engine review</strong>, not merely a promotion block. IFg &lt; 1 is a sign of systemic failure, not of a bad execution.
+  </div>
+
+  <h4>Promotion Criterion</h4>
+  <div class="callout callout-green">
+    <div class="callout-label">Promotion Gate</div>
+    Promote &nbsp;⟸&nbsp; IFo ≥ T1 &nbsp;AND&nbsp; IFs ≥ T2 &nbsp;AND&nbsp; IFg = 1
+  </div>
+
+  <h4>IDI — Intent Drift Index</h4>
+  <p>Fourth lifecycle signal, complementary to the three execution indices. IDI detects when the domain has changed and the skill has gone stale before IFs detects degradation in the result. It measures how often executions of the same hash need to be replanned:</p>
+
+  <div class="formula-block">
+    <span class="formula-name">IDI — Intent Drift Index</span>
+    <span class="formula-eq">IDI = 1 − (replanned_executions / total_executions_same_hash) — last 30 days</span>
+    <ul class="formula-desc">
+      <li>IDI close to 1.0 → stable intent, domain consistent with the catalog</li>
+      <li>IDI below 0.75 → drift detected → skill goes directly to the watchlist</li>
+      <li>IDI below 0.50 → severe drift → immediate demotion with no observation window</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Why IDI Is Necessary Beyond IFs</div>
+    IFs detects when the <em>result</em> has diverged from the contract. IDI detects when the <em>intent</em> is diverging from the domain before any execution confirms the problem. A falling IDI is an early warning: the catalog changed, a new tax law came into effect, the domain was restructured. Acting on IDI means acting before failure, not after it.
+  </div>
+
+  <h4>Configurable Evaluation Window</h4>
+  <p>The promotion evaluation window is not fixed. High-volatility domains such as tax and regulatory need shorter windows. Stable domains such as master data and registration can use longer windows:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">evaluation_window.by_domain</span></div>
+  <pre><code><span class="ck">evaluation_window</span>:
+  <span class="ck">default</span>: <span class="cs">last_7_days</span>
+  <span class="ck">by_domain</span>:
+    <span class="ck">fiscal</span>: <span class="cs">last_3_days</span>           <span class="cc"># high regulatory volatility</span>
+    <span class="ck">master_data</span>: <span class="cs">last_30_days</span>    <span class="cc"># stable domain</span>
+    <span class="ck">operational</span>: <span class="cs">last_7_days</span>     <span class="cc"># default</span></code></pre>
+</section>
+
+<section id="lifecycle">
+  <h2><span class="sec-num">5.12</span> Skill Lifecycle Management</h2>
+  <p>A system that only promotes skills eventually creates a new graveyard of artifacts. Without a demotion cycle, CFA reproduces the static-catalog problem with architectural pedigree.</p>
+
+  <h4>States</h4>
+  <div class="state-flow">
+    <span class="state-pill sp-jit">jit_candidate</span>
+    <span class="state-arrow">→</span>
+    <span class="state-pill sp-active">persisted_active</span>
+    <span class="state-arrow">→</span>
+    <span class="state-pill sp-watch">persisted_watchlist</span>
+    <span class="state-arrow">→</span>
+    <span class="state-pill sp-dep">deprecated</span>
+    <span class="state-arrow">→</span>
+    <span class="state-pill sp-ret">retired</span>
+  </div>
+  <p style="margin-top: 8px; font-size: 12.5px; color: var(--text3)">The transition <code>persisted_active → demoted</code> may occur directly, bypassing the watchlist, in the event of a critical contract or governance violation.</p>
+
+  <h4>Promotion Criterion</h4>
+  <p>Promotion requires evidence accumulated within a time window. A single successful execution is not enough for industrialization:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">promotion_policy</span></div>
+  <pre><code><span class="ck">promotion_policy</span>:
+  <span class="ck">min_executions</span>: <span class="cv">3</span>                     <span class="cc"># minimum number of successful executions</span>
+  <span class="ck">evaluation_window</span>: <span class="cs">last_7_days</span>        <span class="cc"># within this window</span>
+  <span class="ck">thresholds</span>:
+    <span class="ck">IFo</span>: <span class="cv">0.75</span>
+    <span class="ck">IFs</span>: <span class="cv">0.90</span>
+    <span class="ck">IFg</span>: <span class="cv">1.0</span>                             <span class="cc"># binary — no exception</span>
+  <span class="ck">gate</span>: <span class="cs">IFo >= T1 AND IFs >= T2 AND IFg = 1 AND executions >= min_executions</span>
+  <span class="ck">promotion_unit</span>:
+    <span class="ck">type</span>: <span class="cs">intent_signature_hash</span>          <span class="cc"># hash of the State Signature — avoids promoting lookalikes</span>
+    <span class="cc"># two intents with different signatures = different skills, even if semantically close</span></code></pre>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Trigger</th><th>Description</th><th>Resulting State</th></tr></thead>
+      <tbody>
+        <tr><td>Schema drift</td><td>Output contract diverges from the declared contract</td><td>watchlist → deprecated</td></tr>
+        <tr><td>Policy change</td><td>The current policy invalidates the skill</td><td>active → demoted</td></tr>
+        <tr><td>Degraded IFs</td><td>Recurring drop below T2</td><td>active → watchlist</td></tr>
+        <tr><td>High cost</td><td>Consistently low IFo</td><td>active → watchlist</td></tr>
+        <tr><td>Low reuse</td><td>Skill not used for N periods</td><td>watchlist → deprecated</td></tr>
+        <tr><td>Catalog incompatibility</td><td>Dataset or domain removed from the catalog</td><td>active → retired</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Skill Generation Metadata</h4>
+  <p>Every promoted skill must carry provenance metadata. Without it, it is impossible to identify which skills were industrialized under a system version with a promotion bug, making the "Synthetic Legacy" untraceable and unrecoverable at scale.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">skill_generation_metadata</span></div>
+  <pre><code><span class="ck">skill_generation_metadata</span>:
+  <span class="ck">promoted_at</span>: <span class="cs">iso8601</span>
+  <span class="ck">promoted_by_system_version</span>: <span class="cs">"cfa_v2.1"</span>    <span class="cc"># version of CFA that executed the promotion</span>
+  <span class="ck">policy_bundle_at_promotion</span>: <span class="cs">"v4.2"</span>        <span class="cc"># policy active at the time</span>
+  <span class="ck">catalog_snapshot_at_promotion</span>: <span class="cs">"catalog_2026_03_22"</span>
+  <span class="ck">promotion_scores</span>:
+    <span class="ck">IFo</span>: <span class="cv">0.88</span>
+    <span class="ck">IFs</span>: <span class="cv">0.94</span>
+    <span class="ck">IFg</span>: <span class="cv">1.0</span>
+  <span class="ck">execution_count_at_promotion</span>: <span class="cv">5</span>
+  <span class="ck">evaluation_window</span>: <span class="cs">last_7_days</span></code></pre>
+
+  <div class="callout callout-indigo">
+    <div class="callout-label">Why Generation Metadata Is Architectural</div>
+    If the promotion logic contained a bug in an earlier system version, generation metadata makes it possible to identify and demote in bulk all skills promoted under that version without having to analyze each skill individually. Without it, the system industrializes error at scale with no selective recovery mechanism.
+  </div>
+</section>
+
+<section id="faults">
+  <h2><span class="sec-num">5.13</span> Fault Model</h2>
+  <p>Errors in CFA are not exceptions. They are governed events. Each family has a detection point and a defined owner. Mixing families without making the stage explicit creates ambiguity about who detects, when it is detected, and which terminal state is possible.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Family</th><th>Detected In</th><th>Owner</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr class="fault-row-semantic">
+          <td><strong>Semantic Faults</strong><br><small style="color:var(--text3)">governance, finops, contract</small></td>
+          <td>Policy Engine</td>
+          <td>Governance / FinOps layer</td>
+          <td>replan or block before execution</td>
+        </tr>
+        <tr class="fault-row-static">
+          <td><strong>Static Safety Faults</strong><br><small style="color:var(--text3)">collect(), forbidden imports, raw PII</small></td>
+          <td>Static Validation</td>
+          <td>Code analysis layer</td>
+          <td>immediate block, no execution</td>
+        </tr>
+        <tr class="fault-row-runtime">
+          <td><strong>Runtime Behavioral Faults</strong><br><small style="color:var(--text3)">cardinality drift, excessive shuffle, schema divergence</small></td>
+          <td>Runtime Validation</td>
+          <td>Sandbox / Observability</td>
+          <td>quarantine, rollback, or partial state</td>
+        </tr>
+        <tr>
+          <td style="border-left:3px solid var(--cyan)"><strong>Environmental Faults</strong><br><small style="color:var(--text3)">revoked IAM, cluster loss, storage quota, mid-execution policy change</small></td>
+          <td>Sandbox Monitor (external runtime)</td>
+          <td>Infrastructure layer</td>
+          <td>Panic Rollback — quarantine with no projection</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Structure of a Fault Event</h4>
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">error_signature.example</span></div>
+  <pre><code><span class="ck">error_signature</span>:
+  <span class="ck">code</span>: <span class="ce">FINOPS_UNBOUNDED_SCAN</span>
+  <span class="ck">family</span>: <span class="cs">semantic_faults</span>
+  <span class="ck">severity</span>: <span class="cs">high</span>
+  <span class="ck">stage</span>: <span class="cs">policy_engine</span>
+  <span class="ck">detected_before_execution</span>: <span class="cp">true</span>
+  <span class="ck">mandatory_action</span>: <span class="cs">replan_or_block</span>
+  <span class="ck">remediation</span>:
+    - <span class="cs">"Apply a temporal filter on processing_date"</span></code></pre>
+</section>
+
+<section id="decision">
+  <h2><span class="sec-num">5.14</span> Decision Engine</h2>
+  <p>Consolidates the result of all validations and produces the final state of the intent. When components diverge — the Policy Engine approved, Runtime detected drift, Partial Policy allowed commit — the Decision Engine applies the precedence rule to determine who has authority.</p>
+
+  <h4>Decision Precedence</h4>
+  <p>Invariants and components have different roles in the decision. Invariants are not participants. They are the boundary of the field. If an invariant is violated, the result is determined before any other evaluation.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">decision_precedence</span></div>
+  <pre><code><span class="ck">decision_precedence</span>:
+  <span class="ck">veto_absolute</span>:
+    - <span class="co">invariants</span>              <span class="cc"># a violation cancels everything; no vote is possible</span>
+                               <span class="cc"># they are not just another participant; they are the edge of the field</span>
+  <span class="ck">ordered_authority</span>:
+    - <span class="cs">policy_engine</span>           <span class="cc"># 1st: decides pre-execution (approve / replan / block)</span>
+    - <span class="cs">runtime_validation</span>      <span class="cc"># 2nd: decides over the real result (may escalate severity)</span>
+    - <span class="cs">partial_failure_policy</span>  <span class="cc"># 3rd: decides commit granularity</span></code></pre>
+
+  <div class="callout callout-indigo">
+    <div class="callout-label">Example of a Resolved Conflict</div>
+    The Policy Engine approved. Runtime detected mild drift within the threshold. Partial Policy allowed selective commit. Result: <code>approved_with_warnings</code>. Runtime escalated from info to warning, Partial Policy applied selective commit, and no invariant was violated.
+  </div>
+
+  <h4>Conflict Resolution Between Authorities</h4>
+  <p>When <code>policy_engine</code>, <code>runtime_validation</code>, and <code>partial_failure_policy</code> produce divergent outcomes, the resolution strategy is <code>strictest_outcome</code>: the most restrictive result among the active authorities prevails:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">decision_engine.conflict_resolution</span></div>
+  <pre><code><span class="ck">decision_engine</span>:
+  <span class="ck">conflict_resolution</span>:
+    <span class="ck">strategy</span>: <span class="cs">strictest_outcome</span>
+    <span class="cc"># if policy_engine = approved and runtime = quarantine → quarantine</span>
+    <span class="cc"># if policy_engine = replanned and partial = partially_committed → replanned</span>
+    <span class="cc"># severity ordering: blocked > quarantined > rolled_back > partially_committed</span>
+    <span class="cc">#                   > approved_with_warnings > approved</span></code></pre>
+
+  <h4>Possible States</h4>
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">decision_states</span></div>
+  <pre><code><span class="ck">decision_state</span>:
+  - <span class="co">approved</span>                  <span class="cc"># complete, validated, publishable execution</span>
+  - <span class="cs">approved_with_warnings</span>    <span class="cc"># complete execution, non-blocking alerts</span>
+  - <span class="cs">replanned</span>                 <span class="cc"># Policy Engine required changes; new cycle</span>
+  - <span class="cs">blocked</span>                   <span class="cc"># unrecoverable pre-execution violation</span>
+  - <span class="cs">partially_committed</span>       <span class="cc"># partial result; Partial Failure Policy applied</span>
+  - <span class="cs">quarantined</span>              <span class="cc"># isolated units; investigation required</span>
+  - <span class="cs">rolled_back</span>              <span class="cc"># state reverted due to critical failure</span>
+  - <span class="cs">promotion_candidate</span>       <span class="cc"># IFo+IFs+IFg above the thresholds</span></code></pre>
+</section>
+
+<section id="audit">
+  <h2><span class="sec-num">5.15</span> Audit Trail</h2>
+  <p>Immutable record of all decision events. It is not conventional logging. These are typed events, correlated by <code>intent_id</code> and versioned by <code>policy_bundle</code>. It serves two consumers with distinct needs that become incompatible if not addressed explicitly.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">audit_trail.example</span></div>
+  <pre><code><span class="ck">audit_trail</span>:
+  <span class="ck">intent_id</span>: <span class="cs">fiscal_reconciliation_001</span>
+  <span class="ck">correlation_id</span>: <span class="cs">session_4f9a2c</span>
+  <span class="ck">policy_bundle_version</span>: <span class="cs">v4.2</span>
+
+  <span class="ck">events</span>:
+    - <span class="ck">stage</span>: <span class="cs">intent_normalizer</span>
+      <span class="ck">event_type</span>: <span class="cs">semantic_resolution</span>
+      <span class="ck">outcome</span>: <span class="cs">resolved</span>
+      <span class="ck">confidence</span>: <span class="cv">0.81</span>
+      <span class="ck">confirmation_mode</span>: <span class="cs">hard_required</span>
+      <span class="ck">environment_state_consulted</span>: <span class="cp">true</span>
+
+    - <span class="ck">stage</span>: <span class="cs">policy_engine</span>
+      <span class="ck">event_type</span>: <span class="cs">policy_replan</span>
+      <span class="ck">outcome</span>: <span class="cs">replanned</span>
+      <span class="ck">faults</span>: [<span class="ce">GOVERNANCE_RAW_PII_JOIN</span>, <span class="ce">FINOPS_MISSING_TEMPORAL_PREDICATE</span>]
+
+    - <span class="ck">stage</span>: <span class="cs">static_validation</span>
+      <span class="ck">event_type</span>: <span class="cs">code_analysis</span>
+      <span class="ck">outcome</span>: <span class="cs">passed</span>
+
+    - <span class="ck">stage</span>: <span class="cs">execution</span>
+      <span class="ck">event_type</span>: <span class="cs">partial_commit</span>
+      <span class="ck">outcome</span>: <span class="cs">partially_committed</span>
+      <span class="ck">consistency_unit</span>: <span class="cs">partition</span>
+      <span class="ck">successful</span>: [<span class="cs">"2026-01-01"</span>, <span class="cs">"2026-01-02"</span>]
+      <span class="ck">failed</span>: [<span class="cs">"2026-01-03"</span>]
+
+    - <span class="ck">stage</span>: <span class="cs">state_projection</span>
+      <span class="ck">event_type</span>: <span class="cs">environment_update</span>
+      <span class="ck">outcome</span>: <span class="cs">projected</span>
+
+    - <span class="ck">stage</span>: <span class="cs">promotion_engine</span>
+      <span class="ck">event_type</span>: <span class="cs">promotion_evaluation</span>
+      <span class="ck">outcome</span>: <span class="cs">not_eligible</span>
+      <span class="ck">reason</span>: <span class="cs">partial_execution</span></code></pre>
+
+  <h4>Consumption Modes</h4>
+  <div class="two-col">
+    <div class="info-card">
+      <div class="info-card-label">Operational — Engineering</div>
+      <div class="info-card-value">Format: structured JSON<br>Use: debugging, performance tuning, failure analysis, re-execution of failed partitions</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Regulatory — Audit</div>
+      <div class="info-card-value">Format: normalized version + cryptographic signature<br>Use: compliance, decision traceability, governance evidence</div>
+    </div>
+  </div>
+
+  <h4>Properties of the Record</h4>
+  <p>Immutable after write. Causally ordered by <code>intent_id</code>, not merely chronologically. Correlated across subintents. Versioned by the <code>policy_bundle</code> active at execution time, enabling historical replay with the original policy.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">audit_trail.guarantees</span></div>
+  <pre><code><span class="ck">audit_trail</span>:
+  <span class="ck">immutability</span>: <span class="co">append_only</span>              <span class="cc"># events are only appended, never modified or removed</span>
+  <span class="ck">ordering</span>: <span class="cs">causal_order</span>              <span class="cc"># not just timestamp order; causal order of events</span>
+  <span class="ck">guarantees</span>:
+    - <span class="cs">no_event_reordering</span>             <span class="cc"># event A that caused B always appears before B</span>
+    - <span class="cs">immutable_after_write</span>
+    - <span class="cs">complete_per_intent</span>             <span class="cc"># every intent_id has both start and end recorded</span>
+
+  <span class="ck">decision_state_enum</span>:               <span class="cc"># states are enumerated; no ad hoc states</span>
+    - <span class="co">approved</span>
+    - <span class="cs">approved_with_warnings</span>
+    - <span class="cs">replanned</span>
+    - <span class="cs">blocked</span>
+    - <span class="cs">partially_committed</span>
+    - <span class="cs">quarantined</span>
+    - <span class="cs">rolled_back</span>
+    - <span class="cs">promotion_candidate</span></code></pre>
+</section>
+
+<!-- ─── 6. INVARIANTES ─── -->
+<section id="invariants">
+  <div class="section-eyebrow">Section 06</div>
+  <h2><span class="sec-num">6.</span> System Invariants</h2>
+
+  <p>Invariants are the properties the system must <strong>always</strong> preserve. They differ from benefits: they do not describe what the system does well, but what it <em>guarantees</em>. An invariant violation is a system failure, not a user failure.</p>
+
+  <div class="invariant">
+    <div class="inv-num">I1</div>
+    <div class="inv-body">
+      <div class="inv-title">PII PROTECTION</div>
+      <p class="inv-desc">No data classified as PII is published without explicit treatment (hashing or confirmed removal). This applies to all outputs, intermediate and final.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I2</div>
+    <div class="inv-body">
+      <div class="inv-title">GOVERNED WRITING</div>
+      <p class="inv-desc">No Silver or Gold layer receives writes without a merge key or a mutability policy defined and approved by the Policy Engine.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I3</div>
+    <div class="inv-body">
+      <div class="inv-title">STATE AWARENESS</div>
+      <p class="inv-desc">No intent is processed without consulting the <code>environment_state</code> from the Context Registry. The state of the environment is a mandatory input to the Intent Normalizer.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I4</div>
+    <div class="inv-body">
+      <div class="inv-title">MANDATORY PROJECTION</div>
+      <p class="inv-desc">Every <code>partial_execution_state</code> must be projected into the Context Registry before the next intent is processed. If projection fails, the next intent is blocked until the environment is consistent.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I5</div>
+    <div class="inv-body">
+      <div class="inv-title">COMPLETE AUDITABILITY</div>
+      <p class="inv-desc">Every decision generates a structured event in the Audit Trail. Executions without an audit trail are treated as unauthorized executions.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I6</div>
+    <div class="inv-body">
+      <div class="inv-title">SAFE EXECUTION</div>
+      <p class="inv-desc">No approved execution contains forbidden operations. If a forbidden operation is detected at runtime (after Static Validation), execution is immediately interrupted and the generated partial state is quarantined <em>before</em> any projection into the Context Registry.</p>
+      <span class="inv-precedence">Precedence over I4</span>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I7</div>
+    <div class="inv-body">
+      <div class="inv-title">PUBLICATION CONSISTENCY</div>
+      <p class="inv-desc">No dataset in state <code>partially_committed</code> may be published as trusted. The <code>publish_allowed</code> flag is managed by the State Projection Protocol and is only released after complete resolution of the pending units.</p>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <div class="inv-num">I8</div>
+    <div class="inv-body">
+      <div class="inv-title">TOTAL REPRODUCIBILITY</div>
+      <p class="inv-desc">Every execution must be reproducible with exactly the same results from the same inputs: <code>user_intent</code> + <code>context_registry.version_id</code> + <code>policy_bundle_version</code> + <code>catalog_snapshot_version</code>. If the Audit Trail and the Signatures <code>execution_context</code> do not allow exact re-execution, the execution violates I8 and the skill is permanently blocked from promotion.</p>
+      <span class="inv-precedence">Permanently blocks promotion if violated</span>
+    </div>
+  </div>
+
+  <h3>Precedence Between Invariants</h3>
+
+  <div class="precedence-note">
+    <strong>Precedence Rule:</strong> Safety and state-protection invariants (I6, I7) take precedence over continuity invariants (I4). In case of conflict, specifically when an execution with a forbidden operation detected at runtime would generate partial state to be projected, the system must preserve environmental integrity before guaranteeing flow progression. Projection only occurs after confirmed quarantine of the affected units. I8 (Reproducibility) operates independently: its violation does not block future executions, but it permanently blocks promotion. It is a quality guarantee, not a safety guarantee.
+  </div>
+
+  <p>Without this declared precedence rule, an implementer could interpret I4 (mandatory projection) as more important than I6 (immediate interruption), projecting contaminated state into the Context Registry, which is exactly the scenario that destroys system integrity.</p>
+</section>
+
+<!-- ─── 7. FLUXO COMPLETO ─── -->
+<section id="fluxo">
+  <div class="section-eyebrow">Section 07</div>
+  <h2><span class="sec-num">7.</span> End-to-End Flow</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Step</th><th>Component</th><th>Invariant / Guarantee</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Intent received</td><td>—</td><td>—</td></tr>
+        <tr><td>2</td><td>Consult environment_state (versioned snapshot)</td><td>Context Registry</td><td>I3 — latest_committed snapshot</td></tr>
+        <tr><td>3</td><td>Lock check — queue or reject by conflict_resolution</td><td>Concurrency Control</td><td>single_active_intent_per_scope</td></tr>
+        <tr><td>4</td><td>Normalization + semantic resolution</td><td>Intent Normalizer</td><td>—</td></tr>
+        <tr style="background:rgba(129,140,248,0.04)"><td><strong>5</strong></td><td><strong>Semantic escalation (auto / soft / hard / human)</strong></td><td><strong>Confirmation Orchestrator</strong></td><td><strong>fallback: block + notify on timeout</strong></td></tr>
+        <tr><td>6</td><td>Generate State Signature + execution_context</td><td>State Signature</td><td>policy_bundle + catalog versioned</td></tr>
+        <tr><td>7</td><td>Apply policies (max 3 replans)</td><td>Policy Engine</td><td>I1, I2</td></tr>
+        <tr><td>8</td><td>Pre-execution cost estimation</td><td>Pre-cost Estimator</td><td>feedback loop by signature_hash</td></tr>
+        <tr><td>9</td><td>Planning (DAG / Composite + idempotence)</td><td>Execution Planner</td><td>mandatory merge_key</td></tr>
+        <tr><td>10</td><td>Static code validation</td><td>Static Validation</td><td>I6</td></tr>
+        <tr style="background:rgba(61,255,160,0.04)"><td><strong>11</strong></td><td><strong>Acquire Execution Lock (target_scope)</strong></td><td><strong>Concurrency Control</strong></td><td><strong>exclusivity before revalidation</strong></td></tr>
+        <tr style="background:rgba(61,255,160,0.04)"><td><strong>12</strong></td><td><strong>Pre-execution revalidation (TOCTOU)</strong></td><td><strong>Pre-execution Revalidation</strong></td><td><strong>version_id + policy + catalog</strong></td></tr>
+        <tr><td>13</td><td>Execution in the Sandbox</td><td>Execution</td><td>I6, idempotence, Panic Rollback if env changes</td></tr>
+        <tr><td>14</td><td>Runtime behavior validation</td><td>Runtime Validation</td><td>—</td></tr>
+        <tr><td>15</td><td>retry → partial_failure_policy → project_state</td><td>Partial Execution State</td><td>I7, consistency_unit</td></tr>
+        <tr><td>16</td><td>Projection + release lock (atomic, versioned)</td><td>State Projection Protocol</td><td>I4, I6 (precedence)</td></tr>
+        <tr><td>17</td><td>Final decision — strictest_outcome among authorities</td><td>Decision Engine</td><td>decision_state_enum</td></tr>
+        <tr><td>18</td><td>Lifecycle evaluation — IFo + IFs + IFg + IDI by hash</td><td>Promotion / Demotion Engine</td><td>I8 — reproducibility</td></tr>
+        <tr><td>19</td><td>Record in the Audit Trail (append_only, causal order)</td><td>Audit Trail</td><td>I5</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p style="font-size:12.5px; color:var(--text3); margin-top:12px;">Step 5 (Confirmation Orchestrator) is the point where human ambiguity is explicitly addressed before any planning. The lock (step 11) is acquired <em>before</em> revalidation (step 12), closing the residual race condition. IDI in step 18 detects domain drift before IFs detects result degradation.</p>
+</section>
+
+<!-- ─── 8. BENEFITS ─── -->
+<section id="beneficios">
+  <div class="section-eyebrow">Section 08</div>
+  <h2><span class="sec-num">8.</span> Benefits</h2>
+
+  <div class="two-col">
+    <div class="info-card">
+      <div class="info-card-label">Governance</div>
+      <div class="info-card-value">Real enforcement before execution. Explicit PII control. Structured auditability with two consumption modes.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">FinOps</div>
+      <div class="info-card-value">Cost prevention before execution. Blocking of full scans and predicate-less joins. Automatic plan optimization through replanning.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Operational Robustness</div>
+      <div class="info-card-value">Partial-failure tolerance with explicit policy. Consistent state of the environment. No executions that leave invisible traces.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Adaptive Evolution</div>
+      <div class="info-card-value">Selective industrialization based on evidence. Full skill lifecycle: promotion and demotion. No accumulation of obsolete artifacts.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Generalization</div>
+      <div class="info-card-value">Less coupling between intent and implementation. JIT generation eliminates the static catalog. Support for intent composition.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">Explainability</div>
+      <div class="info-card-value">Every decision is traceable. The system explains why it blocked, replanned, or approved. Native regulatory compliance.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── 9. EXTENSION POINTS ─── -->
+<section id="extensions">
+  <div class="section-eyebrow">Section 09</div>
+  <h2><span class="sec-num">9.</span> Extension Points</h2>
+
+  <p>A closed system does not become a standard; it becomes one company's product. For CFA to be adoptable as a framework, it needs declared extension points where specific implementations can inject domain behavior without modifying the core.</p>
+
+  <p>Extension points are interface contracts, not implementations. Each point defines what CFA expects to receive and what it guarantees to return. What happens inside is the responsibility of the implementation.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">extension_points</span></div>
+  <pre><code><span class="ck">extension_points</span>:
+
+  <span class="ck">intent_normalizer</span>:
+    - <span class="co">custom_domain_resolver</span>        <span class="cc"># domain-specific interpretation logic</span>
+    - <span class="co">catalog_enrichment_hook</span>        <span class="cc"># external catalog enrichment before the Signature</span>
+    - <span class="co">confidence_scorer_override</span>     <span class="cc"># custom semantic-confidence model</span>
+
+  <span class="ck">policy_engine</span>:
+    - <span class="co">custom_rule_provider</span>           <span class="cc"># external declarative rules (regulatory, domain)</span>
+    - <span class="co">external_compliance_validator</span>  <span class="cc"># validation against non-AI legacy systems</span>
+
+  <span class="ck">execution_planner</span>:
+    - <span class="co">custom_template_library</span>        <span class="cc"># domain-specific code templates (Spark, SQL, dbt)</span>
+    - <span class="co">pre_cost_estimator_backend</span>     <span class="cc"># cost-estimation backend (AQE, historical)</span>
+
+  <span class="ck">context_registry</span>:
+    - <span class="co">storage_backend</span>                <span class="cc"># Delta, DynamoDB, Redis, etc.</span>
+    - <span class="co">snapshot_provider</span>              <span class="cc"># snapshot_consistent implementation</span>
+
+  <span class="ck">promotion_engine</span>:
+    - <span class="co">custom_promotion_signal</span>        <span class="cc"># external business-value signal</span>
+    - <span class="co">domain_window_provider</span>         <span class="cc"># evaluation_window by domain</span>
+
+  <span class="ck">audit_trail</span>:
+    - <span class="co">storage_backend</span>                <span class="cc"># S3, Kafka, OpenLineage, etc.</span>
+    - <span class="co">regulatory_formatter</span>           <span class="cc"># audit format by jurisdiction</span></code></pre>
+
+  <div class="two-col">
+    <div class="info-card">
+      <div class="info-card-label">CFA Kernel (minimum adoptable set)</div>
+      <div class="info-card-value">Intent Normalizer + State Signature + Policy Engine + Static Validation + Audit Trail. Real governance in two weeks. Extension points active but with default implementations.</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">CFA Full (complete architecture)</div>
+      <div class="info-card-value">All 16 components + customized extension points. Persistent Context Registry, Partial Execution State, Promotion Engine with full lifecycle.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-label">Why Extension Points Transform CFA</div>
+    Without extension points, CFA is an architecture that a company implements from scratch. With extension points, CFA is a framework that a company adopts and extends. These are completely different adoption models. The latter is what allows multiple independent implementations to coexist under the same contract, which is the minimum requirement for any market standard.
+  </div>
+</section>
+
+<!-- ─── 10. EXECUTION SCOPE ─── -->
+<section id="escopo">
+  <div class="section-eyebrow">Section 10</div>
+  <h2><span class="sec-num">10.</span> Execution Scope (v2)</h2>
+
+  <p>CFA v2 was designed and validated for a specific execution model. Declaring it explicitly protects the document against improper extrapolation and defines where the architectural guarantees are valid.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">execution_model</span></div>
+  <pre><code><span class="ck">execution_model</span>:
+  <span class="ck">version</span>: <span class="cs">v2</span>
+  <span class="ck">supported_modes</span>:
+    - <span class="co">batch</span>
+    - <span class="co">micro_batch</span>
+  <span class="ck">concurrent_intent_support</span>: <span class="cp">false</span>         <span class="cc"># one active intent per target scope</span>
+  <span class="ck">streaming_support</span>: <span class="cs">planned_for_v3</span>
+  <span class="ck">consistency_assumption</span>: <span class="cs">single_active_intent_per_target_scope</span></code></pre>
+
+  <h4>Why batch and micro-batch — rather than streaming</h4>
+  <p>Three CFA v2 components implicitly assume discrete execution boundaries, which exist in batch and micro-batch but are problematic in continuous streaming:</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Assumption in v2</th><th>Problem in Streaming</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Partial Execution State</strong></td>
+          <td>Discrete consistency unit (partition, time window)</td>
+          <td>Streaming requires offset, epoch, or checkpoint semantics, not partitions</td>
+        </tr>
+        <tr>
+          <td><strong>State Projection Protocol</strong></td>
+          <td>Post-validation trigger with a clear boundary between execution and projection</td>
+          <td>In asynchronous streaming, the execution → projection linearity can break</td>
+        </tr>
+        <tr>
+          <td><strong>Context Registry</strong></td>
+          <td>Environmental state with enough coherence to guide the next intent</td>
+          <td>Under real concurrency, it requires locking, optimistic versioning, and causal ordering</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Central Operational Hypothesis</div>
+    CFA v2 operates under the hypothesis of <strong>single_active_intent_per_target_scope</strong>: two intents do not write to the same dataset/layer at the same time. This hypothesis is what allows the Context Registry to be consulted and projected consistently without requiring distributed concurrency mechanisms. Violating this hypothesis without the v3 adaptations results in untrustworthy environmental state.
+  </div>
+
+  <h4>Concurrency Control</h4>
+  <p>The declaration <code>concurrent_intent_support: false</code> is not sufficient on its own. It is necessary to define what happens when two intents arrive simultaneously over the same scope. Without that definition, race conditions are possible and Invariant 3 can be silently violated.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">concurrency_control</span></div>
+  <pre><code><span class="ck">concurrency_control</span>:
+  <span class="ck">model</span>: <span class="cs">single_active_intent_per_target_scope</span>
+
+  <span class="ck">scope_definition</span>:
+    - <span class="cs">dataset</span>
+    - <span class="cs">dataset_partition</span>
+
+  <span class="ck">lock</span>:
+    <span class="ck">acquisition</span>: <span class="cs">before_pre_execution_revalidation</span>   <span class="cc"># step 10 in the flow</span>
+    <span class="ck">release</span>: <span class="cs">after_state_projection_confirmed</span>        <span class="cc"># step 15 in the flow</span>
+
+  <span class="ck">conflict_resolution</span>:
+    <span class="ck">on_conflict</span>: <span class="cs">queue</span>              <span class="cc"># queue | reject</span>
+    <span class="cc"># queue: second intent waits for the scope to be released</span>
+    <span class="cc"># reject: second intent receives blocked immediately</span>
+
+  <span class="ck">locking</span>:
+    <span class="ck">type</span>: <span class="cs">optimistic</span>
+    <span class="ck">validation</span>: <span class="cs">pre_execution_revalidation</span></code></pre>
+
+  <p>The <code>queue</code> mode is the recommended default for batch because it avoids losing work. The <code>reject</code> mode is appropriate for scenarios where latency matters more than execution guarantee.</p>
+
+  <h4>Snapshot Selection</h4>
+  <p>The ambiguity over which snapshot the Context Registry serves on each read is resolved by a single rule:</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">context_registry.snapshot_selection</span></div>
+  <pre><code><span class="ck">context_registry</span>:
+  <span class="ck">snapshot_selection</span>:
+    <span class="ck">strategy</span>: <span class="cs">latest_committed_before_intent_resolution</span>
+    <span class="cc"># always the most recent snapshot that has already been atomically committed</span>
+    <span class="cc"># a snapshot in progress (write underway) is never served</span></code></pre>
+
+  <h4>Scope Roadmap</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Version</th><th>Added Scope</th><th>Impacted Components</th></tr></thead>
+      <tbody>
+        <tr><td><strong>v2 (current)</strong></td><td>Batch and micro-batch, sequential intent per scope</td><td>—</td></tr>
+        <tr><td><strong>v3 (planned)</strong></td><td>Continuous streaming, concurrent intents</td><td>Partial Execution State, State Projection, Context Registry</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── 11. LIMITATIONS ─── -->
+<section id="limitacoes">
+  <div class="section-eyebrow">Section 11</div>
+  <h2><span class="sec-num">11.</span> Limitations</h2>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Architectural Honesty</div>
+    CFA solves real problems, but it introduces real complexity. The limitations below are not implementation details; they are structural trade-offs that must be evaluated before adoption.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limitation</th><th>Impact</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Implementation complexity</strong></td><td>High initial cost. Multiple interdependent components.</td><td>Phased implementation (see strategy below)</td></tr>
+        <tr><td><strong>Dependence on a rich catalog</strong></td><td>The Intent Normalizer is only as good as the catalog it consults.</td><td>Invest in a data catalog before CFA</td></tr>
+        <tr><td><strong>Continuous threshold tuning</strong></td><td>T1 and T2 for IFo and IFs require domain calibration.</td><td>Historical baselines + incremental adjustment</td></tr>
+        <tr><td><strong>Policy complexity</strong></td><td>The Policy Engine requires rule maintenance over time.</td><td>Version the policy_bundle in the Audit Trail</td></tr>
+        <tr><td><strong>Additional latency</strong></td><td>The validation pipeline adds pre-execution latency.</td><td>Auto mode for low-risk intents</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Phased Implementation Strategy</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Phase</th><th>Scope</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Phase 1</strong></td><td>Kernel without execution: Intent Normalizer + State Signature + Policy Engine</td><td>Decision system. Evaluates intents; does not execute.</td></tr>
+        <tr><td><strong>Phase 2</strong></td><td>Controlled code generation + Static Validation</td><td>Deterministic execution over an approved plan.</td></tr>
+        <tr><td><strong>Phase 3</strong></td><td>Sandbox + Runtime Validation + Partial Execution State</td><td>Partial-failure tolerance and real metrics.</td></tr>
+        <tr><td><strong>Phase 4</strong></td><td>Context Registry + State Projection + Audit Trail</td><td>Persistent state and complete observability.</td></tr>
+        <tr><td><strong>Phase 5</strong></td><td>Promotion / Demotion Engine + IFo/IFs/IFg</td><td>Adaptive industrialization with lifecycle.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── NON-GOALS ─── -->
+<section id="nongoals">
+  <div class="section-eyebrow">Section 12</div>
+  <h2><span class="sec-num">12.</span> Non-Goals (Negative Scope)</h2>
+
+  <p>A serious technical whitepaper states what the system <strong>does not aim to do</strong>. Non-goals protect against improper extrapolation and define where the system ends, which is as important as defining where it begins.</p>
+
+  <div class="code-header"><span class="code-lang">YAML</span><span class="code-label">non_goals.v2</span></div>
+  <pre><code><span class="ck">non_goals</span>:
+  <span class="cc"># Execution scope</span>
+  - <span class="ce">real_time_stream_processing</span>       <span class="cc"># planned for v3</span>
+  - <span class="ce">distributed_multi_writer_concurrency</span>  <span class="cc"># requires a Context Registry redesign</span>
+  - <span class="ce">sub_second_latency_execution</span>       <span class="cc"># validation overhead is intentional</span>
+
+  <span class="cc"># System responsibility</span>
+  - <span class="ce">data_quality_enforcement</span>           <span class="cc"># CFA governs execution, not the intrinsic quality of data</span>
+  - <span class="ce">schema_inference</span>                   <span class="cc"># schema comes from the catalog; it is not inferred</span>
+  - <span class="ce">business_rule_definition</span>           <span class="cc"># CFA applies rules; it does not define them</span>
+
+  <span class="cc"># Implementation</span>
+  - <span class="ce">storage_engine</span>                     <span class="cc"># engine-agnostic (Spark, Databricks, etc.)</span>
+  - <span class="ce">catalog_implementation</span>             <span class="cc"># depends on an external catalog; does not implement it</span>
+  - <span class="ce">policy_dsl_specification</span>           <span class="cc"># rule contract is defined; DSL is an implementation choice</span></code></pre>
+
+  <div class="callout callout-amber">
+    <div class="callout-label">Why Non-Goals Matter</div>
+    An architect who tries to use CFA v2 for continuous streaming, concurrent multi-writer execution, or sub-second execution will face real problems, not due to implementation limitation, but due to architectural incompatibility. Declaring the non-goals protects both the system and its adopters.
+  </div>
+</section>
+
+<!-- ─── CONCLUSION ─── -->
+<section id="conclusao">
+  <div class="section-eyebrow">Section 13</div>
+  <h2><span class="sec-num">13.</span> Conclusion</h2>
+
+  <p>CFA v2 represents a paradigm shift in the relationship between AI and critical data systems:</p>
+
+  <div class="callout callout-green">
+    <div class="callout-label">From</div>
+    Systems that execute commands: fast, fragile, and unguided.
+  </div>
+
+  <div class="callout callout-indigo">
+    <div class="callout-label">To</div>
+    Systems that understand intents, evaluate the state of the world, constrain themselves to what is permitted, execute with controlled granularity, and then record, learn, and evolve.
+  </div>
+
+  <p>What separates CFA v2 from an elegant concept is the presence of the elements that make real systems operable in production:</p>
+
+  <p><strong>Formalization of what is uncertain</strong>: semantic resolution with confidence scores and confirmation modes treats ambiguity as system data, not as user failure. <strong>Tolerance for what partially fails</strong>: Partial Execution State with consistency_unit transforms partial failure from an unrepresentable event into a governed state with explicit policy. <strong>Memory of the state of the world</strong>: the Context Registry with environment_state closes the loop between what was executed and what may be executed next. <strong>Formal guarantees</strong>: the seven invariants with precedence rules make the system definable, testable, and auditable.</p>
+
+  <div class="definition-box">
+    <p>CFA v2 is a deterministic architecture for governed execution that guarantees semantic consistency, state integrity, and complete auditability through typed intent resolution, explicit concurrency control, pre-execution validation, idempotent execution, versioned state projection, and invariant-based enforcement.</p>
+  </div>
+
+  <p style="color: var(--text3); font-size: 13px; margin-top: 32px; font-family: var(--mono);">
+    This document is the product of a collaboration among AI architects. Each revision incorporated real criticism about executability, not only conceptual elegance. The natural next step is the technical blueprint: Python classes, interfaces, and mapping of each component to implementable code.
+  </p>
+</section>
+
+</main>
+</div>
+
+<script>
+// Active nav on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a[href^="#"]');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
 </body>
 </html>
