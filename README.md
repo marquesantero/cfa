@@ -1,5 +1,8 @@
 # CFA
 
+[![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 **Contextual Flux Architecture** is a governed execution kernel for AI-native systems.
 
 It replaces the traditional `agents + skills/tools` model with an architecture centered on:
