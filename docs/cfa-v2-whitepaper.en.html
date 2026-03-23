@@ -306,15 +306,15 @@
         <div class="doc-eyebrow">CFA v2</div>
         <h1>Contextual Flux Architecture</h1>
         <p class="doc-subtitle">
-          An architectural model for AI-native systems that replaces static agents and skills with governed intent resolution, constrained execution, explicit environment state, and lifecycle evidence.
+          An architectural model for AI-native systems that replaces static agents and skills with governed intent resolution, constrained execution, explicit environment state, and evidence-based lifecycle management.
         </p>
         <div class="badge-row">
           <span class="badge badge-green">Architecture</span>
           <span class="badge badge-indigo">English Edition</span>
-          <span class="badge badge-amber">Public Collaboration Draft</span>
+          <span class="badge badge-amber">Public Review Edition</span>
         </div>
         <div class="lang-links">
-          <a href="./cfa-v2-whitepaper.html">Read the original Portuguese version</a>
+          <a href="./cfa-v2-whitepaper.html">Original Portuguese edition</a>
           <a href="./index.html">Back to docs index</a>
         </div>
       </header>
@@ -322,37 +322,37 @@
       <section id="intro">
         <h2>1. Introduction</h2>
         <p>
-          The <strong>Contextual Flux Architecture (CFA)</strong> is a proposal for building AI systems that can act on real environments without collapsing into prompt routing, fragile tool invocation, or opaque agent behavior. Instead of centering the system around agents and static skills, CFA centers it around <strong>intent as a governed contract</strong>.
+          The <strong>Contextual Flux Architecture (CFA)</strong> is an architectural proposal for AI systems that must operate against real environments without relying on prompt routing, brittle tool invocation, or opaque agent behavior as their primary control model. Rather than centering the system on agents and static skills, CFA centers it on <strong>intent as a governed contract</strong>.
         </p>
         <p>
-          In CFA, natural language is not executed directly. It is first resolved into a typed signature, checked against policy, turned into a constrained execution plan, validated before and after execution, and then projected back into a live model of environment state. The system does not only decide what to do; it also records what state the world is now in, and what can safely happen next.
+          In CFA, natural language is never executed directly. It is first resolved into a typed signature, evaluated against policy, transformed into a constrained execution plan, validated both before and after execution, and finally projected back into a live model of environment state. The system therefore does not merely decide what to do; it also records what state the world is now in, and what classes of action remain admissible.
         </p>
         <div class="note">
-          <strong>Positioning note.</strong> This English edition is intended to make the CFA proposal understandable to international collaborators and reviewers. The original Portuguese HTML remains the canonical full authoring source for the current whitepaper.
+          <strong>Positioning note.</strong> This English edition is intended to make the CFA proposal accessible to international collaborators, reviewers, and potential adopters. The original Portuguese HTML remains the canonical source of the current whitepaper draft.
         </div>
       </section>
 
       <section id="problem">
         <h2>2. Problem Statement</h2>
         <p>
-          Traditional agentic systems usually depend on a thin stack: prompt interpretation, tool selection, execution, and maybe some memory. That is not enough for systems that must be safe, reproducible, auditable, or economically governed.
+          Conventional agentic systems typically rely on a narrow stack: prompt interpretation, tool selection, execution, and, at best, lightweight memory. That stack is insufficient for systems that must be safe, reproducible, auditable, or economically governed.
         </p>
         <div class="grid">
           <div class="card">
             <h4>Silent ambiguity</h4>
-            <p>The model resolves intent incorrectly, but does so with enough confidence that the rest of the stack executes the wrong thing perfectly.</p>
+            <p>The model resolves intent incorrectly, yet with sufficient confidence that the rest of the stack executes the wrong outcome with deterministic precision.</p>
           </div>
           <div class="card">
             <h4>Weak governance</h4>
-            <p>PII, cost, schema, mutability, and write-safety constraints are enforced late or not at all.</p>
+            <p>PII, cost, schema, mutability, and write-safety constraints are enforced too late or are not enforced at all.</p>
           </div>
           <div class="card">
             <h4>No durable world state</h4>
-            <p>Systems often know what they tried to do, but not what state the environment ended up in after partial success, rollback, or quarantine.</p>
+            <p>Systems often know what they attempted, but not what state the environment actually ended up in after partial success, rollback, or quarantine.</p>
           </div>
           <div class="card">
             <h4>Poor reuse discipline</h4>
-            <p>Capabilities are reused because they exist, not because evidence shows they are semantically stable and operationally reliable.</p>
+            <p>Capabilities are reused simply because they exist, rather than because evidence demonstrates semantic stability and operational reliability.</p>
           </div>
         </div>
       </section>
@@ -363,7 +363,7 @@
           CFA proposes that the first-class object in an AI-native execution system should not be an agent or a skill. It should be a <strong>state-changing intention under explicit constraints</strong>.
         </p>
         <p>
-          From that thesis, several design consequences follow:
+          Several design consequences follow directly from this thesis:
         </p>
         <ul>
           <li>Natural language must be resolved into a typed contract before execution.</li>
@@ -391,7 +391,7 @@
   -> audit trail
   -> lifecycle scoring</pre>
         <p>
-          This pipeline gives the system a much stronger shape than agent-plus-tools architectures: every stage has a contract, every stage can emit typed faults, and the downstream system can be reasoned about more rigorously.
+          This pipeline gives the system a materially stronger structure than conventional agent-plus-tools architectures: every stage has an explicit contract, every stage may emit typed faults, and downstream behavior can be reasoned about with significantly greater rigor.
         </p>
       </section>
 
@@ -400,15 +400,15 @@
 
         <h3>5.1 Intent Normalizer and Semantic Resolution</h3>
         <p>
-          The normalizer transforms natural language into a <code>StateSignature</code>. This stage is the highest leverage point in the entire architecture. A wrong signature poisons every downstream stage while still looking deterministic and well-structured.
+          The normalizer transforms natural language into a <code>StateSignature</code>. This stage is the highest-leverage point in the architecture. An incorrect signature contaminates every downstream stage while still appearing internally coherent and structurally well-formed.
         </p>
         <p>
-          The normalizer must consult the <code>ContextRegistry</code> before signing intent. This is not optional metadata. It is a mandatory input to semantic correctness.
+          The normalizer must consult the <code>ContextRegistry</code> before signing intent. This is not optional metadata; it is a mandatory input to semantic correctness.
         </p>
 
         <h3>5.2 Confirmation Orchestrator</h3>
         <p>
-          CFA treats ambiguity as a system property, not a user failure. When semantic risk is high, the confirmation layer inserts escalation between resolution and policy.
+          CFA treats ambiguity as a system property rather than as a user failure. When semantic risk is elevated, the confirmation layer introduces escalation between resolution and policy evaluation.
         </p>
         <table>
           <thead>
@@ -444,12 +444,12 @@
 
         <h3>5.3 State Signature</h3>
         <p>
-          The <code>StateSignature</code> is the formal contract of intent. It captures the target layer, datasets, constraints, and execution context. In architectural terms, it is the object that policy governs and that planning materializes.
+          The <code>StateSignature</code> is the formal contract of intent. It captures the target layer, datasets, constraints, and execution context. Architecturally, it is the object governed by policy and materialized by planning.
         </p>
 
         <h3>5.4 Policy Engine</h3>
         <p>
-          The policy layer evaluates the approved signature before planning and execution. Typical rules concern PII handling, merge semantics, partitioning, type enforcement, and cost ceilings. The output is always one of three actions:
+          The policy layer evaluates the approved signature prior to planning and execution. Typical rules address PII handling, merge semantics, partitioning discipline, type enforcement, and cost ceilings. The output is always one of three actions:
         </p>
         <ul>
           <li><code>approve</code></li>
@@ -459,44 +459,44 @@
 
         <h3>5.5 Execution Planner</h3>
         <p>
-          The planner generates a governed execution DAG. It is intentionally constrained. It does not invent arbitrary execution strategies. It instantiates a bounded set of allowed steps under an approved signature.
+          The planner generates a governed execution DAG. It is intentionally constrained: it does not invent arbitrary strategies, but instead instantiates a bounded set of allowed steps under an approved signature.
         </p>
 
         <h3>5.6 Deterministic Code Generation</h3>
         <p>
-          The code generation stage translates the execution plan into deterministic code. The purpose is not creativity. The purpose is to turn an approved plan into a reproducible artifact that can be validated.
+          The code generation stage translates the execution plan into deterministic code. Its purpose is not creativity, but rather the production of a reproducible artifact that can be validated.
         </p>
 
         <h3>5.7 Static and Runtime Validation</h3>
         <p>
-          CFA separates what can be rejected before execution from what must be inspected after execution. Static validation blocks dangerous patterns in generated artifacts; runtime validation checks behavioral metrics and actual outputs.
+          CFA separates what can be rejected before execution from what must be inspected after execution. Static validation blocks dangerous patterns in generated artifacts, while runtime validation checks behavioral metrics and actual outputs.
         </p>
 
         <h3>5.8 Partial Execution State</h3>
         <p>
-          Partial failure is a modeled state in CFA. If execution partially succeeds, the system must decide what that means. It may quarantine failed units, roll back, commit but not publish, or publish in a degraded state depending on declared policy.
+          Partial failure is a modeled state in CFA. If execution partially succeeds, the system must determine what that outcome means under policy. It may quarantine failed units, roll back, commit without publication, or publish in a degraded state.
         </p>
 
         <h3>5.9 Context Registry</h3>
         <p>
-          The <code>ContextRegistry</code> is the live model of relevant environment state. It is not a plain execution log. It answers questions such as: What target scope is currently quarantined? Which dataset is published? What execution context was visible when an intent was approved?
+          The <code>ContextRegistry</code> is the live model of relevant environment state. It is not a plain execution log. It answers questions such as: Which target scope is currently quarantined? Which dataset is published? Which execution context was visible when a given intent was approved?
         </p>
 
         <h3>5.10 State Projection Protocol</h3>
         <p>
-          After execution, the resulting environment state must be projected back into the registry. Projection updates future decision-making. It is the mechanism that closes the loop between action and future action.
+          After execution, the resulting environment state must be projected back into the registry. Projection updates future decision-making; it is the mechanism that closes the loop between action and subsequent admissible action.
         </p>
 
         <h3>5.11 Audit Trail</h3>
         <p>
-          The audit trail is append-only and hash-chained. It exists so the system can later explain not just what happened, but why a decision was allowed, blocked, replanned, quarantined, or rolled back.
+          The audit trail is append-only and hash-chained. Its function is to allow the system to explain not only what happened, but why a decision was allowed, blocked, replanned, quarantined, or rolled back.
         </p>
       </section>
 
       <section id="invariants">
         <h2>6. System Invariants</h2>
         <p>
-          CFA depends on a small set of architectural invariants. These are not implementation preferences; they are correctness boundaries.
+          CFA depends on a compact set of architectural invariants. These are not implementation preferences; they are correctness boundaries.
         </p>
         <ol>
           <li>No protected write proceeds without explicit governance checks.</li>
@@ -515,12 +515,12 @@
       <section id="execution">
         <h2>7. Execution Semantics</h2>
         <p>
-          A strong architecture needs clear semantics for failure, retries, rollback, and context changes during execution.
+          A robust architecture requires explicit semantics for failure, retries, rollback, and context invalidation during execution.
         </p>
 
         <h3>Partial failure</h3>
         <p>
-          When only part of the execution succeeds, CFA does not reduce the outcome to success or failure. It applies a declared failure policy.
+          When only part of the execution succeeds, CFA does not collapse the result into a binary success/failure outcome. It applies a declared failure policy.
         </p>
         <table>
           <thead>
@@ -551,12 +551,12 @@
 
         <h3>Retry model</h3>
         <p>
-          Retries should target failed consistency units rather than blindly replaying entire plans when possible. This keeps the system closer to governed recovery than brute-force rerun behavior.
+          Retries should target failed consistency units rather than blindly replaying entire plans whenever possible. This keeps the system closer to governed recovery than to brute-force rerun behavior.
         </p>
 
         <h3>Environmental invalidation</h3>
         <p>
-          CFA distinguishes internal execution failure from external context invalidation. If the environment changes in ways that invalidate the conditions under which the execution was approved, the system may need panic-style interruption and rollback semantics.
+          CFA distinguishes internal execution failure from external context invalidation. If the environment changes in ways that invalidate the conditions under which execution was approved, the system may require panic-style interruption and rollback semantics.
         </p>
       </section>
 
@@ -591,7 +591,7 @@
       <section id="implementation">
         <h2>9. Implementation Status</h2>
         <p>
-          The repository associated with this whitepaper already contains a working Python implementation of the CFA kernel and its modular components. That implementation is not the full end-state of the architecture, but it is enough to validate the main design direction.
+          The repository associated with this whitepaper already contains a working Python implementation of the CFA kernel and its modular components. That implementation is not yet the full end-state of the architecture, but it is sufficient to validate the primary design direction.
         </p>
         <ul>
           <li>Typed contracts and fault modeling</li>
@@ -605,14 +605,14 @@
           <li>Lifecycle scoring and promotion logic</li>
         </ul>
         <p>
-          The implementation should currently be understood as a rigorous prototype kernel rather than a final production platform.
+          The implementation should currently be understood as a rigorous prototype kernel rather than as a final production platform.
         </p>
       </section>
 
       <section id="adoption">
         <h2>10. Adoption Strategy</h2>
         <p>
-          CFA does not require all-or-nothing adoption. Teams can adopt it in phases.
+          CFA does not require all-or-nothing adoption. Teams may adopt it in phases.
         </p>
         <table>
           <thead>
@@ -654,7 +654,7 @@
 
       <section id="use-cases">
         <h2>11. Use Cases</h2>
-        <p>CFA is especially relevant for systems where execution has consequences beyond text generation.</p>
+        <p>CFA is especially relevant for systems in which execution has consequences beyond text generation.</p>
         <ul>
           <li>Data pipeline governance</li>
           <li>AI-assisted ETL or transformation planning</li>
@@ -680,7 +680,7 @@
       <section id="roadmap">
         <h2>13. Roadmap</h2>
         <p>
-          The architecture points toward several future directions:
+          The architecture points toward several next-stage directions:
         </p>
         <ul>
           <li>stronger production semantic resolution backends</li>
@@ -695,13 +695,13 @@
       <section id="conclusion">
         <h2>14. Conclusion</h2>
         <p>
-          CFA is an attempt to give AI systems a stronger execution grammar. Rather than assuming that prompts, agents, and tools are enough, it introduces typed intent, policy-governed planning, validation, explicit environment state, structured failure, and lifecycle evidence.
+          CFA is an attempt to give AI systems a stronger execution grammar. Rather than assuming that prompts, agents, and tools are sufficient, it introduces typed intent, policy-governed planning, validation, explicit environment state, structured failure, and lifecycle evidence.
         </p>
         <p>
-          The result is not just safer execution. It is a system that can explain itself, evolve deliberately, and reason about what the world now permits it to do next.
+          The result is not merely safer execution. It is a system that can explain itself, evolve deliberately, and reason about what the world now permits it to do next.
         </p>
         <div class="note">
-          <strong>Repository note.</strong> For implementation details, examples, and the current Python kernel, return to the repository README and the docs index. For the original long-form whitepaper source, see the Portuguese HTML version linked above.
+          <strong>Repository note.</strong> For implementation details, examples, and the current Python kernel, return to the repository README and the docs index. For the original long-form whitepaper source, refer to the Portuguese HTML version linked above.
         </div>
       </section>
     </main>
