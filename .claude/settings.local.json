@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pip install:*)",
+      "Bash(where python:*)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe --version)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -m pip install -e \".[dev]\")",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -m pytest tests/ -v)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe examples/01_basic_usage.py)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe examples/05_promotion_lifecycle.py)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -m pytest tests/ -q)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -c \"from cfa.governance import PolicyEngine, StateSignature; print\\(''governance OK''\\)\")",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -c \"from cfa.resolution import IntentNormalizer, MockNormalizerBackend; print\\(''resolution OK''\\)\")",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe -c \"from cfa.lifecycle import PromotionEngine, IndexCalculator; print\\(''lifecycle OK''\\)\")",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe examples/standalone_governance.py)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe examples/standalone_resolution.py)",
+      "Bash(C:/Users/hyb/scoop/apps/python311/current/python.exe examples/standalone_lifecycle.py)"
+    ]
+  }
+}
