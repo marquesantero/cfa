@@ -42,7 +42,6 @@ CFA is both:
 The architecture is documented in the whitepaper:
 
 - [`cfa-v2-whitepaper.html`](./cfa-v2-whitepaper.html)
-- [`cfa-v2-whitepaper_patched.html`](./cfa-v2-whitepaper_patched.html)
 
 The code in this repository implements the main runtime building blocks described there.
 
