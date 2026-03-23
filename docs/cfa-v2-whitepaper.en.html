@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CFA v2 — Contextual Flux Architecture (English Edition)</title>
+  <title>CFA v2 — Contextual Flux Architecture (English Translation)</title>
   <style>
     :root {
       --bg: #07090f;
@@ -11,7 +11,9 @@
       --surface2: #121520;
       --surface3: #171c28;
       --border: #1a2035;
+      --border2: #222840;
       --green: #3dffa0;
+      --green-dim: rgba(61,255,160,0.12);
       --indigo: #818cf8;
       --amber: #fbbf24;
       --red: #f87171;
@@ -23,7 +25,6 @@
       --sans: "Segoe UI", system-ui, sans-serif;
       --display: "Segoe UI", system-ui, sans-serif;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -44,14 +45,9 @@
       pointer-events: none;
       z-index: 0;
     }
-    .shell {
-      display: flex;
-      min-height: 100vh;
-      position: relative;
-      z-index: 1;
-    }
+    .shell { display: flex; min-height: 100vh; position: relative; z-index: 1; }
     nav {
-      width: 250px;
+      width: 260px;
       flex-shrink: 0;
       position: fixed;
       inset: 0 auto 0 0;
@@ -100,6 +96,7 @@
       color: var(--text2);
       text-decoration: none;
       border-left: 2px solid transparent;
+      line-height: 1.45;
     }
     nav a:hover {
       color: var(--text);
@@ -107,9 +104,9 @@
       border-left-color: var(--green);
     }
     main {
-      margin-left: 250px;
+      margin-left: 260px;
       flex: 1;
-      max-width: 900px;
+      max-width: 960px;
       padding: 64px 56px 120px;
     }
     .doc-header {
@@ -140,14 +137,10 @@
     .doc-subtitle {
       font-size: 18px;
       color: var(--text2);
-      max-width: 700px;
+      max-width: 760px;
       margin-bottom: 28px;
     }
-    .badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 10px; }
     .badge {
       font-family: var(--mono);
       font-size: 10px;
@@ -160,28 +153,14 @@
     .badge-green { color: var(--green); border-color: rgba(61,255,160,0.3); }
     .badge-indigo { color: var(--indigo); border-color: rgba(129,140,248,0.3); }
     .badge-amber { color: var(--amber); border-color: rgba(251,191,36,0.3); }
-    section {
-      margin-bottom: 68px;
-      scroll-margin-top: 30px;
-    }
-    h2 {
-      font-size: 28px;
-      margin-bottom: 18px;
-      color: #fff;
-    }
-    h3 {
-      font-size: 20px;
-      margin: 28px 0 12px;
-      color: #fff;
-    }
-    p {
-      margin-bottom: 14px;
-      color: var(--text);
-    }
-    ul, ol {
-      margin: 8px 0 18px 22px;
-      color: var(--text);
-    }
+    .lang-links { margin-top: 18px; font-size: 14px; }
+    .lang-links a { color: var(--cyan); text-decoration: none; margin-right: 16px; }
+    section { margin-bottom: 70px; scroll-margin-top: 30px; }
+    h2 { font-size: 28px; margin-bottom: 18px; color: #fff; }
+    h3 { font-size: 20px; margin: 30px 0 12px; color: #fff; }
+    h4 { font-size: 16px; margin: 22px 0 10px; color: #fff; }
+    p { margin-bottom: 14px; color: var(--text); }
+    ul, ol { margin: 8px 0 18px 22px; color: var(--text); }
     li { margin-bottom: 8px; }
     .note, .panel {
       background: var(--surface2);
@@ -195,7 +174,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
-      margin-top: 20px;
+      margin-top: 18px;
     }
     .card {
       background: linear-gradient(180deg, var(--surface2), var(--surface3));
@@ -203,19 +182,9 @@
       border-radius: 14px;
       padding: 18px;
     }
-    .card h4 {
-      font-size: 16px;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-    .card p {
-      color: var(--text2);
-      margin-bottom: 0;
-      font-size: 14px;
-    }
-    code, pre {
-      font-family: var(--mono);
-    }
+    .card h4 { margin-top: 0; }
+    .card p { color: var(--text2); margin-bottom: 0; font-size: 14px; }
+    code, pre { font-family: var(--mono); }
     code {
       background: rgba(255,255,255,0.06);
       padding: 2px 6px;
@@ -229,6 +198,7 @@
       overflow-x: auto;
       margin: 16px 0;
       color: #dbeafe;
+      white-space: pre-wrap;
     }
     table {
       width: 100%;
@@ -251,16 +221,6 @@
       background: rgba(129,140,248,0.08);
     }
     td { color: var(--text2); }
-    .muted { color: var(--text3); }
-    .lang-links {
-      margin-top: 18px;
-      font-size: 14px;
-    }
-    .lang-links a {
-      color: var(--cyan);
-      text-decoration: none;
-      margin-right: 16px;
-    }
     @media (max-width: 980px) {
       nav {
         position: static;
@@ -282,23 +242,37 @@
       <div class="nav-logo">
         <div class="nav-logo-tag">Architecture Reference</div>
         <div class="nav-logo-title">Contextual Flux Architecture</div>
-        <div class="nav-logo-version">English edition for public review</div>
+        <div class="nav-logo-version">English translation aligned to the Portuguese whitepaper</div>
       </div>
       <div class="nav-section-label">Sections</div>
-      <a href="#intro">1. Introduction</a>
-      <a href="#problem">2. Problem Statement</a>
-      <a href="#thesis">3. Core Thesis</a>
-      <a href="#architecture">4. Architecture Overview</a>
-      <a href="#components">5. Components</a>
-      <a href="#invariants">6. System Invariants</a>
-      <a href="#execution">7. Execution Semantics</a>
-      <a href="#lifecycle">8. Lifecycle and Reuse</a>
-      <a href="#implementation">9. Implementation Status</a>
-      <a href="#adoption">10. Adoption Strategy</a>
-      <a href="#use-cases">11. Use Cases</a>
-      <a href="#limitations">12. Limitations</a>
-      <a href="#roadmap">13. Roadmap</a>
-      <a href="#conclusion">14. Conclusion</a>
+      <a href="#s1">1. Introduction</a>
+      <a href="#s2">2. The Problem CFA Solves</a>
+      <a href="#s3">3. Foundational Principles</a>
+      <a href="#s4">4. General Architecture</a>
+      <a href="#s51">5.1 Intent Normalizer + Semantic Resolution</a>
+      <a href="#s51b">5.1b Confirmation Orchestrator</a>
+      <a href="#s52">5.2 State Signature</a>
+      <a href="#s53">5.3 Policy Engine</a>
+      <a href="#s54">5.4 Composite Intent Model</a>
+      <a href="#s55">5.5 Execution Planner</a>
+      <a href="#s56">5.6 Static Validation</a>
+      <a href="#s57">5.7 Runtime Validation</a>
+      <a href="#s58">5.8 Partial Execution State</a>
+      <a href="#s59">5.9 Context Registry</a>
+      <a href="#s510">5.10 State Projection Protocol</a>
+      <a href="#s511">5.11 Evaluation Indices</a>
+      <a href="#s512">5.12 Skill Lifecycle Management</a>
+      <a href="#s513">5.13 Fault Model</a>
+      <a href="#s514">5.14 Decision Engine</a>
+      <a href="#s515">5.15 Audit Trail</a>
+      <a href="#s6">6. System Invariants</a>
+      <a href="#s7">7. End-to-End Flow</a>
+      <a href="#s8">8. Benefits</a>
+      <a href="#s9">9. Extension Points</a>
+      <a href="#s10">10. Execution Scope (v2)</a>
+      <a href="#s11">11. Limitations</a>
+      <a href="#s12">12. Non-Goals</a>
+      <a href="#s13">13. Conclusion</a>
     </nav>
 
     <main>
@@ -310,8 +284,8 @@
         </p>
         <div class="badge-row">
           <span class="badge badge-green">Architecture</span>
-          <span class="badge badge-indigo">English Edition</span>
-          <span class="badge badge-amber">Public Review Edition</span>
+          <span class="badge badge-indigo">English Translation</span>
+          <span class="badge badge-amber">Section-by-section edition</span>
         </div>
         <div class="lang-links">
           <a href="./cfa-v2-whitepaper.html">Original Portuguese edition</a>
@@ -319,389 +293,468 @@
         </div>
       </header>
 
-      <section id="intro">
+      <section id="s1">
         <h2>1. Introduction</h2>
         <p>
-          The <strong>Contextual Flux Architecture (CFA)</strong> is an architectural proposal for AI systems that must operate against real environments without relying on prompt routing, brittle tool invocation, or opaque agent behavior as their primary control model. Rather than centering the system on agents and static skills, CFA centers it on <strong>intent as a governed contract</strong>.
+          The <strong>Contextual Flux Architecture (CFA)</strong> is an architecture for AI-oriented systems that replaces the traditional paradigm of <em>agents plus static tools or skills</em> with a model in which intent resolution is treated as a first-class architectural entity.
         </p>
+        <h4>Formal Definition of Intention</h4>
         <p>
-          In CFA, natural language is never executed directly. It is first resolved into a typed signature, evaluated against policy, transformed into a constrained execution plan, validated both before and after execution, and finally projected back into a live model of environment state. The system therefore does not merely decide what to do; it also records what state the world is now in, and what classes of action remain admissible.
+          Within CFA, an intention is not merely a textual request. It is the formalizable representation of a desired state transition, conditioned by explicit constraints, environmental assumptions, and governance requirements. That means the system is not designed around “what tool should be called next,” but around “what state transition is being requested, under which conditions, and with what admissibility guarantees.”
         </p>
-        <div class="note">
-          <strong>Positioning note.</strong> This English edition is intended to make the CFA proposal accessible to international collaborators, reviewers, and potential adopters. The original Portuguese HTML remains the canonical source of the current whitepaper draft.
+        <div class="panel">
+          <strong>Pipeline summary.</strong><br>
+          Semantic Resolution → Governed Planning → Validated Execution → State Management → Adaptive Evolution
         </div>
       </section>
 
-      <section id="problem">
-        <h2>2. Problem Statement</h2>
+      <section id="s2">
+        <h2>2. The Problem CFA Solves</h2>
         <p>
-          Conventional agentic systems typically rely on a narrow stack: prompt interpretation, tool selection, execution, and, at best, lightweight memory. That stack is insufficient for systems that must be safe, reproducible, auditable, or economically governed.
+          CFA emerges from the observation that conventional agent stacks are structurally under-specified for high-consequence execution. They may be acceptable for lightweight assistance, but they do not provide sufficient rigor for systems that must operate with policy, auditability, and persistent environmental awareness.
         </p>
         <div class="grid">
-          <div class="card">
-            <h4>Silent ambiguity</h4>
-            <p>The model resolves intent incorrectly, yet with sufficient confidence that the rest of the stack executes the wrong outcome with deterministic precision.</p>
-          </div>
-          <div class="card">
-            <h4>Weak governance</h4>
-            <p>PII, cost, schema, mutability, and write-safety constraints are enforced too late or are not enforced at all.</p>
-          </div>
-          <div class="card">
-            <h4>No durable world state</h4>
-            <p>Systems often know what they attempted, but not what state the environment actually ended up in after partial success, rollback, or quarantine.</p>
-          </div>
-          <div class="card">
-            <h4>Poor reuse discipline</h4>
-            <p>Capabilities are reused simply because they exist, rather than because evidence demonstrates semantic stability and operational reliability.</p>
-          </div>
+          <div class="card"><h4>Silent ambiguity</h4><p>The model resolves intent incorrectly, yet with sufficient confidence that the downstream stack executes the wrong outcome with deterministic precision.</p></div>
+          <div class="card"><h4>Weak governance</h4><p>PII, cost, mutability, schema, and write-safety constraints are often enforced too late or not enforced at all.</p></div>
+          <div class="card"><h4>No environmental memory</h4><p>The system knows what it attempted, but not reliably what state the world was left in after partial failure, quarantine, or rollback.</p></div>
+          <div class="card"><h4>Fragile reuse</h4><p>Reusable capabilities are curated manually rather than promoted from evidence about fidelity, governance, and operational stability.</p></div>
         </div>
       </section>
 
-      <section id="thesis">
-        <h2>3. Core Thesis</h2>
-        <p>
-          CFA proposes that the first-class object in an AI-native execution system should not be an agent or a skill. It should be a <strong>state-changing intention under explicit constraints</strong>.
-        </p>
-        <p>
-          Several design consequences follow directly from this thesis:
-        </p>
+      <section id="s3">
+        <h2>3. Foundational Principles</h2>
         <ul>
-          <li>Natural language must be resolved into a typed contract before execution.</li>
-          <li>The current environment state must be consulted before intent resolution is considered valid.</li>
-          <li>Execution must be governed by declared policy, not by prompt conventions.</li>
-          <li>Partial failure must become a modeled state, not an implementation accident.</li>
-          <li>Reusable capabilities must emerge from evidence and lifecycle scoring, not just manual promotion.</li>
+          <li><strong>Intent before execution.</strong> Natural language must first become a typed contract.</li>
+          <li><strong>Policy before freedom.</strong> Plans are not creative artifacts; they are governed instantiations.</li>
+          <li><strong>Environment as system input.</strong> The state of the world is part of decision correctness.</li>
+          <li><strong>Structured failure.</strong> Partial execution is representable and governable.</li>
+          <li><strong>Evidence-based evolution.</strong> Promotion and demotion derive from observed behavior over time.</li>
         </ul>
       </section>
 
-      <section id="architecture">
-        <h2>4. Architecture Overview</h2>
-        <p>The conceptual CFA pipeline can be summarized as:</p>
-        <pre>Natural language
-  -> semantic resolution
-  -> confirmation orchestration
-  -> policy evaluation
-  -> execution planning
-  -> deterministic code generation
-  -> static validation
-  -> sandbox execution
-  -> runtime validation
-  -> partial execution policy
-  -> state projection
-  -> audit trail
-  -> lifecycle scoring</pre>
+      <section id="s4">
+        <h2>4. General Architecture</h2>
         <p>
-          This pipeline gives the system a materially stronger structure than conventional agent-plus-tools architectures: every stage has an explicit contract, every stage may emit typed faults, and downstream behavior can be reasoned about with significantly greater rigor.
+          The CFA architecture can be understood as a staged system in which each layer narrows the space of permitted outcomes.
+        </p>
+        <pre>Natural language
+  -> Intent Normalizer
+  -> Confirmation Orchestrator
+  -> State Signature
+  -> Policy Engine
+  -> Composite Intent / Planner
+  -> Static Validation
+  -> Runtime Validation
+  -> Partial Execution State
+  -> Context Registry
+  -> State Projection
+  -> Evaluation Indices / Lifecycle
+  -> Decision Engine
+  -> Audit Trail</pre>
+        <p>
+          The architecture is deliberately ordered: semantic correctness precedes governance, governance precedes planning, planning precedes execution, execution precedes state projection, and projected state precedes future intent processing.
+        </p>
+      </section>
+      <section id="s51">
+        <h2>5.1 Intent Normalizer + Semantic Resolution</h2>
+        <p>
+          The Intent Normalizer is the most critical stage of the pipeline. A malformed signature generated here contaminates all downstream components: the Policy Engine governs the wrong problem, the Planner builds the wrong DAG, and the generated code becomes deterministically incorrect without necessarily looking hallucinated.
+        </p>
+        <h4>Component Input</h4>
+        <p>The normalizer must receive, at minimum:</p>
+        <ul>
+          <li>the raw user intention in natural language</li>
+          <li>the environment state provided by the Context Registry</li>
+          <li>the data catalog or equivalent operational catalog</li>
+        </ul>
+        <h4>Semantic Resolution</h4>
+        <p>
+          Semantic Resolution transforms the raw request into a typed interpretation composed of domain, intended action, target layer, referenced datasets, declared constraints, ambiguity level, confidence score, and competing interpretations when present.
+        </p>
+        <h4>Confirmation Modes</h4>
+        <p>
+          Resolution does not stop at a semantic guess. It also derives the proper confirmation mode according to risk:
+        </p>
+        <ul>
+          <li><code>auto</code> for low-risk, high-confidence cases</li>
+          <li><code>soft</code> for moderate ambiguity</li>
+          <li><code>hard</code> for protected writes with elevated risk</li>
+          <li><code>human_escalation</code> for high-consequence cases such as Gold publication or unresolved ambiguity</li>
+        </ul>
+        <h4>Integration with the Context Registry</h4>
+        <p>
+          The normalizer must query the Context Registry before generating the final signature. If the registry indicates, for example, that a target scope is <code>partially_committed</code>, the interpretation may need to be adjusted, additional constraints must be injected, or the intent may need to be blocked entirely. Without this consultation, the system plans on top of false premises about the world state.
         </p>
       </section>
 
-      <section id="components">
-        <h2>5. Components</h2>
-
-        <h3>5.1 Intent Normalizer and Semantic Resolution</h3>
+      <section id="s51b">
+        <h2>5.1b Confirmation Orchestrator</h2>
         <p>
-          The normalizer transforms natural language into a <code>StateSignature</code>. This stage is the highest-leverage point in the architecture. An incorrect signature contaminates every downstream stage while still appearing internally coherent and structurally well-formed.
+          The Confirmation Orchestrator exists because the normalizer is also the most dangerous single point of semantic failure. It introduces a risk-aware escalation layer between semantic resolution and policy evaluation.
         </p>
         <p>
-          The normalizer must consult the <code>ContextRegistry</code> before signing intent. This is not optional metadata; it is a mandatory input to semantic correctness.
+          Its role is not to confirm everything indiscriminately, but to selectively increase friction when the semantic or operational risk profile requires it.
         </p>
+      </section>
 
-        <h3>5.2 Confirmation Orchestrator</h3>
+      <section id="s52">
+        <h2>5.2 State Signature</h2>
         <p>
-          CFA treats ambiguity as a system property rather than as a user failure. When semantic risk is elevated, the confirmation layer introduces escalation between resolution and policy evaluation.
+          The State Signature is the formal contract of intent. It captures the desired state change, target layer, datasets, execution constraints, and a versioned execution context. It is the normative object that the rest of the architecture acts upon.
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Mode</th>
-              <th>Typical trigger</th>
-              <th>Behavior</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>auto</code></td>
-              <td>Low ambiguity, low risk</td>
-              <td>Continue automatically</td>
-            </tr>
-            <tr>
-              <td><code>soft</code></td>
-              <td>Moderate ambiguity</td>
-              <td>Log or surface warning, continue</td>
-            </tr>
-            <tr>
-              <td><code>hard</code></td>
-              <td>Higher risk protected writes</td>
-              <td>Require explicit confirmation</td>
-            </tr>
-            <tr>
-              <td><code>human_escalation</code></td>
-              <td>Gold writes, severe ambiguity, competing interpretations</td>
-              <td>Escalate for manual review</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>5.3 State Signature</h3>
+        <h4>Why <code>execution_context</code> belongs to the Signature</h4>
         <p>
-          The <code>StateSignature</code> is the formal contract of intent. It captures the target layer, datasets, constraints, and execution context. Architecturally, it is the object governed by policy and materialized by planning.
+          Reproducibility cannot depend on logs alone. The execution context must be part of the signature because policy version, catalog snapshot, and context-registry version are all constitutive of what was approved. Without them, later reproduction becomes approximate rather than exact.
         </p>
+      </section>
 
-        <h3>5.4 Policy Engine</h3>
+      <section id="s53">
+        <h2>5.3 Policy Engine</h2>
         <p>
-          The policy layer evaluates the approved signature prior to planning and execution. Typical rules address PII handling, merge semantics, partitioning discipline, type enforcement, and cost ceilings. The output is always one of three actions:
+          The Policy Engine evaluates the approved signature before execution planning. Its output is always one of three actions:
         </p>
         <ul>
           <li><code>approve</code></li>
           <li><code>replan</code></li>
           <li><code>block</code></li>
         </ul>
-
-        <h3>5.5 Execution Planner</h3>
         <p>
-          The planner generates a governed execution DAG. It is intentionally constrained: it does not invent arbitrary strategies, but instead instantiates a bounded set of allowed steps under an approved signature.
+          Policy covers governance, FinOps, data contracts, and explicit execution safety assumptions.
         </p>
-
-        <h3>5.6 Deterministic Code Generation</h3>
+        <h4>Declarative Rule Contract</h4>
         <p>
-          The code generation stage translates the execution plan into deterministic code. Its purpose is not creativity, but rather the production of a reproducible artifact that can be validated.
+          Policy rules are intended to be declarative: condition plus action, versioned by policy bundle. The whitepaper does not prescribe a single implementation DSL, but it does prescribe the contract that any policy rule must satisfy.
         </p>
-
-        <h3>5.7 Static and Runtime Validation</h3>
+        <h4>Replanning Limit</h4>
         <p>
-          CFA separates what can be rejected before execution from what must be inspected after execution. Static validation blocks dangerous patterns in generated artifacts, while runtime validation checks behavioral metrics and actual outputs.
-        </p>
-
-        <h3>5.8 Partial Execution State</h3>
-        <p>
-          Partial failure is a modeled state in CFA. If execution partially succeeds, the system must determine what that outcome means under policy. It may quarantine failed units, roll back, commit without publication, or publish in a degraded state.
-        </p>
-
-        <h3>5.9 Context Registry</h3>
-        <p>
-          The <code>ContextRegistry</code> is the live model of relevant environment state. It is not a plain execution log. It answers questions such as: Which target scope is currently quarantined? Which dataset is published? Which execution context was visible when a given intent was approved?
-        </p>
-
-        <h3>5.10 State Projection Protocol</h3>
-        <p>
-          After execution, the resulting environment state must be projected back into the registry. Projection updates future decision-making; it is the mechanism that closes the loop between action and subsequent admissible action.
-        </p>
-
-        <h3>5.11 Audit Trail</h3>
-        <p>
-          The audit trail is append-only and hash-chained. Its function is to allow the system to explain not only what happened, but why a decision was allowed, blocked, replanned, quarantined, or rolled back.
+          Replanning is bounded. If the system repeatedly fails to converge through policy-guided replanning, the result must become a terminal block rather than an infinite loop disguised as adaptive planning.
         </p>
       </section>
 
-      <section id="invariants">
+      <section id="s54">
+        <h2>5.4 Composite Intent Model</h2>
+        <p>
+          Composite intentions are decomposed into sub-intentions with explicit dependencies. Conceptually, this is an <strong>Intent Graph</strong>. In implementation terms, the Execution Planner may internalize this capability as long as the dependency structure remains explicit and governable.
+        </p>
+      </section>
+
+      <section id="s55">
+        <h2>5.5 Execution Planner</h2>
+        <p>
+          The Execution Planner generates the execution DAG from an approved signature. It is not free to invent arbitrary workflows. It fills governed templates, follows the approved contract, and respects every declared constraint.
+        </p>
+        <h4>Pre-cost Estimator</h4>
+        <p>
+          The whitepaper distinguishes between a FinOps guard and a pre-cost estimator. The FinOps guard blocks excessive cost based on heuristic policy, while the pre-cost estimator blocks based on historical evidence for the same signature hash. One is rule-based anticipation; the other is empirical anticipation.
+        </p>
+        <p>
+          Every execution plan must also be idempotent. In retry or replay scenarios, the system must not duplicate records or produce divergent results simply because the execution path was repeated.
+        </p>
+        <h4>Consistency Unit — Closed Enum</h4>
+        <p>
+          The notion of consistency must be explicit and bounded. The whitepaper defines a closed set of allowed consistency units such as partition, dataset, DAG branch, or time window. This prevents “partial success” from becoming semantically vague.
+        </p>
+      </section>
+
+      <section id="s56">
+        <h2>5.6 Static Validation</h2>
+        <p>
+          Static Validation analyzes the generated artifact prior to execution. Its task is to detect dangerous or contract-breaking patterns that can be rejected without running the plan.
+        </p>
+      </section>
+
+      <section id="s57">
+        <h2>5.7 Runtime Validation</h2>
+        <p>
+          Runtime Validation evaluates actual behavior after or during execution. It is responsible for detecting cost overruns, schema deviations, behavioral drift, and other faults that only become knowable once the artifact runs.
+        </p>
+      </section>
+
+      <section id="s58">
+        <h2>5.8 Partial Execution State</h2>
+        <p>
+          Without Partial Execution State, the system may govern inputs well but remain semantically loose at the output boundary: some of the plan was materialized, some was not, and the system lacks a governed representation of that fact.
+        </p>
+        <h4>Consistency Unit</h4>
+        <p>
+          Partial execution semantics are evaluated in relation to an explicit consistency unit. This is the granularity at which rollback, quarantine, or retry decisions make sense.
+        </p>
+        <h4>Partial Failure Policy</h4>
+        <p>
+          The whitepaper defines a deterministic sequence for handling partial failure: retry if policy allows, apply the declared failure policy, and only then determine what can be projected into environment state.
+        </p>
+        <h4>Retry Policy</h4>
+        <p>
+          Retries should target failed units where possible instead of replaying entire plans indiscriminately. This preserves idempotence assumptions and prevents recovery from degenerating into brute-force repetition.
+        </p>
+        <h4>Publish Semantics</h4>
+        <p>
+          Commit and publication are not the same thing. A system may commit successfully produced units while still withholding publication due to degraded integrity, unresolved quarantine, or policy constraints.
+        </p>
+        <h4>Panic Rollback — Environment Change During Execution</h4>
+        <p>
+          A change in the external environment during execution is not merely an execution failure; it is an invalidation of the premises under which that execution was authorized. This case requires its own protocol. Crucially, a panic rollback should not project unreliable state into the Context Registry.
+        </p>
+      </section>
+
+      <section id="s59">
+        <h2>5.9 Context Registry</h2>
+        <p>
+          The Context Registry is the cognitive infrastructure of the system. It is not an execution log. It is the live model of environment state on which future intentions depend.
+        </p>
+        <h4>Registry Versioning</h4>
+        <p>
+          The registry requires explicit versioning. Without versioning, there is no temporal consistency, and the reproducibility promised by the execution context becomes illusory.
+        </p>
+        <h4>Pre-execution Revalidation (TOCTOU)</h4>
+        <p>
+          There is a temporal gap between consulting the registry during normalization and executing the approved plan. During that interval, another execution may update the same target scope. The architecture therefore requires pre-execution revalidation to guard against stale assumptions and TOCTOU-style hazards.
+        </p>
+        <h4>TTL and Obsolete State Policy</h4>
+        <p>
+          The registry cannot accumulate stale state indefinitely. Without TTL or explicit obsolescence policy, the environment model becomes progressively contaminated by states that were once relevant but are no longer active.
+        </p>
+      </section>
+
+      <section id="s510">
+        <h2>5.10 State Projection Protocol</h2>
+        <p>
+          State Projection closes the execution loop. It updates the Context Registry so that future intent processing sees the environment as it now is, not as it was before execution.
+        </p>
+        <h4>Mandatory Properties</h4>
+        <p>
+          Projection must be atomic from the perspective of the registry, versioned for reproducibility, and constrained by invariant precedence. It is mandatory when projection is admissible, but must be suppressed when projecting would contaminate the environment model with invalid state.
+        </p>
+      </section>
+
+      <section id="s511">
+        <h2>5.11 Evaluation Indices</h2>
+        <p>
+          CFA defines four principal evaluation indices to reason about operational quality and reuse:
+        </p>
+        <ul>
+          <li><strong>IFo</strong>: operational fluidity</li>
+          <li><strong>IFs</strong>: semantic fidelity</li>
+          <li><strong>IFg</strong>: governance integrity</li>
+          <li><strong>IDI</strong>: intent drift index</li>
+        </ul>
+        <p>
+          IFg is intentionally binary in spirit: a value below 1 indicates a governance failure that should trigger systemic review rather than merely local suppression.
+        </p>
+        <h4>Promotion Criterion</h4>
+        <p>
+          Promotion should require sufficient execution count, strong operational performance, strong semantic fidelity, and uncompromised governance integrity.
+        </p>
+        <h4>IDI — Intent Drift Index</h4>
+        <p>
+          IDI measures the stability of the same signature over time, especially how often it requires replanning or exhibits drift.
+        </p>
+        <h4>Configurable Evaluation Window</h4>
+        <p>
+          Evaluation windows should be configurable by operational context. The same time horizon is unlikely to make sense for all domains.
+        </p>
+      </section>
+
+      <section id="s512">
+        <h2>5.12 Skill Lifecycle Management</h2>
+        <p>
+          Although CFA is a move away from static skill-centric architecture, it still recognizes that reusable capabilities may emerge. The point is that they should emerge from evidence, not from assumption.
+        </p>
+        <h4>States</h4>
+        <p>
+          Lifecycle states include candidate, active, watchlist, deprecated, retired, and demoted. State transitions should be caused by measured behavior, policy change, or environmental incompatibility.
+        </p>
+        <h4>Promotion Criterion</h4>
+        <p>
+          Promotion depends on the indices defined above and on minimum execution evidence. The system must be able to justify why a signature hash deserves reuse.
+        </p>
+        <h4>Skill Generation Metadata</h4>
+        <p>
+          Promoted artifacts must carry provenance: the system version that promoted them, the policy bundle in effect at the time, catalog snapshot, evaluation scores, and related execution evidence.
+        </p>
+      </section>
+
+      <section id="s513">
+        <h2>5.13 Fault Model</h2>
+        <p>
+          In CFA, failures are structured as typed fault events rather than being left as unclassified exceptions. This creates a coherent grammar of failure across semantic resolution, policy, execution, runtime, and environmental invalidation.
+        </p>
+        <h4>Structure of a Fault Event</h4>
+        <p>
+          A fault should identify its code, family, severity, detection stage, mandatory action, and remediation guidance where relevant. The architecture depends on typed failure because typed failure is governable failure.
+        </p>
+      </section>
+
+      <section id="s514">
+        <h2>5.14 Decision Engine</h2>
+        <p>
+          The Decision Engine consolidates the outputs of policy, validation, partial execution policy, and environmental status into the final state of the intent.
+        </p>
+        <h4>Decision Precedence</h4>
+        <p>
+          When components disagree, the system needs explicit precedence rules. For example, a runtime interruption with environmental invalidation may outrank an otherwise successful plan. Without such precedence, the implementation becomes ambiguous exactly where rigor is most needed.
+        </p>
+        <h4>Conflict Resolution Between Authorities</h4>
+        <p>
+          The Decision Engine is where conflicting authorities are resolved into a single final state such as approved, approved with warnings, replanned, blocked, partially committed, quarantined, or rolled back.
+        </p>
+        <h4>Possible States</h4>
+        <p>
+          The architecture explicitly enumerates possible outcomes rather than leaving them implicit in runtime behavior.
+        </p>
+      </section>
+
+      <section id="s515">
+        <h2>5.15 Audit Trail</h2>
+        <p>
+          The Audit Trail is the append-only, causally ordered record of all major decision events.
+        </p>
+        <h4>Consumption Modes</h4>
+        <p>
+          The whitepaper distinguishes between at least two modes of audit consumption: an operational mode for engineering diagnosis and tuning, and a regulatory mode for normalized, traceable review.
+        </p>
+        <h4>Properties of the Record</h4>
+        <p>
+          The record should be immutable after write, causally ordered per intent, complete enough to reconstruct critical decisions, and resistant to tampering through cryptographic chaining or equivalent integrity mechanisms.
+        </p>
+      </section>
+
+      <section id="s6">
         <h2>6. System Invariants</h2>
         <p>
-          CFA depends on a compact set of architectural invariants. These are not implementation preferences; they are correctness boundaries.
+          CFA depends on explicit invariants. These are not implementation preferences; they are correctness boundaries.
         </p>
         <ol>
-          <li>No protected write proceeds without explicit governance checks.</li>
-          <li>No intent is processed without consulting environment state.</li>
-          <li>Partial execution outcomes must be represented structurally, not silently dropped.</li>
-          <li>State projection must update future decision context when projection is allowed.</li>
-          <li>Audit events must preserve causal traceability.</li>
-          <li>If forbidden execution behavior is detected at runtime, unsafe continuation must stop immediately.</li>
-          <li>Execution context must remain reproducible through versioned references.</li>
+          <li>No protected write proceeds without governance approval.</li>
+          <li>No intention is processed without consulting environment state.</li>
+          <li>Every partial execution outcome must be represented structurally before the next intention proceeds.</li>
+          <li>Projection is mandatory whenever projection is admissible.</li>
+          <li>Execution context must remain reproducible through explicit version references.</li>
+          <li>Unsafe runtime behavior must interrupt execution immediately.</li>
+          <li>Invariant precedence must prevent contaminated state from being projected under the excuse of completeness.</li>
         </ol>
-        <div class="panel">
-          <strong>Important nuance.</strong> Invariants have precedence. For example, safe interruption outranks mandatory projection if projecting the resulting state would contaminate the environment model with invalid data.
-        </div>
-      </section>
-
-      <section id="execution">
-        <h2>7. Execution Semantics</h2>
+        <h3>Precedence Between Invariants</h3>
         <p>
-          A robust architecture requires explicit semantics for failure, retries, rollback, and context invalidation during execution.
-        </p>
-
-        <h3>Partial failure</h3>
-        <p>
-          When only part of the execution succeeds, CFA does not collapse the result into a binary success/failure outcome. It applies a declared failure policy.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Policy</th>
-              <th>Meaning</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>full_rollback</code></td>
-              <td>Discard and represent the execution as rolled back</td>
-            </tr>
-            <tr>
-              <td><code>selective_quarantine</code></td>
-              <td>Commit successful units, quarantine failed ones</td>
-            </tr>
-            <tr>
-              <td><code>partial_commit_no_publish</code></td>
-              <td>Allow commit but do not expose the result as published</td>
-            </tr>
-            <tr>
-              <td><code>degraded_publish</code></td>
-              <td>Publish with explicit degradation state</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h3>Retry model</h3>
-        <p>
-          Retries should target failed consistency units rather than blindly replaying entire plans whenever possible. This keeps the system closer to governed recovery than to brute-force rerun behavior.
-        </p>
-
-        <h3>Environmental invalidation</h3>
-        <p>
-          CFA distinguishes internal execution failure from external context invalidation. If the environment changes in ways that invalidate the conditions under which execution was approved, the system may require panic-style interruption and rollback semantics.
+          Invariants have priority relationships. A straightforward example is that execution safety outranks mandatory projection whenever projecting the resulting state would register contamination as fact.
         </p>
       </section>
 
-      <section id="lifecycle">
-        <h2>8. Lifecycle and Reuse</h2>
+      <section id="s7">
+        <h2>7. End-to-End Flow</h2>
         <p>
-          One of the central claims of CFA is that reusable capabilities should emerge from evidence rather than from manually curated skills alone. The architecture therefore defines lifecycle indices for repeated execution of the same signature hash.
+          The complete CFA flow can be described as a sequence:
         </p>
-        <div class="grid">
-          <div class="card">
-            <h4>IFo</h4>
-            <p>Operational fluidity: latency, cost, and execution stability.</p>
-          </div>
-          <div class="card">
-            <h4>IFs</h4>
-            <p>Semantic fidelity: contract adherence, drift resistance, and invariant preservation.</p>
-          </div>
-          <div class="card">
-            <h4>IFg</h4>
-            <p>Governance compliance: a binary index by design. If it drops below 1, something systemic is wrong.</p>
-          </div>
-          <div class="card">
-            <h4>IDI</h4>
-            <p>Intent drift index: how frequently the same signature needs replanning or shows instability over time.</p>
-          </div>
-        </div>
-        <p>
-          Promotion, watchlisting, demotion, deprecation, and retirement should be based on these signals rather than on intuition alone.
-        </p>
+        <ol>
+          <li>Receive natural-language intention</li>
+          <li>Consult the current environment snapshot</li>
+          <li>Resolve semantic intent</li>
+          <li>Apply confirmation policy if required</li>
+          <li>Generate the State Signature</li>
+          <li>Apply the Policy Engine</li>
+          <li>Replan if policy requires it and bounded replanning allows it</li>
+          <li>Generate the execution DAG</li>
+          <li>Acquire execution lock or equivalent exclusivity where required</li>
+          <li>Perform pre-execution revalidation</li>
+          <li>Execute in the sandbox</li>
+          <li>Apply runtime validation</li>
+          <li>Apply partial execution policy and retry policy</li>
+          <li>Project the resulting state when admissible</li>
+          <li>Persist audit events and update lifecycle evidence</li>
+        </ol>
       </section>
 
-      <section id="implementation">
-        <h2>9. Implementation Status</h2>
-        <p>
-          The repository associated with this whitepaper already contains a working Python implementation of the CFA kernel and its modular components. That implementation is not yet the full end-state of the architecture, but it is sufficient to validate the primary design direction.
-        </p>
+      <section id="s8">
+        <h2>8. Benefits</h2>
         <ul>
-          <li>Typed contracts and fault modeling</li>
-          <li>Policy evaluation</li>
-          <li>Execution planning</li>
-          <li>Deterministic code generation</li>
-          <li>Static and runtime validation</li>
-          <li>Sandbox simulation</li>
-          <li>Partial execution handling</li>
-          <li>Context registry and audit trail</li>
-          <li>Lifecycle scoring and promotion logic</li>
-        </ul>
-        <p>
-          The implementation should currently be understood as a rigorous prototype kernel rather than as a final production platform.
-        </p>
-      </section>
-
-      <section id="adoption">
-        <h2>10. Adoption Strategy</h2>
-        <p>
-          CFA does not require all-or-nothing adoption. Teams may adopt it in phases.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Phase</th>
-              <th>Focus</th>
-              <th>Value delivered</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Phase 1</td>
-              <td>Intent normalization + policy + audit</td>
-              <td>Governed decision-making before execution</td>
-            </tr>
-            <tr>
-              <td>Phase 2</td>
-              <td>Planner + code generation + static validation</td>
-              <td>Constrained execution artifacts</td>
-            </tr>
-            <tr>
-              <td>Phase 3</td>
-              <td>Sandbox + runtime validation + partial execution state</td>
-              <td>Behavioral control during and after execution</td>
-            </tr>
-            <tr>
-              <td>Phase 4</td>
-              <td>Context registry + state projection</td>
-              <td>Environment-aware future decisions</td>
-            </tr>
-            <tr>
-              <td>Phase 5</td>
-              <td>Indices + promotion/demotion lifecycle</td>
-              <td>Evidence-based reuse and capability evolution</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section id="use-cases">
-        <h2>11. Use Cases</h2>
-        <p>CFA is especially relevant for systems in which execution has consequences beyond text generation.</p>
-        <ul>
-          <li>Data pipeline governance</li>
-          <li>AI-assisted ETL or transformation planning</li>
-          <li>Internal copilots with real operational write access</li>
-          <li>Regulated execution systems requiring auditability</li>
-          <li>Platform teams building controlled AI execution kernels</li>
+          <li>Semantic ambiguity becomes governable rather than merely tolerated.</li>
+          <li>Execution is constrained before it becomes expensive or unsafe.</li>
+          <li>Environment state becomes a first-class input to decision-making.</li>
+          <li>Partial failure is representable and auditable.</li>
+          <li>Reuse can emerge through evidence rather than intuition.</li>
+          <li>The architecture is modular enough for phased adoption.</li>
         </ul>
       </section>
 
-      <section id="limitations">
-        <h2>12. Limitations</h2>
+      <section id="s9">
+        <h2>9. Extension Points</h2>
         <p>
-          CFA v2 also has deliberate scope boundaries.
+          CFA is not defined by a single implementation stack. It exposes extension points such as:
         </p>
         <ul>
-          <li>It assumes relatively conservative concurrency semantics.</li>
-          <li>It is not a generic multi-writer distributed transaction framework.</li>
-          <li>It does not make semantic interpretation magically correct; it makes ambiguity governable.</li>
-          <li>It adds structural rigor, which means more architecture than minimalist agent stacks.</li>
+          <li>semantic resolution backends</li>
+          <li>policy bundles and rule DSLs</li>
+          <li>execution planners</li>
+          <li>code generation targets</li>
+          <li>runtime validators</li>
+          <li>context storage backends</li>
+          <li>audit persistence backends</li>
+          <li>promotion and lifecycle policies</li>
         </ul>
       </section>
 
-      <section id="roadmap">
-        <h2>13. Roadmap</h2>
+      <section id="s10">
+        <h2>10. Execution Scope (v2)</h2>
         <p>
-          The architecture points toward several next-stage directions:
+          CFA v2 is scoped deliberately. It assumes a controlled execution environment and conservative concurrency semantics, especially around single active intent per target scope.
+        </p>
+        <h4>Why batch and micro-batch instead of streaming</h4>
+        <p>
+          The whitepaper limits v2 to batch and micro-batch semantics because continuous multi-writer streaming would require a more sophisticated redesign of Partial Execution State, State Projection, and Context Registry semantics.
+        </p>
+        <h4>Concurrency Control</h4>
+        <p>
+          v2 assumes that conflicting writes to the same target scope are not processed concurrently without additional coordination. Violating that assumption undermines the reliability of both projection and revalidation.
+        </p>
+        <h4>Snapshot Selection</h4>
+        <p>
+          Snapshot selection must be explicit. The registry must not serve ambiguous or implicit temporal state to the normalizer or to the pre-execution revalidation step.
+        </p>
+        <h4>Scope Roadmap</h4>
+        <p>
+          Future versions may extend the architecture toward stronger concurrency, continuous processing, and richer revalidation protocols, but such changes require architectural rather than merely local implementation adjustments.
+        </p>
+      </section>
+
+      <section id="s11">
+        <h2>11. Limitations</h2>
+        <p>
+          CFA deliberately accepts some limitations in exchange for architectural rigor:
         </p>
         <ul>
-          <li>stronger production semantic resolution backends</li>
-          <li>richer policy authoring and lifecycle tooling</li>
-          <li>broader execution backends</li>
-          <li>more explicit concurrency and revalidation protocols</li>
-          <li>deeper observability and evaluation infrastructure</li>
-          <li>public collaboration around the whitepaper and kernel design</li>
+          <li>policy complexity grows with real-world governance needs</li>
+          <li>semantic quality still depends on the quality of normalization backends</li>
+          <li>state management adds architectural weight compared with lightweight agent stacks</li>
+          <li>conservative concurrency assumptions limit some execution scenarios in v2</li>
+        </ul>
+        <h3>Phased Implementation Strategy</h3>
+        <p>
+          The architecture is designed to be adopted incrementally: begin with intent normalization and policy, then add planning, then execution and validation, then state projection, and finally lifecycle evidence.
+        </p>
+      </section>
+
+      <section id="s12">
+        <h2>12. Non-Goals</h2>
+        <p>
+          CFA v2 explicitly does not aim to be:
+        </p>
+        <ul>
+          <li>a generic distributed multi-writer transaction framework</li>
+          <li>a prompt-only orchestration layer</li>
+          <li>a replacement for all workflow engines</li>
+          <li>a guarantee of perfect semantic interpretation</li>
         </ul>
       </section>
 
-      <section id="conclusion">
-        <h2>14. Conclusion</h2>
+      <section id="s13">
+        <h2>13. Conclusion</h2>
         <p>
-          CFA is an attempt to give AI systems a stronger execution grammar. Rather than assuming that prompts, agents, and tools are sufficient, it introduces typed intent, policy-governed planning, validation, explicit environment state, structured failure, and lifecycle evidence.
+          CFA is an attempt to give AI-native systems a stronger execution grammar. Rather than assuming that prompts, agents, and tools are sufficient, it formalizes intent, governs planning, validates execution, models world state explicitly, and lets reuse emerge through evidence.
         </p>
         <p>
-          The result is not merely safer execution. It is a system that can explain itself, evolve deliberately, and reason about what the world now permits it to do next.
+          Its core promise is not only safer execution. It is the possibility of building systems that can explain themselves, evolve deliberately, and reason about what the environment now permits them to do next.
         </p>
         <div class="note">
-          <strong>Repository note.</strong> For implementation details, examples, and the current Python kernel, return to the repository README and the docs index. For the original long-form whitepaper source, refer to the Portuguese HTML version linked above.
+          <strong>Repository note.</strong> For implementation details, examples, and the current Python kernel, return to the repository README and docs index. For the current canonical source text, refer to the original Portuguese HTML whitepaper.
         </div>
       </section>
     </main>
