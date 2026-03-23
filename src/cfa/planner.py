@@ -285,7 +285,4 @@ class ExecutionPlanner:
         return WriteMode.MERGE
 
     def _derive_target_name(self, sig: StateSignature) -> str:
-        layer = sig.target_layer.value
-        if len(sig.datasets) == 1:
-            return f"{layer}_{sig.datasets[0].name}"
-        return f"{layer}_{sig.domain}"
+        return sig.target_dataset_name

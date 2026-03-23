@@ -167,6 +167,14 @@ class StateSignature:
     def writes_to_protected_layer(self) -> bool:
         return self.target_layer in (TargetLayer.SILVER, TargetLayer.GOLD)
 
+    @property
+    def target_dataset_name(self) -> str:
+        """Deterministic target scope derived from the approved signature."""
+        layer = self.target_layer.value
+        if len(self.datasets) == 1:
+            return f"{layer}_{self.datasets[0].name}"
+        return f"{layer}_{self.domain}"
+
     def with_constraints(self, **overrides: Any) -> StateSignature:
         """Return a new Signature with updated constraints (immutable update)."""
         current = {

@@ -45,10 +45,11 @@ class TestProjectPublished:
         assert result.projected
         assert result.projection_type == "full"
         assert result.snapshot_version != ""
+        ds_state = reg.get_dataset_state(sig.target_dataset_name)
+        assert ds_state is not None
+        assert ds_state["state"] == "published"
         for ds in sig.datasets:
-            ds_state = reg.get_dataset_state(ds.name)
-            assert ds_state is not None
-            assert ds_state["state"] == "published"
+            assert reg.get_dataset_state(ds.name) is None
 
     def test_published_includes_metrics(self):
         reg = ContextRegistry()
@@ -58,7 +59,7 @@ class TestProjectPublished:
         exec_state = _make_exec_state(PublishState.PUBLISHED, rows=50_000, cost=3.0)
         protocol.project(sig, exec_state)
 
-        ds_state = reg.get_dataset_state("nfe")
+        ds_state = reg.get_dataset_state(sig.target_dataset_name)
         assert ds_state["metrics"]["rows_output"] == 50_000
         assert ds_state["metrics"]["cost_dbu"] == 3.0
 
@@ -77,7 +78,7 @@ class TestProjectDegraded:
         result = protocol.project(sig, exec_state)
 
         assert result.projection_type == "degraded"
-        ds_state = reg.get_dataset_state("nfe")
+        ds_state = reg.get_dataset_state(sig.target_dataset_name)
         assert ds_state["state"] == "degraded"
         assert "load" in ds_state["quarantined_steps"]
 
@@ -94,12 +95,12 @@ class TestProjectQuarantined:
         result = protocol.project(sig, exec_state)
 
         assert result.projection_type == "quarantine"
-        ds_state = reg.get_dataset_state("nfe")
+        ds_state = reg.get_dataset_state(sig.target_dataset_name)
         assert ds_state["state"] == "quarantined"
 
 
 class TestProjectRolledBack:
-    def test_projects_rollback_for_new_dataset(self):
+    def test_rollback_does_not_project_context_state(self):
         reg = ContextRegistry()
         protocol = StateProjectionProtocol(reg)
         sig = make_signature()
@@ -108,12 +109,13 @@ class TestProjectRolledBack:
         result = protocol.project(sig, exec_state)
 
         assert result.projection_type == "rollback"
-        ds_state = reg.get_dataset_state("nfe")
-        assert ds_state["state"] == "rolled_back"
+        assert not result.projected
+        assert result.audit_only
+        assert reg.get_dataset_state(sig.target_dataset_name) is None
 
     def test_preserves_existing_state_on_rollback(self):
         reg = ContextRegistry()
-        reg.set_dataset_state("nfe", {"state": "published", "rows": 1000})
+        reg.set_dataset_state("silver_nfe", {"state": "published", "rows": 1000})
         protocol = StateProjectionProtocol(reg)
         sig = make_signature()
 
@@ -121,7 +123,7 @@ class TestProjectRolledBack:
         protocol.project(sig, exec_state)
 
         # Should NOT overwrite existing published state
-        ds_state = reg.get_dataset_state("nfe")
+        ds_state = reg.get_dataset_state("silver_nfe")
         assert ds_state["state"] == "published"
 
 
@@ -139,7 +141,7 @@ class TestProjectCommittedNotPublished:
         result = protocol.project(sig, exec_state)
 
         assert result.projection_type == "partial"
-        ds_state = reg.get_dataset_state("nfe")
+        ds_state = reg.get_dataset_state(sig.target_dataset_name)
         assert ds_state["state"] == "committed_not_published"
 
 
@@ -163,9 +165,9 @@ class TestSnapshotCreation:
         result = protocol.project(sig, exec_state)
 
         # Mutate
-        reg.set_dataset_state("nfe", {"state": "quarantined"})
-        assert reg.get_dataset_state("nfe")["state"] == "quarantined"
+        reg.set_dataset_state(sig.target_dataset_name, {"state": "quarantined"})
+        assert reg.get_dataset_state(sig.target_dataset_name)["state"] == "quarantined"
 
         # Restore
         assert reg.restore_snapshot(result.snapshot_version)
-        assert reg.get_dataset_state("nfe")["state"] == "published"
+        assert reg.get_dataset_state(sig.target_dataset_name)["state"] == "published"

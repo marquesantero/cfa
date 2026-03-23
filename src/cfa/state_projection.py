@@ -39,6 +39,7 @@ class ProjectionResult:
     snapshot_version: str = ""
     dataset_states_updated: list[str] = None  # type: ignore[assignment]
     projection_type: str = ""  # "full", "partial", "rollback", "degraded"
+    audit_only: bool = False
 
     def __post_init__(self) -> None:
         if self.dataset_states_updated is None:
@@ -66,25 +67,25 @@ class StateProjectionProtocol:
     ) -> ProjectionResult:
         """Project execution state into the Context Registry."""
         now = _utcnow().isoformat()
-        target_datasets = [d.name for d in signature.datasets]
+        target_scope = [signature.target_dataset_name]
 
         match execution_state.publish_state:
             case PublishState.PUBLISHED:
-                return self._project_published(signature, execution_state, target_datasets, now)
+                return self._project_published(signature, execution_state, target_scope, now)
 
             case PublishState.DEGRADED:
-                return self._project_degraded(signature, execution_state, target_datasets, now)
+                return self._project_degraded(signature, execution_state, target_scope, now)
 
             case PublishState.COMMITTED_NOT_PUBLISHED:
                 return self._project_committed_not_published(
-                    signature, execution_state, target_datasets, now
+                    signature, execution_state, target_scope, now
                 )
 
             case PublishState.QUARANTINED:
-                return self._project_quarantined(signature, execution_state, target_datasets, now)
+                return self._project_quarantined(signature, execution_state, target_scope, now)
 
             case PublishState.ROLLED_BACK:
-                return self._project_rolled_back(signature, execution_state, target_datasets, now)
+                return self._project_rolled_back(signature, execution_state, target_scope, now)
 
             case _:
                 return ProjectionResult(projected=False, projection_type="unknown")
@@ -209,23 +210,10 @@ class StateProjectionProtocol:
         datasets: list[str],
         timestamp: str,
     ) -> ProjectionResult:
-        # On rollback, record that datasets were NOT updated
-        for ds_name in datasets:
-            current = self.registry.get_dataset_state(ds_name)
-            if current is None:
-                # First time — mark as rolled back
-                self.registry.set_dataset_state(ds_name, {
-                    "state": "rolled_back",
-                    "signature_hash": signature.signature_hash,
-                    "last_updated": timestamp,
-                    "reason": execution_state.faults[0].message if execution_state.faults else "unknown",
-                })
-            # If dataset already has state, leave it untouched (rollback = no change)
-
-        snapshot_id = self.registry.snapshot()
         return ProjectionResult(
-            projected=True,
-            snapshot_version=snapshot_id,
-            dataset_states_updated=datasets,
+            projected=False,
+            snapshot_version="",
+            dataset_states_updated=[],
             projection_type="rollback",
+            audit_only=True,
         )

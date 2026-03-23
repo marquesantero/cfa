@@ -340,18 +340,23 @@ class KernelOrchestrator:
                             projection.projection_type,
                             snapshot_version=projection.snapshot_version,
                             datasets_updated=projection.dataset_states_updated,
+                            projected=projection.projected,
+                            audit_only=projection.audit_only,
                         )
                         result.add_event(
                             "state_projection", "projected",
                             projection.projection_type,
                             snapshot_version=projection.snapshot_version,
                             datasets_updated=projection.dataset_states_updated,
+                            projected=projection.projected,
+                            audit_only=projection.audit_only,
                         )
 
                         if exec_state.publish_state == PublishState.ROLLED_BACK:
                             result.state = DecisionState.ROLLED_BACK
                             result.blocked_reason = "Execution rolled back."
                             result.signature = signature
+                            self._finalize_execution_result(result, signature, replan_count)
                             return result
 
                         if exec_state.publish_state == PublishState.QUARANTINED:
@@ -360,11 +365,13 @@ class KernelOrchestrator:
                                 f"Steps quarantined: {exec_state.quarantined_steps}"
                             )
                             result.signature = signature
+                            self._finalize_execution_result(result, signature, replan_count)
                             return result
 
                         if exec_state.publish_state == PublishState.COMMITTED_NOT_PUBLISHED:
                             result.state = DecisionState.PARTIALLY_COMMITTED
                             result.signature = signature
+                            self._finalize_execution_result(result, signature, replan_count)
                             return result
 
         # ── Step 9: Final Decision ───────────────────────────────────────
@@ -380,53 +387,7 @@ class KernelOrchestrator:
 
         result.state = final_state
         result.signature = signature
-
-        # Record in Context Registry
-        self.context_registry.record_execution(
-            intent_id=intent_id,
-            outcome=final_state.value,
-            signature_hash=signature.signature_hash,
-        )
-
-        self._audit(intent_id, "decision_engine", "final_decision", final_state.value,
-                    signature_hash=signature.signature_hash,
-                    replan_count=replan_count, warnings=has_warnings)
-        result.add_event("decision_engine", "final_decision", final_state.value,
-                         signature_hash=signature.signature_hash,
-                         replan_count=replan_count, warnings=has_warnings)
-
-        # ── Step 10: Promotion / Demotion Evaluation (Phase 5) ──────────
-        if self.config.enable_promotion:
-            exec_state = result.execution_state
-            exec_record = ExecutionRecord(
-                signature_hash=signature.signature_hash,
-                timestamp=_utcnow(),
-                success=final_state in (DecisionState.APPROVED, DecisionState.APPROVED_WITH_WARNINGS),
-                replanned=replan_count > 0,
-                cost_dbu=exec_state.sandbox_result.aggregate_metrics.cost_dbu if exec_state and exec_state.sandbox_result else 0.0,
-                duration_seconds=exec_state.sandbox_result.aggregate_metrics.duration_seconds if exec_state and exec_state.sandbox_result else 0.0,
-                faults=[f.code for f in policy_result.faults],
-                policy_compliant=True,
-                pii_exposure=False,
-                layer_adherent=True,
-            )
-            self.promotion_engine.record_execution(exec_record)
-
-            skill, scores = self.promotion_engine.evaluate(
-                signature.signature_hash,
-                policy_bundle_version=pbv,
-                catalog_snapshot_version=self.config.catalog_snapshot_version,
-            )
-
-            self._audit(intent_id, "promotion_engine", "promotion_evaluation", skill.state.value,
-                        ifo=scores.ifo, ifs=scores.ifs, ifg=scores.ifg, idi=scores.idi,
-                        execution_count=scores.execution_count, skill_state=skill.state.value)
-            result.add_event("promotion_engine", "promotion_evaluation", skill.state.value,
-                             ifo=scores.ifo, ifs=scores.ifs, ifg=scores.ifg, idi=scores.idi,
-                             execution_count=scores.execution_count, skill_state=skill.state.value)
-
-            if skill.state == SkillState.ACTIVE and final_state == DecisionState.APPROVED:
-                result.state = DecisionState.PROMOTION_CANDIDATE
+        self._finalize_execution_result(result, signature, replan_count)
 
         return result
 
@@ -484,3 +445,104 @@ class KernelOrchestrator:
             "policy_rules": len(self.policy.rules),
             "audit_events": self.audit_trail.event_count,
         }
+
+    def _finalize_execution_result(
+        self,
+        result: KernelResult,
+        signature: StateSignature,
+        replan_count: int,
+    ) -> None:
+        """Persist final outcome and feed lifecycle metrics for executed intents."""
+        intent_id = result.intent_id
+        final_state = result.state
+        exec_state = result.execution_state
+        policy_result = result.policy_result
+
+        self.context_registry.record_execution(
+            intent_id=intent_id,
+            outcome=final_state.value,
+            signature_hash=signature.signature_hash,
+        )
+
+        self._audit(
+            intent_id,
+            "decision_engine",
+            "final_decision",
+            final_state.value,
+            signature_hash=signature.signature_hash,
+            replan_count=replan_count,
+            warnings=final_state == DecisionState.APPROVED_WITH_WARNINGS,
+        )
+        result.add_event(
+            "decision_engine",
+            "final_decision",
+            final_state.value,
+            signature_hash=signature.signature_hash,
+            replan_count=replan_count,
+            warnings=final_state == DecisionState.APPROVED_WITH_WARNINGS,
+        )
+
+        if not self.config.enable_promotion:
+            return
+
+        all_faults: list[str] = []
+        if policy_result:
+            all_faults.extend(f.code for f in policy_result.faults)
+        if exec_state:
+            all_faults.extend(f.code for f in exec_state.faults)
+
+        cost_dbu = 0.0
+        duration_seconds = 0.0
+        if exec_state and exec_state.sandbox_result:
+            cost_dbu = exec_state.sandbox_result.aggregate_metrics.cost_dbu
+            duration_seconds = exec_state.sandbox_result.aggregate_metrics.duration_seconds
+
+        exec_record = ExecutionRecord(
+            signature_hash=signature.signature_hash,
+            timestamp=_utcnow(),
+            success=final_state in (DecisionState.APPROVED, DecisionState.APPROVED_WITH_WARNINGS),
+            replanned=replan_count > 0,
+            cost_dbu=cost_dbu,
+            duration_seconds=duration_seconds,
+            faults=all_faults,
+            policy_compliant=final_state not in (
+                DecisionState.ROLLED_BACK,
+                DecisionState.QUARANTINED,
+            ),
+            pii_exposure=any("PII" in code for code in all_faults),
+            layer_adherent=final_state != DecisionState.ROLLED_BACK,
+        )
+        self.promotion_engine.record_execution(exec_record)
+
+        skill, scores = self.promotion_engine.evaluate(
+            signature.signature_hash,
+            policy_bundle_version=self.config.policy_bundle_version,
+            catalog_snapshot_version=self.config.catalog_snapshot_version,
+        )
+
+        self._audit(
+            intent_id,
+            "promotion_engine",
+            "promotion_evaluation",
+            skill.state.value,
+            ifo=scores.ifo,
+            ifs=scores.ifs,
+            ifg=scores.ifg,
+            idi=scores.idi,
+            execution_count=scores.execution_count,
+            skill_state=skill.state.value,
+        )
+        result.add_event(
+            "promotion_engine",
+            "promotion_evaluation",
+            skill.state.value,
+            ifo=scores.ifo,
+            ifs=scores.ifs,
+            ifg=scores.ifg,
+            idi=scores.idi,
+            execution_count=scores.execution_count,
+            skill_state=skill.state.value,
+        )
+
+        if skill.state == SkillState.ACTIVE and final_state == DecisionState.APPROVED:
+            result.state = DecisionState.PROMOTION_CANDIDATE

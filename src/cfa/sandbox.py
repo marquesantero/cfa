@@ -253,6 +253,7 @@ class SandboxExecutor:
         plan: ExecutionPlan,
         code: GeneratedCode,
         signature: StateSignature,
+        step_ids: list[str] | None = None,
     ) -> SandboxResult:
         # Pre-check environment
         env_faults = self.backend.check_environment()
@@ -264,6 +265,9 @@ class SandboxExecutor:
             )
 
         ordered_steps = plan.execution_order()
+        if step_ids is not None:
+            allowed = set(step_ids)
+            ordered_steps = [step for step in ordered_steps if step.id in allowed]
         step_results: list[StepResult] = []
         all_faults: list[Fault] = []
         total_metrics = ExecutionMetrics()

@@ -21,6 +21,7 @@ from enum import Enum
 from typing import Any
 
 from .sandbox import (
+    ExecutionMetrics,
     SandboxExecutor,
     SandboxResult,
     SandboxOutcome,
@@ -167,9 +168,96 @@ class PartialExecutionManager:
 
         # ── Partial failure: some steps failed ──────────────────────────
         if sandbox_result.outcome in (SandboxOutcome.PARTIAL, SandboxOutcome.FAILED):
+            retried = self._retry_failed_steps(state, plan, code, signature, schema_contract)
+            if retried is not None:
+                return retried
             return self._apply_failure_policy(state)
 
         return state
+
+    def _retry_failed_steps(
+        self,
+        state: PartialExecutionState,
+        plan: ExecutionPlan,
+        code: GeneratedCode,
+        signature: StateSignature,
+        schema_contract: dict[str, Any] | None,
+    ) -> PartialExecutionState | None:
+        """Retry failed consistency units before terminal policy application."""
+        assert state.sandbox_result is not None
+        failed_step_ids = [r.step_id for r in state.sandbox_result.failed_steps]
+        if not failed_step_ids or self.retry_policy.max_attempts <= 1:
+            return None
+
+        latest_result = state.sandbox_result
+        retryable_ids = list(failed_step_ids)
+
+        for attempt in range(1, self.retry_policy.max_attempts):
+            retry_result = self.sandbox.execute(plan, code, signature, step_ids=retryable_ids)
+            state.retry_count = attempt
+            state.faults.extend(retry_result.faults)
+
+            latest_result = self._merge_retry_result(latest_result, retry_result)
+            remaining_failed = [r.step_id for r in latest_result.failed_steps]
+
+            if not remaining_failed:
+                state.sandbox_result = latest_result
+                rv_result = self.runtime_validator.validate(latest_result, signature, schema_contract)
+                state.runtime_validation = rv_result
+                state.faults.extend(rv_result.faults)
+                if rv_result.passed:
+                    state.publish_state = PublishState.PUBLISHED
+                    state.committed_steps = [r.step_id for r in latest_result.step_results]
+                    state.quarantined_steps = []
+                    return state
+                return self._apply_failure_policy_for_validation(state)
+
+            if not self.retry_policy.retry_failed_only:
+                retryable_ids = [s.id for s in plan.execution_order()]
+            else:
+                retryable_ids = remaining_failed
+
+        state.sandbox_result = latest_result
+        return None
+
+    def _merge_retry_result(
+        self,
+        base: SandboxResult,
+        retry: SandboxResult,
+    ) -> SandboxResult:
+        """Merge retry outcomes over the original attempt, keeping latest result per retried step."""
+        replacement = {r.step_id: r for r in retry.step_results}
+        merged_steps = [replacement.get(step.step_id, step) for step in base.step_results]
+
+        aggregate = ExecutionMetrics()
+        all_faults: list[Fault] = []
+        for step in merged_steps:
+            if step.faults:
+                all_faults.extend(step.faults)
+            if step.outcome == StepOutcome.SUCCESS:
+                aggregate.rows_output = step.metrics.rows_output
+                aggregate.shuffle_bytes += step.metrics.shuffle_bytes
+                aggregate.duration_seconds += step.metrics.duration_seconds
+                aggregate.cost_dbu += step.metrics.cost_dbu
+                aggregate.output_schema = step.metrics.output_schema
+                for col, cnt in step.metrics.null_counts.items():
+                    aggregate.null_counts[col] = aggregate.null_counts.get(col, 0) + cnt
+
+        failed = [r for r in merged_steps if r.outcome == StepOutcome.FAILED]
+        if not failed:
+            outcome = SandboxOutcome.COMPLETED
+        elif len(failed) < len(merged_steps):
+            outcome = SandboxOutcome.PARTIAL
+        else:
+            outcome = SandboxOutcome.FAILED
+
+        return SandboxResult(
+            outcome=outcome,
+            step_results=merged_steps,
+            aggregate_metrics=aggregate,
+            faults=all_faults,
+            panic_reason=retry.panic_reason or base.panic_reason,
+        )
 
     def _apply_failure_policy(self, state: PartialExecutionState) -> PartialExecutionState:
         """Apply failure policy when sandbox has partial/full failure."""

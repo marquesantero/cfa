@@ -120,6 +120,23 @@ class TestKernelContextRegistry:
         env = registry.get_environment_state()
         assert len(env["execution_history"]) == 0
 
+    def test_context_registry_records_rolled_back_execution(self):
+        from cfa.kernel import KernelConfig
+        from cfa.sandbox import PanicSandboxBackend
+
+        registry = ContextRegistry()
+        kernel = KernelOrchestrator(
+            catalog=CATALOG,
+            context_registry=registry,
+            config=KernelConfig(enable_sandbox=True),
+            sandbox_backend=PanicSandboxBackend(panic_on_step="extract_nfe"),
+        )
+        result = kernel.process("Processar nfe na Silver")
+        env = registry.get_environment_state()
+        assert result.state == DecisionState.ROLLED_BACK
+        assert env["execution_history"][-1]["intent_id"] == result.intent_id
+        assert env["execution_history"][-1]["outcome"] == "rolled_back"
+
 
 class TestKernelDescribe:
     def test_describe_returns_expected_keys(self):

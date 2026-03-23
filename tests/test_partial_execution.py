@@ -12,9 +12,12 @@ from cfa.runtime_validation import RuntimeThresholds, RuntimeValidator
 from cfa.sandbox import (
     MockSandboxBackend,
     PanicSandboxBackend,
+    StepOutcome,
+    StepResult,
     SandboxExecutor,
     SandboxOutcome,
 )
+from cfa.types import Fault, FaultFamily, FaultSeverity, PolicyAction
 from conftest import make_signature
 
 
@@ -25,6 +28,33 @@ def _make_plan_code_sig(**kwargs):
     plan = planner.plan(sig)
     code = gen.generate(plan)
     return plan, code, sig
+
+
+class FailOnceBackend(MockSandboxBackend):
+    def __init__(self, fail_once_steps: set[str], **kwargs):
+        super().__init__(**kwargs)
+        self.fail_once_steps = set(fail_once_steps)
+
+    def execute_step(self, step, code, context):
+        if step.id in self.fail_once_steps:
+            self.fail_once_steps.remove(step.id)
+            return StepResult(
+                step_id=step.id,
+                outcome=StepOutcome.FAILED,
+                error=f"Transient failure on step {step.id}",
+                faults=[
+                    Fault(
+                        code="RUNTIME_STEP_FAILED",
+                        family=FaultFamily.RUNTIME,
+                        severity=FaultSeverity.HIGH,
+                        stage="sandbox",
+                        message=f"Step {step.id} failed during execution.",
+                        mandatory_action=PolicyAction.BLOCK,
+                        detected_before_execution=False,
+                    )
+                ],
+            )
+        return super().execute_step(step, code, context)
 
 
 class TestHappyPath:
@@ -111,6 +141,20 @@ class TestFailurePolicies:
             assert state.publish_state == PublishState.DEGRADED
             degraded_faults = [f for f in state.faults if f.code == "PARTIAL_DEGRADED_PUBLISH"]
             assert len(degraded_faults) == 1
+
+
+class TestRetries:
+    def test_retry_failed_steps_only_can_recover(self):
+        plan, code, sig = _make_plan_code_sig()
+        fail_id = plan.execution_order()[0].id
+        manager = PartialExecutionManager(
+            sandbox=SandboxExecutor(backend=FailOnceBackend(fail_once_steps={fail_id})),
+            retry_policy=RetryPolicy(max_attempts=3, retry_failed_only=True),
+        )
+        state = manager.execute(plan, code, sig)
+        assert state.retry_count == 1
+        assert state.publish_state == PublishState.PUBLISHED
+        assert fail_id in state.committed_steps
 
 
 class TestRuntimeValidationFailure:
