@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CFA Docs</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121936;
+      --panel-2: #172042;
+      --border: #27315a;
+      --text: #eef2ff;
+      --muted: #a5b4fc;
+      --accent: #7dd3fc;
+      --accent-2: #86efac;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(125, 211, 252, 0.14), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(134, 239, 172, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.05;
+    }
+
+    .intro {
+      max-width: 720px;
+      font-size: 18px;
+      line-height: 1.7;
+      color: #dbe4ff;
+      margin-bottom: 36px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .label {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .desc {
+      color: #cbd5e1;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .note {
+      margin-top: 36px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    code {
+      background: rgba(255,255,255,0.08);
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="eyebrow">Contextual Flux Architecture</div>
+    <h1>CFA Documentation</h1>
+    <p class="intro">
+      CFA is a governed execution kernel for AI-native systems. This documentation entrypoint is intended for GitHub Pages so the whitepaper can be read as a real HTML page instead of raw source.
+    </p>
+
+    <section class="grid">
+      <a class="card" href="./cfa-v2-whitepaper.html">
+        <div class="label">Architecture</div>
+        <div class="title">CFA v2 Whitepaper</div>
+        <div class="desc">Read the full architecture reference in HTML format, including the conceptual model, invariants, components, and phased implementation strategy.</div>
+      </a>
+
+      <a class="card" href="../README.md">
+        <div class="label">Repository</div>
+        <div class="title">Project Overview</div>
+        <div class="desc">Open the repository README for the proposal summary, implementation overview, use cases, installation, roadmap, and contribution details.</div>
+      </a>
+
+      <a class="card" href="./guide.md">
+        <div class="label">Implementation</div>
+        <div class="title">Usage Guide</div>
+        <div class="desc">Review the implementation-oriented guide covering the governance, resolution, lifecycle, and full-kernel usage modes.</div>
+      </a>
+    </section>
+
+    <p class="note">
+      To publish this on GitHub Pages, set the repository Pages source to branch <code>main</code> and folder <code>/docs</code>.
+    </p>
+  </main>
+</body>
+</html>
