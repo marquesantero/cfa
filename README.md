@@ -4,67 +4,123 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 
-**Contextual Flux Architecture** is a governed execution kernel for AI-native data systems.
+**Contextual Flux Architecture** is a governed execution kernel for AI-native systems.
 
-Most agentic stacks jump straight from prompt to action. CFA inserts typed intent resolution, policy evaluation, validation, controlled execution, state projection, and auditability between those two points. Instead of asking _"which agent or skill should act?"_, CFA asks _"which state transition is being requested, under which constraints, and can it be executed safely?"_
+It is designed for the point where language models stop being just conversational interfaces and start participating in real operational flows: transforming data, materializing outputs, touching governed layers, consuming runtime budget, and changing system state.
 
-## The three gaps CFA targets
+Most current agentic stacks still move too quickly from prompt to action. CFA introduces a stronger middle layer between those two points: typed intent resolution, declarative policy evaluation, validation, controlled execution, state projection, and auditability.
 
-| Gap | What happens in many current stacks | What CFA does |
+Instead of asking:
+
+> which agent or skill should act?
+
+CFA asks:
+
+> which state transition is being requested, under which constraints, and can it be executed safely?
+
+## Why CFA exists
+
+The dominant `agents + skills + tools` pattern works well for lightweight automation and low-impact tasks. It becomes much weaker when AI is expected to operate inside real systems.
+
+The core failure mode is not only model quality. It is architectural looseness.
+
+### The three gaps CFA targets
+
+| Gap | What often happens today | What CFA adds |
 | --- | --- | --- |
-| Silent ambiguity | The model interprets intent and executes with implicit assumptions | Formalizes intent as a `StateSignature` before execution |
-| Weak governance | Skills/tools run without explicit checks for PII, cost, schema, or policy | `PolicyEngine` evaluates declarative rules before execution |
-| No explicit state model | The system returns text/logs but does not persist operational context | `ContextRegistry` projects approved state back into the environment |
+| Silent ambiguity | The model interprets the request and executes on implicit assumptions | Intent is formalized into a typed `StateSignature` before execution |
+| Weak governance | Tools run without a strong policy gate for PII, cost, schema, or target constraints | `PolicyEngine` applies declarative rules before execution |
+| No explicit state model | The system returns logs or text, but does not persist operational context | `ContextRegistry` projects approved state back into the environment |
 
-## Modular by design
+In practice, CFA is an attempt to move AI execution from "model interpreted something plausible" to "the system can explain what was requested, what was allowed, what was executed, and what changed afterward."
 
-Each subsystem can be adopted independently:
+## What CFA is
+
+CFA is not:
+
+- another prompt wrapper
+- a generic agent orchestration framework
+- a collection of skills with stronger naming
+
+CFA is:
+
+- a typed contract layer between intent and action
+- a governed execution pipeline
+- a model for projecting approved execution effects back into system context
+- a basis for measuring recurring flow health over time
+
+## Architecture at a glance
+
+The implementation is modular. You can adopt only the layer you need.
+
+| Surface | Purpose | Typical use |
+| --- | --- | --- |
+| `cfa.governance` | Policy checks and validation before execution | Existing pipelines that need a formal decision gate |
+| `cfa.resolution` | Natural-language intent resolution into typed contracts | Systems that need semantic interpretation before action |
+| `cfa.lifecycle` | Quantitative health tracking for recurring flows | Promotion, watchlisting, demotion, and retirement |
+| `KernelOrchestrator` | Full governed execution flow | End-to-end natural-language to execution outcome |
+
+High-level kernel flow:
 
 ```text
-cfa.governance   Evaluate operations against policy rules.
-cfa.resolution   Convert natural language into typed intent.
-cfa.lifecycle    Track recurring execution health with quantitative indices.
+intent -> normalization -> confirmation -> policy -> planning -> codegen
+-> static validation -> sandbox -> runtime validation -> partial execution
+-> state projection -> audit -> lifecycle evaluation
 ```
 
-The full kernel (`KernelOrchestrator`) composes all of them when you need the complete flow.
+## Core concepts
 
-## Requirements
+### `StateSignature`
 
-- Python 3.11+
+An immutable execution contract that captures:
 
-The repository uses `match` statements in the code generation path, so Python 3.9 will not execute the full kernel or governance examples correctly.
+- domain
+- intent
+- input datasets
+- target layer
+- constraints
+- execution context
 
-## Installation
+Every kernel decision starts from the signature, not from an opaque prompt interpretation.
 
-```bash
-pip install -e .
-pip install -e .[dev]
-```
+### `PolicyEngine`
 
-Run tests:
+A declarative policy layer that evaluates whether a request may proceed, must be replanned, or must be blocked.
 
-```bash
-pytest -q
-```
+Typical checks include:
 
-Current suite: `203 passed`.
+- PII handling
+- merge-key requirements
+- partition requirements
+- type enforcement
+- cost guardrails
 
-## Running the examples
+### `ContextRegistry`
 
-The examples in [`examples`](./examples/) are written to run directly from a repository checkout. If you prefer not to install the package, run them with Python 3.11 from the repo root:
+An operational context store for what the system should consider current and relevant. It is not just a log. It exists to inform future decisions with materialized context.
 
-```bash
-python examples/standalone_resolution.py
-python examples/standalone_lifecycle.py
-python examples/standalone_governance.py
-python examples/full_pipeline.py
-```
+### `AuditTrail`
 
-If you are embedding CFA into another environment, the standard editable install remains the cleanest option.
+An append-only chain of events with linked hashes for tamper detection and execution traceability.
 
-## `cfa.governance`
+### Lifecycle indices
 
-Add governance to an existing pipeline without requiring an LLM, Spark cluster, or runtime adapter.
+Recurring flows can be evaluated with four indices:
+
+| Index | Meaning |
+| --- | --- |
+| IFo | Operational fluidity: latency, cost, success rate |
+| IFs | Semantic fidelity: schema health, drift, faults |
+| IFg | Governance integrity: binary pass/fail signal |
+| IDI | Intent drift over the evaluation window |
+
+These scores support evidence-based promotion, watchlisting, demotion, and retirement.
+
+## Quick example
+
+### Governance only
+
+Use CFA as a policy gate in front of an existing pipeline:
 
 ```python
 from cfa.governance import (
@@ -77,7 +133,7 @@ from cfa.governance import (
     ExecutionContext,
 )
 
-sig = StateSignature(
+signature = StateSignature(
     domain="fiscal",
     intent="reconciliation",
     target_layer=TargetLayer.SILVER,
@@ -94,20 +150,15 @@ sig = StateSignature(
     execution_context=ExecutionContext("v1.0", "catalog_2026", "ctx_1"),
 )
 
-engine = PolicyEngine()
-result = engine.evaluate(sig)
+result = PolicyEngine().evaluate(signature)
 
 if result.is_blocked:
-    raise RuntimeError(f"Blocked: {result.reasoning}")
+    raise RuntimeError(result.reasoning)
 ```
 
-Built-in policy coverage includes PII handling, merge-key enforcement, partition requirements, type enforcement, and cost constraints.
+### Natural-language resolution
 
-`StaticValidator` can also scan generated PySpark code for disallowed patterns such as `collect`, `toPandas`, `crossJoin`, and `import os`.
-
-## `cfa.resolution`
-
-Convert natural-language requests into typed intent contracts.
+Use CFA to convert free-form requests into typed intent:
 
 ```python
 from cfa.resolution import IntentNormalizer, MockNormalizerBackend
@@ -134,55 +185,15 @@ resolution = normalizer.normalize(
     catalog=catalog,
 )
 
-sig = resolution.signature
-print(sig.domain)
-print(sig.target_layer)
-print(sig.contains_pii)
+print(resolution.signature.domain)
+print(resolution.signature.target_layer.value)
 print(resolution.confidence_score)
-print(resolution.confirmation_mode)
+print(resolution.confirmation_mode.value)
 ```
 
-The bundled `MockNormalizerBackend` is deterministic and intended for tests and demos. Production usage should implement `NormalizerBackend` against an actual LLM or rules-based semantic resolver.
+### Full kernel
 
-The `ConfirmationOrchestrator` escalates automatically when confidence is low, ambiguity is high, or protected data is involved.
-
-## `cfa.lifecycle`
-
-Track recurring execution quality and decide whether a flow should be promoted, watchlisted, deprecated, or retired.
-
-```python
-from datetime import datetime, timezone
-from cfa.lifecycle import PromotionEngine, PromotionPolicy, ExecutionRecord
-
-engine = PromotionEngine(policy=PromotionPolicy(min_executions=5))
-
-engine.record_execution(
-    ExecutionRecord(
-        signature_hash="pipeline_fiscal_abc",
-        timestamp=datetime.now(timezone.utc),
-        success=True,
-        cost_dbu=5.0,
-        duration_seconds=30.0,
-    )
-)
-
-skill, scores = engine.evaluate("pipeline_fiscal_abc")
-print(skill.state.value)
-print(scores.ifo, scores.ifs, scores.ifg, scores.idi)
-```
-
-The lifecycle model computes four indices:
-
-| Index | Meaning |
-| --- | --- |
-| IFo | Operational fluidity: latency, cost, success rate |
-| IFs | Semantic fidelity: schema health, drift, faults |
-| IFg | Governance integrity: binary pass/fail signal |
-| IDI | Intent drift over the evaluation window |
-
-## Full kernel
-
-When you need the full path from natural language to execution outcome:
+Use the full orchestrator when you want the governed end-to-end flow:
 
 ```python
 from cfa import KernelOrchestrator
@@ -193,29 +204,79 @@ result = kernel.process("Join NFe with Clientes and persist to Silver")
 print(result.state.value)
 ```
 
-High-level flow:
+## What makes the project different
 
-```text
-intent -> normalization -> confirmation -> policy -> planning -> codegen
--> static validation -> sandbox -> runtime validation -> partial execution
--> state projection -> audit -> lifecycle evaluation
+The differentiator is not that CFA uses an LLM somewhere in the pipeline. Many systems do that.
+
+The differentiator is that CFA treats:
+
+- semantic interpretation
+- governance
+- execution
+- state update
+- audit
+- recurring health
+
+as parts of the same architectural contract.
+
+That makes it a better fit for systems where AI is allowed to do more than answer questions.
+
+## Adoption model
+
+You do not need to adopt CFA all at once.
+
+| Adoption mode | What you get |
+| --- | --- |
+| Governance only | A formal decision gate before pipeline execution |
+| Governance + Resolution | Natural-language requests converted into governed contracts |
+| Partial kernel | Validation, controlled execution, and state projection |
+| Full kernel | End-to-end governed execution flow |
+
+This matters because architectural replacement rarely happens in one move. The repository is intentionally structured so adoption can happen incrementally.
+
+## Current implementation status
+
+Current repository characteristics:
+
+- Python 3.11+
+- modular package layout
+- full automated test suite
+- deterministic mock backend for semantic resolution
+- deterministic PySpark-oriented code generation path
+- JSON/JSONL-oriented local persistence backends
+- public whitepaper and project site
+
+Test status:
+
+```bash
+pytest -q
 ```
 
-Each phase can be disabled through `KernelConfig`.
+Current suite: `203 passed`.
 
-## Key concepts
+## Requirements
 
-**StateSignature**  
-Immutable execution contract capturing domain, intent, datasets, constraints, and execution context. It carries a deterministic SHA256 hash.
+- Python 3.11+
 
-**ContextRegistry**  
-Persistent operational context store. It is not just a log; it represents the environment state relevant to future decisions.
+The repository uses `match` in the code generation path, so Python 3.9 will not execute the full kernel or governance examples correctly.
 
-**Faults**  
-Typed faults grouped into semantic, static, runtime, and environmental families instead of generic execution errors.
+## Installation
 
-**AuditTrail**  
-Append-only event chain with SHA256 hash linking for tamper detection.
+```bash
+pip install -e .
+pip install -e .[dev]
+```
+
+## Running examples
+
+The examples in [`examples`](./examples/) are set up to run from a repository checkout.
+
+```bash
+python examples/standalone_resolution.py
+python examples/standalone_lifecycle.py
+python examples/standalone_governance.py
+python examples/full_pipeline.py
+```
 
 ## Repository structure
 
@@ -243,7 +304,7 @@ src/cfa/
 
 examples/             standalone and full-kernel examples
 tests/                automated test suite
-docs/                 guide and repository-facing documents
+docs/                 repository-facing documentation
 ```
 
 ## Known limitations
@@ -253,18 +314,26 @@ docs/                 guide and repository-facing documents
 - Persistence defaults to JSON/JSONL-oriented local backends.
 - Concurrency is intentionally conservative.
 
-## Documentation
+## Where to read next
 
 - [Usage Guide](./docs/guide.md)
-- [Repository Article Draft](./docs/linkedin-article.md)
 - [Examples](./examples/)
 - [Project Pages](https://marquesantero.github.io/cfa/)
 - [Whitepaper PT-BR](./docs/cfa-v2-whitepaper.html)
 - [Whitepaper EN](./docs/cfa-v2-whitepaper.en.html)
+- [Contributing](./CONTRIBUTING.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md).
+If you want to contribute, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Areas especially worth discussion:
+
+- state projection semantics
+- policy evolution
+- planner contracts
+- runtime adapters
+- lifecycle evidence thresholds
 
 ## License
 
