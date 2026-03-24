@@ -50,6 +50,8 @@ If you change runtime behavior that affects the architectural contract, update t
 - [`docs/guide.md`](./docs/guide.md)
 - the whitepaper files when appropriate
 
+For public-facing reading, prefer the published GitHub Pages experience. If whitepaper content is updated, keep the repository copies and published pages aligned.
+
 ### 2. Prefer explicit contracts
 
 CFA is based on typed contracts, policy evaluation, and state transitions. Avoid introducing opaque behavior that bypasses:

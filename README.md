@@ -252,7 +252,7 @@ Test status:
 pytest -q
 ```
 
-Current suite: `203 passed`.
+The current test suite passes in CI and locally with `pytest -q`.
 
 ## Requirements
 
@@ -277,6 +277,15 @@ python examples/standalone_lifecycle.py
 python examples/standalone_governance.py
 python examples/full_pipeline.py
 ```
+
+## Documentation model
+
+The repository currently keeps:
+
+- authored whitepaper material in the repository itself
+- published project pages under GitHub Pages
+
+For the best reading experience, use the published pages links below rather than the raw repository HTML view.
 
 ## Repository structure
 
@@ -319,9 +328,10 @@ docs/                 repository-facing documentation
 - [Usage Guide](./docs/guide.md)
 - [Examples](./examples/)
 - [Project Pages](https://marquesantero.github.io/cfa/)
-- [Whitepaper PT-BR](./docs/cfa-v2-whitepaper.html)
-- [Whitepaper EN](./docs/cfa-v2-whitepaper.en.html)
+- [Whitepaper PT-BR](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.html)
+- [Whitepaper EN](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.en.html)
 - [Contributing](./CONTRIBUTING.md)
+- [Security Policy](./SECURITY.md)
 
 ## Contributing
 
