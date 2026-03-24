@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFA v2</title>
+<title>CFA v2 -- Contextual Flux Architecture</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#07090f;--surface:#0d1018;--surface2:#121520;--surface3:#171c28;--border:#1a2035;--border2:#243050;--green:#3dffa0;--green-dim:rgba(61,255,160,.12);--green-glow:rgba(61,255,160,.05);--indigo:#818cf8;--indigo-dim:rgba(129,140,248,.12);--amber:#fbbf24;--cyan:#22d3ee;--text:#e2e8f0;--text2:#92a0b5;--text3:#526077;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--display:'Syne',sans-serif}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75}body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(61,255,160,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(61,255,160,.012) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}.page{position:relative;z-index:1}.topbar{position:sticky;top:0;z-index:20;backdrop-filter:blur(16px);background:rgba(7,9,15,.84);border-bottom:1px solid var(--border)}.topbar-inner{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:24px}.brand{display:flex;flex-direction:column;gap:2px;min-width:220px}.brand-tag{font:500 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--green)}.brand-name{font:700 15px var(--display);color:#fff}.topnav{display:flex;gap:18px;flex:1;flex-wrap:wrap}.topnav a,.lang-option{text-decoration:none;font:500 12px var(--mono);letter-spacing:.04em}.topnav a{color:var(--text2)}.topnav a:hover{color:var(--green)}.lang-switch{display:flex;gap:6px;align-items:center}.lang-option{padding:8px 12px;border:1px solid transparent;color:var(--text2)}.lang-option:hover{border-color:var(--border2);color:#fff}.lang-option.active{background:var(--green);border-color:var(--green);color:var(--bg)}main{max-width:1200px;margin:0 auto;padding:48px 24px 96px}.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:22px;padding:34px 0 54px;border-bottom:1px solid var(--border)}.eyebrow{font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--green);margin-bottom:18px}.hero h1{font:800 clamp(38px,6vw,72px) var(--display);line-height:1.02;letter-spacing:-.04em;background:linear-gradient(140deg,#fff 0%,var(--green) 56%,var(--indigo) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}.hero p{max-width:760px;color:var(--text2);font-size:18px;line-height:1.7}.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.badge{display:inline-block;padding:5px 10px;border:1px solid var(--border2);background:var(--surface2);font:500 10px var(--mono);letter-spacing:.05em;color:var(--text2)}.primary-card,.panel,.mini-card,.repo-link{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--border)}.primary-card{display:block;text-decoration:none;color:inherit;padding:28px;align-self:stretch;box-shadow:0 0 0 1px rgba(61,255,160,.08) inset}.primary-card:hover{border-color:var(--green);transform:translateY(-2px)}.primary-label,.section-label,.mini-label{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green)}.primary-title{font:700 30px var(--display);color:#fff;margin:10px 0 12px}.primary-desc{color:var(--text2);font-size:15px}.primary-link{margin-top:16px;font:500 12px var(--mono);color:var(--cyan)}.section{padding:34px 0;border-bottom:1px solid var(--border)}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px}.section-title{font:700 26px var(--display);color:#fff}.section-copy{max-width:760px;color:var(--text2)}.grid-3,.grid-2{display:grid;gap:16px}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mini-card,.repo-link{padding:20px;text-decoration:none;color:inherit}.mini-title{font:700 20px var(--display);color:#fff;margin:8px 0}.mini-copy{color:var(--text2);font-size:14px}.repo-link:hover,.mini-card:hover{border-color:var(--green)}code{font:400 12px var(--mono);color:var(--cyan);background:var(--surface3);padding:2px 6px;border-radius:2px}.flow{padding:18px 20px;border:1px solid var(--border);background:var(--surface)}.flow p{color:var(--text2)}ul{margin:10px 0 0 18px;color:var(--text2)}li{margin-bottom:8px}@media (max-width:980px){.topbar-inner{align-items:flex-start;flex-direction:column}.topnav{width:100%}.hero{grid-template-columns:1fr}.grid-3,.grid-2{grid-template-columns:1fr}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.75}body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(61,255,160,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(61,255,160,.012) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}.page{position:relative;z-index:1}.topbar{position:sticky;top:0;z-index:20;backdrop-filter:blur(16px);background:rgba(7,9,15,.84);border-bottom:1px solid var(--border)}.topbar-inner{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:24px}.brand{display:flex;flex-direction:column;gap:2px;min-width:220px}.brand-tag{font:500 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--green)}.brand-name{font:700 15px var(--display);color:#fff}.topnav{display:flex;gap:18px;flex:1;flex-wrap:wrap}.topnav a,.lang-option{text-decoration:none;font:500 12px var(--mono);letter-spacing:.04em}.topnav a{color:var(--text2)}.topnav a:hover{color:var(--green)}.lang-switch{display:flex;gap:6px;align-items:center}.lang-option{padding:8px 12px;border:1px solid transparent;color:var(--text2)}.lang-option:hover{border-color:var(--border2);color:#fff}.lang-option.active{background:var(--green);border-color:var(--green);color:var(--bg)}main{max-width:1200px;margin:0 auto;padding:48px 24px 96px}.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:22px;padding:34px 0 54px;border-bottom:1px solid var(--border)}.eyebrow{font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--green);margin-bottom:18px}.hero h1{font:800 clamp(38px,6vw,72px) var(--display);line-height:1.02;letter-spacing:-.04em;background:linear-gradient(140deg,#fff 0%,var(--green) 56%,var(--indigo) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}.hero p{max-width:760px;color:var(--text2);font-size:18px;line-height:1.7}.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.badge{display:inline-block;padding:5px 10px;border:1px solid var(--border2);background:var(--surface2);font:500 10px var(--mono);letter-spacing:.05em;color:var(--text2)}.primary-card,.panel,.mini-card,.repo-link{background:linear-gradient(180deg,var(--surface),var(--surface2));border:1px solid var(--border)}.primary-card{display:block;text-decoration:none;color:inherit;padding:28px;align-self:stretch;box-shadow:0 0 0 1px rgba(61,255,160,.08) inset}.primary-card:hover{border-color:var(--green);transform:translateY(-2px)}.primary-label,.section-label,.mini-label{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--green)}.primary-title{font:700 30px var(--display);color:#fff;margin:10px 0 12px}.primary-desc{color:var(--text2);font-size:15px}.primary-link{margin-top:16px;font:500 12px var(--mono);color:var(--cyan)}.section{padding:34px 0;border-bottom:1px solid var(--border)}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:18px;flex-wrap:wrap}.section-title{font:700 26px var(--display);color:#fff}.section-copy{max-width:760px;color:var(--text2)}.grid-3,.grid-2{display:grid;gap:16px}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.mini-card,.repo-link{padding:20px;text-decoration:none;color:inherit}.mini-title{font:700 20px var(--display);color:#fff;margin:8px 0}.mini-copy{color:var(--text2);font-size:14px}.repo-link:hover,.mini-card:hover{border-color:var(--green)}code{font:400 12px var(--mono);color:var(--cyan);background:var(--surface3);padding:2px 6px;border-radius:2px}.flow{padding:18px 20px;border:1px solid var(--border);background:var(--surface)}.flow p{color:var(--text2)}.flow code{font-size:11px}ul{margin:10px 0 0 18px;color:var(--text2)}li{margin-bottom:8px}.index-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.index-card{padding:16px;background:var(--surface);border:1px solid var(--border)}.index-name{font:700 18px var(--display);color:var(--indigo)}.index-desc{font-size:13px;color:var(--text2);margin-top:4px}.install-block{background:var(--surface);border:1px solid var(--border);padding:16px 20px;margin-top:16px;font:400 13px var(--mono);color:var(--cyan)}@media(max-width:980px){.topbar-inner{align-items:flex-start;flex-direction:column}.topnav{width:100%}.hero{grid-template-columns:1fr}.grid-3,.grid-2,.index-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -20,10 +20,11 @@
     </div>
     <nav class="topnav">
       <a href="#overview">Overview</a>
-      <a href="#proposal">Proposal</a>
-      <a href="#implementation">Implementation</a>
+      <a href="#modules">Modules</a>
+      <a href="#flow">Pipeline</a>
+      <a href="#indices">Indices</a>
+      <a href="#start">Quick Start</a>
       <a href="#whitepaper">Whitepaper</a>
-      <a href="#repository">Repository</a>
     </nav>
     <div class="lang-switch">
       <a class="lang-option" href="./index.html">PT-BR</a>
@@ -34,108 +35,163 @@
 <main>
   <section class="hero" id="overview">
     <div>
-      <div class="eyebrow">Overview</div>
+      <div class="eyebrow">Governed Execution for Data Systems</div>
       <h1>CFA v2</h1>
-      <p>An architecture for AI-native systems that replaces the static agents-and-skills model with intent resolution, governed planning, validated execution, explicit state projection, and evidence-based lifecycle evolution.</p>
+      <p>Agentic systems jump from prompt to action. CFA puts governance, validation, and state between those two points -- formalizing intent into a typed contract before any execution happens.</p>
       <div class="hero-meta">
-        <span class="badge">EN</span>
-        <span class="badge">Governed Execution Architecture</span>
-        <span class="badge">GitHub Pages</span>
+        <span class="badge">Python 3.11+</span>
+        <span class="badge">203 tests</span>
+        <span class="badge">MIT</span>
       </div>
     </div>
     <a class="primary-card" href="./cfa-v2-whitepaper.en.html" id="whitepaper">
-      <div class="primary-label">Reference Document</div>
-      <div class="primary-title">Read the Whitepaper</div>
-      <div class="primary-desc">Open the complete English architectural reference for CFA v2, including invariants, components, fault model, execution flow, and declared scope.</div>
-      <div class="primary-link">Open English whitepaper →</div>
+      <div class="primary-label">Architectural Reference</div>
+      <div class="primary-title">Whitepaper</div>
+      <div class="primary-desc">Full specification: invariants, components, fault model, execution flow, and formal scope for CFA v2.</div>
+      <div class="primary-link">Open English whitepaper -></div>
     </a>
   </section>
 
-  <section class="section" id="proposal">
+  <section class="section" id="problem">
     <div class="section-head">
       <div>
-        <div class="section-label">Proposal</div>
-        <div class="section-title">From prompt to contract</div>
+        <div class="section-label">Problem</div>
+        <div class="section-title">3 gaps in agents and skills</div>
       </div>
-      <div class="section-copy">Instead of asking which agent or skill should act, CFA asks which state change is being requested, under which constraints, and whether it can be executed safely.</div>
     </div>
     <div class="grid-3">
       <div class="mini-card">
-        <div class="mini-label">Semantic Resolution</div>
-        <div class="mini-title">Typed intent</div>
-        <div class="mini-copy">Intent becomes a <code>StateSignature</code> with domain, target, datasets, constraints, and execution context.</div>
+        <div class="mini-label">Gap 1</div>
+        <div class="mini-title">Silent ambiguity</div>
+        <div class="mini-copy">The model misinterprets and executes confidently. CFA formalizes intent into a <code>StateSignature</code> before acting.</div>
       </div>
       <div class="mini-card">
-        <div class="mini-label">Governance</div>
-        <div class="mini-title">Policy before execution</div>
-        <div class="mini-copy">The <code>Policy Engine</code> approves, replans, or blocks before any execution touches real data.</div>
+        <div class="mini-label">Gap 2</div>
+        <div class="mini-title">No governance</div>
+        <div class="mini-copy">Skills run without checking PII, cost, or schema. The <code>PolicyEngine</code> evaluates declarative rules before execution.</div>
       </div>
       <div class="mini-card">
-        <div class="mini-label">State</div>
-        <div class="mini-title">Persistent context</div>
-        <div class="mini-copy">The <code>Context Registry</code> closes the loop between what was executed and what may be executed next.</div>
+        <div class="mini-label">Gap 3</div>
+        <div class="mini-title">No state model</div>
+        <div class="mini-copy">Nobody knows what state the data ended up in. The <code>ContextRegistry</code> projects and persists state after each execution.</div>
       </div>
     </div>
   </section>
 
-  <section class="section" id="implementation">
+  <section class="section" id="modules">
     <div class="section-head">
       <div>
-        <div class="section-label">Implementation</div>
-        <div class="section-title">Core Implementation</div>
+        <div class="section-label">Modular Architecture</div>
+        <div class="section-title">Use only what you need</div>
       </div>
-      <div class="section-copy">The current implementation is organized in <code>src/cfa</code>, with independent modules for resolution, governance, lifecycle, and end-to-end orchestration.</div>
+      <div class="section-copy">Each module works independently. The full pipeline orchestrates all three together, but it is not required to get started.</div>
     </div>
-    <div class="grid-2">
+    <div class="grid-3">
       <div class="mini-card">
-        <div class="mini-label">Modules</div>
-        <div class="mini-title">Core building blocks</div>
-        <div class="mini-copy"><strong>resolution</strong>, <strong>governance</strong>, <strong>lifecycle</strong>, and <strong>kernel</strong> form the operational core of CFA.</div>
+        <div class="mini-label">cfa.governance</div>
+        <div class="mini-title">Governance</div>
+        <div class="mini-copy">Validates operations against 7 declarative rules. No LLM, no Spark, no infrastructure needed. Pluggable into Airflow, Dagster, or any script.</div>
       </div>
       <div class="mini-card">
-        <div class="mini-label">Components</div>
-        <div class="mini-title">Implemented flow</div>
-        <div class="mini-copy"><code>normalizer</code>, <code>policy</code>, <code>planner</code>, <code>codegen</code>, <code>static_validation</code>, <code>runtime_validation</code>, <code>partial_execution</code>, <code>state_projection</code>, <code>audit</code>, and <code>promotion</code>.</div>
+        <div class="mini-label">cfa.resolution</div>
+        <div class="mini-title">Semantic Resolution</div>
+        <div class="mini-copy">Turns natural language into a typed contract (<code>StateSignature</code>). Escalates to human approval when risk is high.</div>
       </div>
-    </div>
-    <div class="flow" style="margin-top:16px;">
-      <p><code>Natural language → resolution → confirmation → policy → planning → code generation → static validation → execution → runtime validation → partial execution → state projection → audit → lifecycle</code></p>
-      <ul>
-        <li>Read the whitepaper for the full architectural contract.</li>
-        <li>Use <code>examples/</code> for the full pipeline.</li>
-        <li>Use the README for setup, collaboration, and CI.</li>
-      </ul>
+      <div class="mini-card">
+        <div class="mini-label">cfa.lifecycle</div>
+        <div class="mini-title">Lifecycle</div>
+        <div class="mini-copy">Monitors recurring pipeline health with 4 quantitative indices. Promotes, demotes, or retires based on evidence.</div>
+      </div>
     </div>
   </section>
 
-  <section class="section" id="repository">
+  <section class="section" id="flow">
     <div class="section-head">
       <div>
-        <div class="section-label">Repository</div>
-        <div class="section-title">GitHub Resources</div>
+        <div class="section-label">Full Pipeline</div>
+        <div class="section-title">13 governed stages</div>
       </div>
-      <div class="section-copy">The links below point to concrete GitHub destinations and do not depend on Markdown rendering inside Pages.</div>
     </div>
-    <div class="grid-2">
+    <div class="flow">
+      <p><code>intent -> normalization -> confirmation -> policy -> planning -> codegen -> static validation -> sandbox -> runtime validation -> partial execution -> state projection -> audit -> lifecycle</code></p>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="mini-card">
+        <div class="mini-label">Before execution</div>
+        <div class="mini-title">Contract + Policy</div>
+        <div class="mini-copy">Intent becomes a typed signature, confirmed by risk level, evaluated against rules. The plan and code are generated and statically validated.</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-label">After execution</div>
+        <div class="mini-title">Validation + State</div>
+        <div class="mini-copy">Sandbox collects metrics, runtime validation checks limits, partial failures have explicit policy, and the result is projected into environment state.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="indices">
+    <div class="section-head">
+      <div>
+        <div class="section-label">Lifecycle</div>
+        <div class="section-title">4 health indices</div>
+      </div>
+      <div class="section-copy">Each pipeline accumulates quantitative evidence. Promotion and demotion are automatic decisions based on these indices.</div>
+    </div>
+    <div class="index-grid">
+      <div class="index-card">
+        <div class="index-name">IFo</div>
+        <div class="index-desc">Operational fluidity: latency, cost, success rate</div>
+      </div>
+      <div class="index-card">
+        <div class="index-name">IFs</div>
+        <div class="index-desc">Semantic fidelity: schema match, drift absence, fault-free rate</div>
+      </div>
+      <div class="index-card">
+        <div class="index-name">IFg</div>
+        <div class="index-desc">Governance: binary -- 1 if compliant, 0 on any violation</div>
+      </div>
+      <div class="index-card">
+        <div class="index-name">IDI</div>
+        <div class="index-desc">Intent drift: proportion of replans in a 30-day window</div>
+      </div>
+    </div>
+    <div class="flow" style="margin-top:16px">
+      <p>Promotion gate: <code>IFo >= 0.75 AND IFs >= 0.90 AND IFg = 1</code></p>
+      <p style="margin-top:8px">Lifecycle: <code>candidate -> active -> watchlist -> deprecated -> retired</code></p>
+    </div>
+  </section>
+
+  <section class="section" id="start">
+    <div class="section-head">
+      <div>
+        <div class="section-label">Quick Start</div>
+        <div class="section-title">Get started in 2 minutes</div>
+      </div>
+    </div>
+    <div class="install-block">
+      pip install -e .&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# install<br>
+      pytest -q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 203 tests, &lt;1s
+    </div>
+    <div class="grid-2" style="margin-top:16px">
       <a class="repo-link" href="https://github.com/marquesantero/cfa" target="_blank" rel="noreferrer">
         <div class="mini-label">GitHub</div>
         <div class="mini-title">Repository</div>
-        <div class="mini-copy">Source code, issues, pull requests, license, and CI automation.</div>
+        <div class="mini-copy">Source code, issues, CI, examples, and documentation.</div>
       </a>
       <a class="repo-link" href="https://github.com/marquesantero/cfa/blob/main/README.md" target="_blank" rel="noreferrer">
-        <div class="mini-label">README</div>
-        <div class="mini-title">Project Guide</div>
-        <div class="mini-copy">Project summary, motivation, repository structure, installation, and contribution model.</div>
+        <div class="mini-label">Documentation</div>
+        <div class="mini-title">README</div>
+        <div class="mini-copy">Full guide with examples for each module, Airflow integration, and full pipeline usage.</div>
       </a>
       <a class="repo-link" href="https://github.com/marquesantero/cfa/tree/main/src/cfa" target="_blank" rel="noreferrer">
         <div class="mini-label">Source</div>
-        <div class="mini-title">Kernel Implementation</div>
-        <div class="mini-copy">Main Python modules for the CFA kernel, including orchestration, context, audit, lifecycle, and validations.</div>
+        <div class="mini-title">Implementation</div>
+        <div class="mini-copy">16 Python modules: kernel, policy, context, audit, sandbox, indices, promotion, and more.</div>
       </a>
       <a class="repo-link" href="https://github.com/marquesantero/cfa/tree/main/examples" target="_blank" rel="noreferrer">
         <div class="mini-label">Examples</div>
-        <div class="mini-title">Examples</div>
-        <div class="mini-copy">Examples for isolated governance, lifecycle, semantic resolution, and the full pipeline.</div>
+        <div class="mini-title">4 ready-to-run scripts</div>
+        <div class="mini-copy">Standalone governance, resolution, lifecycle, and full pipeline.</div>
       </a>
     </div>
   </section>
