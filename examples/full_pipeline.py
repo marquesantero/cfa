@@ -1,12 +1,19 @@
 """
-Pipeline completo -- KernelOrchestrator
-========================================
-Orquestra todos os modulos juntos.
-So use isso quando precisar do fluxo inteiro:
-  linguagem natural -> governanca -> execucao -> projecao -> lifecycle
+Full kernel example.
+
+Use this when you want the entire governed path from natural-language intent
+to execution result.
 """
 
-from cfa import KernelOrchestrator, KernelConfig
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from cfa import KernelOrchestrator
 
 CATALOG = {
     "datasets": {
@@ -26,10 +33,10 @@ CATALOG = {
 }
 
 kernel = KernelOrchestrator(catalog=CATALOG)
-result = kernel.process("Join NFe com Clientes e persista na Silver")
+result = kernel.process("Join NFe with Clientes and persist to Silver")
 
-print(f"Estado: {result.state.value}")
+print(f"State:  {result.state.value}")
 if result.signature:
     print(f"Hash:   {result.signature.signature_hash}")
 if result.blocked_reason:
-    print(f"Motivo: {result.blocked_reason}")
+    print(f"Reason: {result.blocked_reason}")

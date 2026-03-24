@@ -1,23 +1,17 @@
 """
-cfa.resolution -- Uso standalone
-==================================
-Transforma linguagem natural em intencao tipada.
-Requer um backend (LLM ou mock).
+Standalone resolution example.
 
-Caso de uso:
-  Usuarios nao-tecnicos pedem operacoes de dados.
-  Voce quer entender O QUE eles querem antes de executar.
-
-  Antes:
-    usuario_pede("junta as notas com clientes")
-    # ...e agora? qual dataset? qual layer? tem PII?
-
-  Depois:
-    resolution = normalizer.normalize("junta as notas com clientes", catalog=CATALOG)
-    # resolution.signature tem tudo tipado: domain, layer, datasets, constraints
-    # resolution.confidence_score diz se o LLM tem certeza
-    # resolution.confirmation_mode diz se precisa aprovacao humana
+Use this when natural-language requests must be converted into a typed
+`StateSignature` before any policy or execution decision.
 """
+
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from cfa.resolution import (
     IntentNormalizer,
@@ -45,48 +39,36 @@ CATALOG = {
     }
 }
 
-# ── 1. Normalizar com mock (teste) ──────────────────────────────────────────
-
 normalizer = IntentNormalizer(backend=MockNormalizerBackend())
 
 resolution = normalizer.normalize(
-    raw_intent="Join NFe com Clientes e persista na Silver",
+    raw_intent="Join NFe with Clientes and persist to Silver",
     environment_state={},
     catalog=CATALOG,
 )
 
-sig = resolution.signature
-print(f"Domain:      {sig.domain}")
-print(f"Intent:      {sig.intent}")
-print(f"Layer:       {sig.target_layer.value}")
-print(f"Datasets:    {[d.name for d in sig.datasets]}")
-print(f"PII:         {sig.contains_pii}")
-print(f"Confidence:  {resolution.confidence_score:.0%}")
-print(f"Confirmacao: {resolution.confirmation_mode.value}")
-print(f"Hash:        {sig.signature_hash}")
-
-# ── 2. Confirmation Orchestrator ─────────────────────────────────────────────
+signature = resolution.signature
+print(f"Domain:        {signature.domain}")
+print(f"Intent:        {signature.intent}")
+print(f"Layer:         {signature.target_layer.value}")
+print(f"Datasets:      {[d.name for d in signature.datasets]}")
+print(f"Contains PII:  {signature.contains_pii}")
+print(f"Confidence:    {resolution.confidence_score:.0%}")
+print(f"Confirmation:  {resolution.confirmation_mode.value}")
+print(f"Hash:          {signature.signature_hash}")
 
 confirmator = ConfirmationOrchestrator(handler=AutoApproveHandler())
 approved, reason, fault = confirmator.process(resolution)
-print(f"\nAprovado: {approved}")
-print(f"Motivo:   {reason}")
+print(f"\nApproved:      {approved}")
+print(f"Reason:        {reason}")
+print(f"Fault:         {fault.code if fault else 'None'}")
 
-# ── 3. Como implementar com LLM real ────────────────────────────────────────
 
-class MeuLLMBackend(NormalizerBackend):
-    """
-    Substitua pelo seu LLM preferido.
-    O metodo resolve() recebe contexto completo e retorna NormalizerOutput.
-    """
+class ExampleLLMBackend(NormalizerBackend):
+    """Replace this with your actual LLM integration."""
+
     def resolve(self, inp: NormalizerInput) -> NormalizerOutput:
-        # inp.raw_intent  -> texto do usuario
-        # inp.catalog     -> datasets disponiveis
-        # inp.environment_state -> estado atual dos dados
-        #
-        # Chame seu LLM aqui:
-        # response = llm.chat(system=PROMPT, user=inp.raw_intent, context=inp.catalog)
-        # return NormalizerOutput(**response.parsed)
-        raise NotImplementedError("Implemente com seu LLM")
+        raise NotImplementedError("Implement resolve() with your production LLM")
 
-print("\n(MeuLLMBackend precisa de implementacao real)")
+
+print("\nExampleLLMBackend is a placeholder for a real semantic backend.")

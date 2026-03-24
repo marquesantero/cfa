@@ -4,56 +4,77 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 
-**Contextual Flux Architecture** -- um kernel de execucao governada para sistemas de dados orientados por IA.
+**Contextual Flux Architecture** is a governed execution kernel for AI-native data systems.
 
-A maioria dos sistemas agenticos pula direto do prompt para a acao. O CFA coloca governanca, validacao e estado entre esses dois pontos: a intencao e formalizada em contrato tipado, avaliada contra regras, executada em sandbox, e o resultado e projetado de volta no estado do ambiente.
+Most agentic stacks jump straight from prompt to action. CFA inserts typed intent resolution, policy evaluation, validation, controlled execution, state projection, and auditability between those two points. Instead of asking _"which agent or skill should act?"_, CFA asks _"which state transition is being requested, under which constraints, and can it be executed safely?"_
 
-Em vez de perguntar _"qual agent ou skill deve agir?"_, o CFA pergunta _"qual mudanca de estado esta sendo pedida, sob quais restricoes, e ela pode ser executada com seguranca?"_
+## The three gaps CFA targets
 
-## 3 gaps que o CFA resolve
+| Gap | What happens in many current stacks | What CFA does |
+| --- | --- | --- |
+| Silent ambiguity | The model interprets intent and executes with implicit assumptions | Formalizes intent as a `StateSignature` before execution |
+| Weak governance | Skills/tools run without explicit checks for PII, cost, schema, or policy | `PolicyEngine` evaluates declarative rules before execution |
+| No explicit state model | The system returns text/logs but does not persist operational context | `ContextRegistry` projects approved state back into the environment |
 
-| Gap | O que acontece hoje | O que o CFA faz |
-|-----|---------------------|-----------------|
-| **Ambiguidade silenciosa** | LLM interpreta errado e executa com confianca | Formaliza a intencao em `StateSignature` antes de qualquer execucao |
-| **Zero governanca** | Skill roda sem validar PII, custo, schema | `PolicyEngine` valida regras declarativas antes da execucao |
-| **Sem modelo de estado** | Ninguem sabe em que estado os dados ficaram | `ContextRegistry` projeta e persiste estado apos cada execucao |
+## Modular by design
 
-## Modular por design
+Each subsystem can be adopted independently:
 
-Cada modulo funciona de forma independente. Use so o que precisa.
-
-```
-cfa.governance   Valida operacoes contra regras. Sem LLM, sem cluster.
-cfa.resolution   Transforma linguagem natural em intencao tipada.
-cfa.lifecycle    Monitora saude de pipelines com indices quantitativos.
+```text
+cfa.governance   Evaluate operations against policy rules.
+cfa.resolution   Convert natural language into typed intent.
+cfa.lifecycle    Track recurring execution health with quantitative indices.
 ```
 
-O pipeline completo (`KernelOrchestrator`) orquestra os tres juntos quando voce precisa do fluxo inteiro.
+The full kernel (`KernelOrchestrator`) composes all of them when you need the complete flow.
 
----
+## Requirements
 
-## Instalacao
+- Python 3.11+
+
+The repository uses `match` statements in the code generation path, so Python 3.9 will not execute the full kernel or governance examples correctly.
+
+## Installation
 
 ```bash
-pip install -e .        # basico
-pip install -e .[dev]   # com pytest
+pip install -e .
+pip install -e .[dev]
 ```
+
+Run tests:
 
 ```bash
-pytest -q               # 203 testes, <1s
+pytest -q
 ```
 
----
+Current suite: `203 passed`.
 
-## cfa.governance
+## Running the examples
 
-Adiciona governanca a pipelines existentes. Funciona sem LLM, sem Spark, sem infraestrutura.
+The examples in [`examples`](./examples/) are written to run directly from a repository checkout. If you prefer not to install the package, run them with Python 3.11 from the repo root:
+
+```bash
+python examples/standalone_resolution.py
+python examples/standalone_lifecycle.py
+python examples/standalone_governance.py
+python examples/full_pipeline.py
+```
+
+If you are embedding CFA into another environment, the standard editable install remains the cleanest option.
+
+## `cfa.governance`
+
+Add governance to an existing pipeline without requiring an LLM, Spark cluster, or runtime adapter.
 
 ```python
 from cfa.governance import (
-    PolicyEngine, StateSignature, TargetLayer,
-    DatasetRef, DatasetClassification,
-    SignatureConstraints, ExecutionContext,
+    PolicyEngine,
+    StateSignature,
+    TargetLayer,
+    DatasetRef,
+    DatasetClassification,
+    SignatureConstraints,
+    ExecutionContext,
 )
 
 sig = StateSignature(
@@ -67,6 +88,7 @@ sig = StateSignature(
     constraints=SignatureConstraints(
         no_pii_raw=True,
         merge_key_required=True,
+        enforce_types=True,
         partition_by=("processing_date",),
     ),
     execution_context=ExecutionContext("v1.0", "catalog_2026", "ctx_1"),
@@ -76,198 +98,174 @@ engine = PolicyEngine()
 result = engine.evaluate(sig)
 
 if result.is_blocked:
-    raise Exception(f"Bloqueado: {result.reasoning}")
+    raise RuntimeError(f"Blocked: {result.reasoning}")
 ```
 
-7 regras declarativas incluidas (PII, merge key, particao, custo, type enforcement). Regras customizadas sao funcoes `StateSignature -> bool`.
+Built-in policy coverage includes PII handling, merge-key enforcement, partition requirements, type enforcement, and cost constraints.
 
-Tambem inclui `StaticValidator` para checar codigo PySpark contra tokens proibidos (collect, toPandas, crossJoin, import os).
+`StaticValidator` can also scan generated PySpark code for disallowed patterns such as `collect`, `toPandas`, `crossJoin`, and `import os`.
 
-## cfa.resolution
+## `cfa.resolution`
 
-Transforma pedidos em linguagem natural em contratos tipados.
+Convert natural-language requests into typed intent contracts.
 
 ```python
 from cfa.resolution import IntentNormalizer, MockNormalizerBackend
 
+catalog = {
+    "datasets": {
+        "nfe": {
+            "classification": "high_volume",
+            "size_gb": 4000,
+            "partition_column": "processing_date",
+        },
+        "clientes": {
+            "classification": "sensitive",
+            "size_gb": 0.5,
+            "pii_columns": ["cpf", "email"],
+        },
+    }
+}
+
 normalizer = IntentNormalizer(backend=MockNormalizerBackend())
 resolution = normalizer.normalize(
-    raw_intent="Join NFe com Clientes e persista na Silver",
+    raw_intent="Join NFe with Clientes and persist to Silver",
     environment_state={},
     catalog=catalog,
 )
 
 sig = resolution.signature
-# sig.domain, sig.target_layer, sig.contains_pii, resolution.confidence_score
+print(sig.domain)
+print(sig.target_layer)
+print(sig.contains_pii)
+print(resolution.confidence_score)
+print(resolution.confirmation_mode)
 ```
 
-O `MockNormalizerBackend` serve para testes. Para producao, implemente `NormalizerBackend` com seu LLM.
+The bundled `MockNormalizerBackend` is deterministic and intended for tests and demos. Production usage should implement `NormalizerBackend` against an actual LLM or rules-based semantic resolver.
 
-O `ConfirmationOrchestrator` escala automaticamente para aprovacao humana quando o risco e alto (PII em camada protegida, confianca baixa, multiplas interpretacoes).
+The `ConfirmationOrchestrator` escalates automatically when confidence is low, ambiguity is high, or protected data is involved.
 
-## cfa.lifecycle
+## `cfa.lifecycle`
 
-Monitora saude de pipelines recorrentes e decide quais promover ou aposentar.
+Track recurring execution quality and decide whether a flow should be promoted, watchlisted, deprecated, or retired.
 
 ```python
-from cfa.lifecycle import PromotionEngine, PromotionPolicy, ExecutionRecord
 from datetime import datetime, timezone
+from cfa.lifecycle import PromotionEngine, PromotionPolicy, ExecutionRecord
 
 engine = PromotionEngine(policy=PromotionPolicy(min_executions=5))
 
-engine.record_execution(ExecutionRecord(
-    signature_hash="pipeline_fiscal_abc",
-    timestamp=datetime.now(timezone.utc),
-    success=True,
-    cost_dbu=5.0,
-    duration_seconds=30.0,
-))
+engine.record_execution(
+    ExecutionRecord(
+        signature_hash="pipeline_fiscal_abc",
+        timestamp=datetime.now(timezone.utc),
+        success=True,
+        cost_dbu=5.0,
+        duration_seconds=30.0,
+    )
+)
 
 skill, scores = engine.evaluate("pipeline_fiscal_abc")
-# skill.state: candidate -> active -> watchlist -> deprecated -> retired
-# scores: ifo, ifs, ifg, idi
+print(skill.state.value)
+print(scores.ifo, scores.ifs, scores.ifg, scores.idi)
 ```
 
-4 indices quantitativos:
+The lifecycle model computes four indices:
 
-| Indice | O que mede |
-|--------|-----------|
-| **IFo** | Fluidity operacional -- latencia, custo, taxa de sucesso |
-| **IFs** | Fidelidade semantica -- schema, drift, faults |
-| **IFg** | Governanca -- binario: 1 se tudo ok, 0 se qualquer violacao |
-| **IDI** | Drift de intencao -- proporcao de replans em janela de 30 dias |
+| Index | Meaning |
+| --- | --- |
+| IFo | Operational fluidity: latency, cost, success rate |
+| IFs | Semantic fidelity: schema health, drift, faults |
+| IFg | Governance integrity: binary pass/fail signal |
+| IDI | Intent drift over the evaluation window |
 
-Gate de promocao: `IFo >= 0.75 AND IFs >= 0.90 AND IFg = 1`. Drift severo ou violacao de governanca causa demotion imediato.
+## Full kernel
 
----
-
-## Pipeline completo
-
-Quando voce precisa do fluxo inteiro -- da linguagem natural ate a projecao de estado:
+When you need the full path from natural language to execution outcome:
 
 ```python
 from cfa import KernelOrchestrator
 
 kernel = KernelOrchestrator(catalog=catalog)
-result = kernel.process("Join NFe com Clientes e persista na Silver")
+result = kernel.process("Join NFe with Clientes and persist to Silver")
 
-print(result.state.value)  # approved / blocked / quarantined / rolled_back
+print(result.state.value)
 ```
 
-Fluxo interno:
+High-level flow:
 
-```
+```text
 intent -> normalization -> confirmation -> policy -> planning -> codegen
 -> static validation -> sandbox -> runtime validation -> partial execution
 -> state projection -> audit -> lifecycle evaluation
 ```
 
-Cada fase pode ser desabilitada via `KernelConfig`.
+Each phase can be disabled through `KernelConfig`.
 
----
+## Key concepts
 
-## Integracao com pipelines existentes
+**StateSignature**  
+Immutable execution contract capturing domain, intent, datasets, constraints, and execution context. It carries a deterministic SHA256 hash.
 
-O caso de uso mais comum e adicionar governanca a um pipeline que ja existe:
+**ContextRegistry**  
+Persistent operational context store. It is not just a log; it represents the environment state relevant to future decisions.
 
-```python
-# Airflow
-from airflow.decorators import task
-from cfa.governance import PolicyEngine
+**Faults**  
+Typed faults grouped into semantic, static, runtime, and environmental families instead of generic execution errors.
 
-@task
-def validar(signature_dict: dict):
-    result = PolicyEngine().evaluate(StateSignature(**signature_dict))
-    if result.is_blocked:
-        raise AirflowException(f"Bloqueado: {result.reasoning}")
+**AuditTrail**  
+Append-only event chain with SHA256 hash linking for tamper detection.
 
-# validar >> executar_spark
-```
+## Repository structure
 
-```python
-# Script
-from cfa.governance import PolicyEngine, StateSignature
-
-sig = montar_signature(...)
-result = PolicyEngine().evaluate(sig)
-if result.is_blocked:
-    sys.exit(f"Bloqueado: {result.reasoning}")
-
-# execucao normal do seu pipeline
-```
-
----
-
-## Conceitos-chave
-
-**StateSignature** -- contrato imutavel que captura dominio, intencao, datasets, restricoes e contexto de execucao. Tem hash SHA256 deterministico. Toda decisao do kernel parte de uma signature.
-
-**ContextRegistry** -- modelo de estado persistente do ambiente. Nao e um log; e o estado corrente relevante para decisoes futuras. Aceita backends customizados (JSON, DB).
-
-**Faults** -- falhas tipadas em 4 familias (semantic, static, runtime, environmental) em vez de excecoes genericas. Sao eventos, nao erros.
-
-**Audit Trail** -- eventos append-only com hash chain SHA256 para deteccao de adulteracao. Cada evento referencia o hash do anterior.
-
----
-
-## Estrutura
-
-```
+```text
 src/cfa/
-  governance/         uso standalone: policy + validacao
-  resolution/         uso standalone: NLP -> contrato tipado
-  lifecycle/          uso standalone: indices + promocao
+  governance/         standalone policy + validation surface
+  resolution/         standalone intent resolution surface
+  lifecycle/          standalone indices + promotion surface
 
   types.py            StateSignature, Fault, enums
-  policy.py           PolicyEngine, 7 regras declarativas
-  normalizer.py       IntentNormalizer, ConfirmationOrchestrator
-  planner.py          ExecutionPlanner (DAG)
-  codegen.py          PySparkGenerator
+  policy.py           PolicyEngine and declarative rules
+  normalizer.py       IntentNormalizer and confirmation
+  planner.py          Execution planner
+  codegen.py          Deterministic PySpark code generator
   static_validation.py
-  sandbox.py          SandboxExecutor
+  sandbox.py
   runtime_validation.py
   partial_execution.py
-  context.py          ContextRegistry (persistente)
+  context.py          Context registry
   state_projection.py
-  audit.py            AuditTrail (hash chain)
+  audit.py            Audit trail
   indices.py          IFo, IFs, IFg, IDI
-  promotion.py        PromotionEngine
-  kernel.py           KernelOrchestrator
+  promotion.py        Promotion/demotion engine
+  kernel.py           Full kernel orchestrator
 
-examples/             4 exemplos standalone e pipeline completo
-tests/                203 testes
-docs/                 whitepaper PT-BR e EN, guia de uso
+examples/             standalone and full-kernel examples
+tests/                automated test suite
+docs/                 guide and repository-facing documents
 ```
 
----
+## Known limitations
 
-## Limitacoes conhecidas
+- The default normalizer backend is a deterministic mock.
+- Code generation currently targets PySpark.
+- Persistence defaults to JSON/JSONL-oriented local backends.
+- Concurrency is intentionally conservative.
 
-- O normalizer padrao e um mock deterministico -- producao precisa de um `NormalizerBackend` real
-- Codegen e orientado a PySpark -- outros runtimes precisam de novos backends
-- Persistencia usa JSON/JSONL -- ambientes de producao provavelmente vao querer um backend de banco
-- Concorrencia e conservadora por design (single-writer)
+## Documentation
 
-## Proximo
+- [Usage Guide](./docs/guide.md)
+- [Repository Article Draft](./docs/linkedin-article.md)
+- [Examples](./examples/)
+- [Project Pages](https://marquesantero.github.io/cfa/)
+- [Whitepaper PT-BR](./docs/cfa-v2-whitepaper.html)
+- [Whitepaper EN](./docs/cfa-v2-whitepaper.en.html)
 
-- Backends de resolucao semantica para producao (LLM)
-- Contratos mais ricos no planner (merge keys, target scopes)
-- Adaptadores de execucao alem de PySpark
-- Observabilidade no runtime
+## Contributing
 
----
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Documentacao
-
-- [Whitepaper PT-BR](./cfa-v2-whitepaper.html) / [EN](./docs/cfa-v2-whitepaper.en.html) -- referencia arquitetural completa
-- [Guia de uso](./docs/guide.md) -- exemplos praticos e integracao
-- [Exemplos](./examples/) -- scripts prontos para cada modulo
-- [GitHub Pages](https://marquesantero.github.io/cfa/) -- pagina do projeto
-
-## Contribuindo
-
-Veja [`CONTRIBUTING.md`](./CONTRIBUTING.md). O projeto separa contribuicoes de arquitetura (whitepaper, invariantes) de implementacao (kernel, adapters, testes).
-
-## Licenca
+## License
 
 [MIT](./LICENSE)

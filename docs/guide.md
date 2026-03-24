@@ -1,50 +1,77 @@
-# CFA v2 -- Contextual Flux Architecture
+# CFA Usage Guide
 
-## O que e
+This guide focuses on the repository implementation, not the GitHub Pages site. It assumes the code in [`src/cfa`](../src/cfa) as the source of truth.
 
-O CFA corrige 3 gaps de agentes e skills tradicionais:
+## What was verified
 
-| Gap | Problema | O que o CFA faz |
-|-----|----------|-----------------|
-| **Ambiguidade silenciosa** | LLM interpreta errado e executa com confianca | Formaliza a intencao em contrato tipado ANTES de executar |
-| **Zero governanca** | Skill roda sem validar se pode (PII, custo, contrato) | Policy Engine valida regras declarativas antes da execucao |
-| **Sem nocao de estado** | Ninguem sabe em que estado os dados ficaram | Context Registry mantem estado vivo, projetado apos cada execucao |
+The examples and guide were checked against the current implementation with these practical outcomes:
 
----
+| Item | Status | Notes |
+| --- | --- | --- |
+| Test suite | Verified | `pytest -q` passes with 203 tests |
+| `standalone_resolution.py` | Verified | Runs successfully directly from the repository checkout |
+| `standalone_lifecycle.py` | Verified | Runs successfully directly from the repository checkout |
+| `standalone_governance.py` | API-aligned | Requires Python 3.11+ because `codegen.py` uses `match` |
+| `full_pipeline.py` | API-aligned | Requires Python 3.11+ for the same reason |
 
-## 3 modulos independentes
+The repository metadata already declares `requires-python = ">=3.11"` in [`pyproject.toml`](../pyproject.toml), so the environment mismatch is local rather than architectural.
 
-O CFA e uma **biblioteca modular**. Cada modulo funciona sozinho. Use so o que precisa.
+## Setup
 
+Requirements:
+
+- Python 3.11+
+
+Recommended install:
+
+```bash
+pip install -e .[dev]
 ```
-cfa.governance  -- Valida operacoes contra regras. Sem LLM, sem execucao.
-cfa.resolution  -- Transforma linguagem natural em intencao tipada.
-cfa.lifecycle   -- Monitora saude de pipelines com indices (IFo/IFs/IFg/IDI).
+
+Run tests:
+
+```bash
+pytest -q
 ```
 
-O pipeline completo (`KernelOrchestrator`) orquestra os 3 juntos. So use o pipeline completo quando precisar do fluxo inteiro.
+Run examples from a repository checkout:
 
----
+```bash
+python examples/standalone_resolution.py
+python examples/standalone_lifecycle.py
+python examples/standalone_governance.py
+python examples/full_pipeline.py
+```
 
-## Modulo 1: cfa.governance
+The examples bootstrap `src` automatically, so editable install is recommended but not strictly required for local exploration.
 
-**Para que serve:** Validar operacoes de dados contra regras de governanca.
+## Architecture map
 
-**Quando usar:** Voce ja tem um pipeline (Airflow, Dagster, script) e quer adicionar governanca ANTES de executar.
+The implementation is organized around three standalone surfaces and one full orchestrator:
 
-**O que NAO precisa:** LLM, cluster Spark, infraestrutura. Roda local, em memoria.
+| Surface | Main purpose | Depends on |
+| --- | --- | --- |
+| `cfa.governance` | Policy checks and validation before execution | No LLM required |
+| `cfa.resolution` | Natural-language intent resolution into typed contracts | A normalizer backend |
+| `cfa.lifecycle` | Quantitative evaluation of recurring flows | Execution history |
+| `KernelOrchestrator` | End-to-end governed execution flow | All of the above plus execution components |
 
-### Uso
+## 1. Governance only
+
+Use `cfa.governance` when you already have a pipeline and want a formal decision gate before execution.
 
 ```python
 from cfa.governance import (
-    PolicyEngine, StateSignature, TargetLayer,
-    DatasetRef, DatasetClassification,
-    SignatureConstraints, ExecutionContext,
+    PolicyEngine,
+    StateSignature,
+    TargetLayer,
+    DatasetRef,
+    DatasetClassification,
+    SignatureConstraints,
+    ExecutionContext,
 )
 
-# Declare o que seu pipeline faz
-sig = StateSignature(
+signature = StateSignature(
     domain="fiscal",
     intent="reconciliation",
     target_layer=TargetLayer.SILVER,
@@ -55,302 +82,245 @@ sig = StateSignature(
     constraints=SignatureConstraints(
         no_pii_raw=True,
         merge_key_required=True,
+        enforce_types=True,
         partition_by=("processing_date",),
+        max_cost_dbu=50.0,
     ),
     execution_context=ExecutionContext("v1.0", "catalog_2026", "ctx_1"),
 )
 
-# Valide
 engine = PolicyEngine()
-result = engine.evaluate(sig)
+result = engine.evaluate(signature)
 
 if result.is_blocked:
-    raise Exception(f"Bloqueado: {result.reasoning}")
-# so entao executa seu pipeline
+    raise RuntimeError(result.reasoning)
 ```
 
-### 7 regras default
+Typical fit:
 
-| Regra | Tipo | O que faz |
-|-------|------|-----------|
-| `forbid_raw_pii_in_silver_or_gold` | REPLAN | PII em camada protegida sem tratamento |
-| `require_pii_anonymization_declaration` | BLOCK | Dataset com PII sem `no_pii_raw=True` |
-| `require_partition_filter_for_high_volume` | REPLAN | High volume sem filtro de particao |
-| `warn_on_sensitive_without_partition` | REPLAN | Sensitive sem particao declarada |
-| `require_merge_key_for_silver_gold` | BLOCK | Silver/Gold sem merge key |
-| `enforce_type_checking` | REPLAN | Camada protegida sem `enforce_types=True` |
-| `enforce_cost_ceiling` | BLOCK | `max_cost_dbu` invalido |
+- Airflow or Dagster pipelines that already exist
+- scripts that materialize data into governed layers
+- systems that need policy gates before human or automated execution
 
-### Adicionando regras customizadas
+### Built-in policy coverage
 
-```python
-from cfa.governance import PolicyRule, PolicyAction, FaultFamily, FaultSeverity
+| Rule family | Purpose |
+| --- | --- |
+| PII protection | Blocks or replans unsafe handling of protected fields |
+| Merge-key enforcement | Requires merge semantics in protected layers |
+| Partition requirements | Pushes high-volume and sensitive flows toward partition-aware execution |
+| Type enforcement | Prevents protected-layer execution without explicit typing intent |
+| Cost ceiling checks | Prevents invalid or missing cost guardrails |
 
-engine.add_rule(PolicyRule(
-    name="fiscal_requer_particao_diaria",
-    condition=lambda s: s.domain == "fiscal" and "processing_date" not in s.constraints.partition_by,
-    action=PolicyAction.BLOCK,
-    fault_code="FISCAL_SEM_PARTICAO",
-    fault_family=FaultFamily.SEMANTIC,
-    severity=FaultSeverity.CRITICAL,
-    message="Pipeline fiscal deve ter particao por processing_date.",
-))
-```
+### Static validation
 
-### Static Validation (opcional)
-
-Valida codigo PySpark contra tokens proibidos (collect, toPandas, crossJoin, import os).
+`StaticValidator` can inspect generated code before runtime:
 
 ```python
 from cfa.governance import StaticValidator
 from cfa.codegen import GeneratedCode
 
 validator = StaticValidator()
-result = validator.validate(generated_code, signature)
-if not result.passed:
-    print(result.fault_codes)
+generated = GeneratedCode(
+    plan_signature_hash="demo",
+    intent_id="demo",
+    language="pyspark",
+    code="df.collect()",
+)
+
+result = validator.validate(generated, signature)
+print(result.passed, result.fault_codes)
 ```
 
----
+## 2. Resolution only
 
-## Modulo 2: cfa.resolution
-
-**Para que serve:** Transformar linguagem natural em intencao tipada (StateSignature).
-
-**Quando usar:** Usuarios nao-tecnicos pedem operacoes de dados e voce precisa entender O QUE eles querem antes de executar.
-
-**O que precisa:** Um backend de NLP (LLM ou rule-based).
-
-### Uso com mock (teste)
+Use `cfa.resolution` when the main problem is semantic interpretation: turning natural-language requests into a stable contract before any operational decision.
 
 ```python
 from cfa.resolution import IntentNormalizer, MockNormalizerBackend
 
+catalog = {
+    "datasets": {
+        "nfe": {
+            "classification": "high_volume",
+            "size_gb": 4000,
+            "pii_columns": [],
+            "partition_column": "processing_date",
+        },
+        "clientes": {
+            "classification": "sensitive",
+            "size_gb": 0.5,
+            "pii_columns": ["cpf", "email"],
+        },
+    }
+}
+
 normalizer = IntentNormalizer(backend=MockNormalizerBackend())
 resolution = normalizer.normalize(
-    raw_intent="Join NFe com Clientes e persista na Silver",
+    raw_intent="Join NFe with Clientes and persist to Silver",
     environment_state={},
-    catalog=CATALOG,
+    catalog=catalog,
 )
 
-sig = resolution.signature
-print(sig.domain)            # "fiscal_data_processing"
-print(sig.target_layer)      # TargetLayer.SILVER
-print(sig.contains_pii)      # True
-print(resolution.confidence_score)    # 0.75
-print(resolution.confirmation_mode)   # ConfirmationMode.HARD
+print(resolution.signature.domain)
+print(resolution.signature.target_layer.value)
+print(resolution.confidence_score)
+print(resolution.confirmation_mode.value)
 ```
 
-### Uso com LLM real
+What comes out of resolution:
+
+- a typed `StateSignature`
+- a confidence score
+- an ambiguity level
+- a confirmation mode
+- optional competing interpretations
+- environment constraints injected from current state
+
+### Confirmation modes
+
+The `ConfirmationOrchestrator` decides whether the request can proceed automatically or should be escalated.
+
+| Typical condition | Outcome |
+| --- | --- |
+| High confidence, low ambiguity, no protected risk | `AUTO` |
+| Medium confidence | `SOFT` |
+| Protected data in a sensitive target | `HARD` |
+| Very low confidence or severe ambiguity | `HUMAN_ESCALATION` |
+
+The repository includes `AutoApproveHandler` and `AutoRejectHandler` for deterministic flows and tests.
+
+## 3. Lifecycle only
+
+Use `cfa.lifecycle` when you already have repeated executions and want evidence-based promotion, watchlisting, demotion, or retirement.
 
 ```python
-from cfa.resolution import NormalizerBackend, NormalizerInput, NormalizerOutput
-
-class ClaudeBackend(NormalizerBackend):
-    def resolve(self, inp: NormalizerInput) -> NormalizerOutput:
-        response = claude.messages.create(
-            model="claude-sonnet-4-20250514",
-            messages=[{"role": "user", "content": f"""
-                Intent: {inp.raw_intent}
-                Catalog: {inp.catalog}
-                Retorne JSON: domain, intent, target_layer, datasets, constraints, confidence_score
-            """}],
-        )
-        return NormalizerOutput(**json.loads(response.content[0].text))
-
-normalizer = IntentNormalizer(backend=ClaudeBackend())
-```
-
-### Confirmation Orchestrator
-
-Escalona automaticamente para aprovacao humana baseado no risco:
-
-| Situacao | Modo |
-|----------|------|
-| Alta confianca, sem PII, nao e Gold | AUTO (passa direto) |
-| Confianca media | SOFT |
-| PII + Silver/Gold | HARD |
-| Gold, ou confianca < 65% com PII, ou multiplas interpretacoes | HUMAN_ESCALATION |
-
----
-
-## Modulo 3: cfa.lifecycle
-
-**Para que serve:** Monitorar saude de pipelines e decidir quais promover/demover.
-
-**Quando usar:** Voce tem pipelines recorrentes e quer saber quais sao estaveis, quais estao degradando, e quais aposentar.
-
-**O que NAO precisa:** LLM, cluster. So precisa de metricas de execucao.
-
-### Uso
-
-```python
-from cfa.lifecycle import PromotionEngine, PromotionPolicy, ExecutionRecord, SkillState
 from datetime import datetime, timezone
+from cfa.lifecycle import PromotionEngine, PromotionPolicy, ExecutionRecord
 
-engine = PromotionEngine(policy=PromotionPolicy(min_executions=5))
+engine = PromotionEngine(policy=PromotionPolicy(min_executions=3))
 
-# Registre metricas de cada execucao
-engine.record_execution(ExecutionRecord(
-    signature_hash="meu_pipeline_abc",
-    timestamp=datetime.now(timezone.utc),
-    success=True,
-    cost_dbu=5.0,
-    duration_seconds=30.0,
-))
+engine.record_execution(
+    ExecutionRecord(
+        signature_hash="fiscal_reconciliation_silver_abc123",
+        timestamp=datetime.now(timezone.utc),
+        success=True,
+        cost_dbu=5.0,
+        duration_seconds=30.0,
+    )
+)
 
-# Avalie
-skill, scores = engine.evaluate("meu_pipeline_abc")
-print(f"Estado: {skill.state.value}")  # candidate -> active -> watchlist -> ...
-print(f"IFo={scores.ifo:.2f} IFs={scores.ifs:.2f} IDI={scores.idi:.2f}")
+skill, scores = engine.evaluate("fiscal_reconciliation_silver_abc123")
+print(skill.state.value)
+print(scores.ifo, scores.ifs, scores.ifg, scores.idi)
 ```
 
-### 4 indices
+### The four indices
 
-| Indice | O que mede | Formula |
-|--------|-----------|---------|
-| **IFo** | Fluidity operacional | (1 - latencia) x (1 - custo) x taxa_sucesso |
-| **IFs** | Fidelidade semantica | schema_ok x sem_drift x sem_faults |
-| **IFg** | Governanca (binario) | 1 se tudo ok, 0 se qualquer violacao |
-| **IDI** | Drift de intencao | 1 - (replanejados / total) em 30 dias |
+| Index | What it measures |
+| --- | --- |
+| IFo | Operational fluidity: latency, cost, success |
+| IFs | Semantic fidelity: drift and fault health |
+| IFg | Governance integrity: whether execution stayed within governance boundaries |
+| IDI | Intent drift over the active evaluation window |
 
-### Gate de promocao
+### Promotion and demotion
 
-```
-Promote  <==  IFo >= 0.75  AND  IFs >= 0.90  AND  IFg = 1  AND  executions >= min
-```
+Promotion requires enough executions plus thresholds from `PromotionPolicy`.
 
-### Triggers de demotion
+Demotion can be triggered by:
 
-| Trigger | Acao |
-|---------|------|
-| IDI < 0.50 (drift severo) | Demotion imediato |
-| IFg < 1 (violacao de governanca) | Demotion imediato |
-| IDI < 0.75 (drift moderado) | Watchlist |
-| IFs abaixo do threshold | Watchlist |
-| Inatividade prolongada | Deprecated |
-| Catalogo incompativel | Retired |
+- severe drift
+- governance violations
+- sustained degradation while on the watchlist
+- prolonged inactivity
+- catalog incompatibility through explicit retirement
 
-### Mass demotion (bug recovery)
+The implementation also supports mass demotion by system version:
 
 ```python
-# Se descobrir bug na versao que promoveu skills
-demoted = engine.demote_by_system_version("cfa_v2.0", "Bug na logica de promocao")
+engine.demote_by_system_version("cfa_v2.0", "Promotion logic regression")
 ```
 
----
+## 4. Full kernel
 
-## Pipeline completo (KernelOrchestrator)
-
-So use quando precisar de TUDO junto: linguagem natural -> governanca -> planejamento -> codegen -> execucao -> projecao -> lifecycle.
+Use `KernelOrchestrator` when you need the entire governed flow from natural language to execution outcome.
 
 ```python
 from cfa import KernelOrchestrator, KernelConfig
 
-kernel = KernelOrchestrator(catalog=CATALOG)
-result = kernel.process("Join NFe com Clientes e persista na Silver")
+catalog = {"datasets": {}}
 
-print(result.state.value)           # approved / blocked / quarantined / ...
-print(result.signature.signature_hash)
-print(result.execution_plan.step_count)
-print(result.generated_code.code)
-print(result.sandbox_result.aggregate_metrics.rows_output)
-```
-
-### Desabilitando fases
-
-```python
 kernel = KernelOrchestrator(
-    catalog=CATALOG,
+    catalog=catalog,
     config=KernelConfig(
-        enable_planning=False,           # sem plano de execucao
-        enable_codegen=False,            # sem geracao de codigo
-        enable_static_validation=False,  # sem validacao estatica
-        enable_sandbox=False,            # sem execucao
-        enable_promotion=False,          # sem lifecycle
+        enable_planning=True,
+        enable_codegen=True,
+        enable_static_validation=True,
+        enable_sandbox=True,
+        enable_promotion=True,
     ),
 )
-# Agora funciona so como: normalizer -> policy -> decisao
+
+result = kernel.process("Join NFe with Clientes and persist to Silver")
+print(result.state.value)
 ```
 
----
+### Kernel phases
 
-## Integrando com pipeline existente
+```text
+context registry -> normalization -> confirmation -> policy
+-> planning -> code generation -> static validation
+-> sandbox execution -> runtime validation -> partial execution
+-> state projection -> audit -> lifecycle evaluation
+```
 
-### Airflow
+### Partial execution behavior
+
+The implementation includes:
+
+- retry policy via `RetryPolicy`
+- failure policy via `FailurePolicy`
+- terminal publish states such as quarantine and rollback handling
+
+The execution path records history into lifecycle scoring for approved and non-approved terminal states, which keeps the operational record more honest than a success-only ledger.
+
+## Integration patterns
+
+### Existing orchestrator
 
 ```python
-from airflow.decorators import task
-from cfa.governance import PolicyEngine
+from cfa.governance import PolicyEngine, StateSignature
 
-engine = PolicyEngine()
-
-@task
-def validar_governanca(signature_dict: dict):
-    sig = StateSignature(**signature_dict)
-    result = engine.evaluate(sig)
+def validate_before_run(signature_dict: dict) -> None:
+    result = PolicyEngine().evaluate(StateSignature(**signature_dict))
     if result.is_blocked:
-        raise AirflowException(f"Bloqueado: {result.reasoning}")
-
-@task
-def executar_spark(config: dict):
-    # seu codigo Spark atual, inalterado
-    ...
-
-# DAG: validar_governanca >> executar_spark
+        raise RuntimeError(result.reasoning)
 ```
 
-### Script existente
+### Runtime-generated requests
 
 ```python
-from cfa.governance import PolicyEngine, StateSignature, ...
+from cfa import KernelOrchestrator
 
-def meu_pipeline():
-    sig = montar_signature(...)  # declara o que o pipeline faz
+kernel = KernelOrchestrator(catalog=my_catalog)
+result = kernel.process(user_request)
 
-    # Governanca
-    result = PolicyEngine().evaluate(sig)
-    if result.is_blocked:
-        return f"Bloqueado: {result.reasoning}"
-
-    # Execucao normal
-    spark.read("nfe").join(spark.read("clientes")).write("silver")
+if result.state.value == "approved":
+    print("Execution completed under governed flow")
+else:
+    print(result.blocked_reason or result.state.value)
 ```
 
----
+## Repository-facing notes
 
-## Estrutura do projeto
+- The GitHub Pages site under `docs/*.html` was intentionally left untouched in this pass.
+- The repository-facing docs were aligned to the implementation instead.
+- The current local environment did not have Python 3.11 installed, so direct runtime validation for the governance/full-kernel examples was limited to API inspection plus the project requirement metadata.
 
-```
-src/cfa/
-  governance/        <-- uso standalone: validacao + policy
-    __init__.py
-  resolution/        <-- uso standalone: NLP -> intencao tipada
-    __init__.py
-  lifecycle/         <-- uso standalone: indices + promocao
-    __init__.py
+## Pointers
 
-  types.py           fundacao: StateSignature, Fault, enums
-  policy.py          Policy Engine (7 regras)
-  normalizer.py      Intent Normalizer + Confirmation
-  planner.py         Execution Planner (DAG)
-  codegen.py         PySpark Generator
-  static_validation.py  Static Validation
-  sandbox.py         Sandbox Executor
-  runtime_validation.py  Runtime Validation
-  partial_execution.py   Failure policies
-  context.py         Context Registry (persistente)
-  state_projection.py  State Projection Protocol
-  audit.py           Audit Trail (hash chain)
-  indices.py         IFo, IFs, IFg, IDI
-  promotion.py       Promotion/Demotion Engine
-  kernel.py          KernelOrchestrator (orquestra tudo)
-
-examples/
-  standalone_governance.py   <-- use so governanca
-  standalone_resolution.py   <-- use so resolucao
-  standalone_lifecycle.py    <-- use so lifecycle
-  full_pipeline.py           <-- pipeline completo
-
-tests/               201 testes
-```
+- [README](../README.md)
+- [Examples](../examples/)
+- [Issue templates](../.github/ISSUE_TEMPLATE/)
+- [Pull request template](../.github/PULL_REQUEST_TEMPLATE.md)
