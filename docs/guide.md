@@ -8,7 +8,7 @@ The examples and guide were checked against the current implementation with thes
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Test suite | Verified | `pytest -q` passes with 203 tests |
+| Test suite | Verified | `pytest -q` passes (205 tests as of last run) |
 | `standalone_resolution.py` | Verified | Runs successfully directly from the repository checkout |
 | `standalone_lifecycle.py` | Verified | Runs successfully directly from the repository checkout |
 | `standalone_governance.py` | API-aligned | Requires Python 3.11+ because `codegen.py` uses `match` |
@@ -249,7 +249,20 @@ Use `KernelOrchestrator` when you need the entire governed flow from natural lan
 ```python
 from cfa import KernelOrchestrator, KernelConfig
 
-catalog = {"datasets": {}}
+catalog = {
+    "datasets": {
+        "nfe": {
+            "classification": "high_volume",
+            "size_gb": 4000,
+            "partition_column": "processing_date",
+        },
+        "clientes": {
+            "classification": "sensitive",
+            "size_gb": 0.5,
+            "pii_columns": ["cpf", "email"],
+        },
+    }
+}
 
 kernel = KernelOrchestrator(
     catalog=catalog,

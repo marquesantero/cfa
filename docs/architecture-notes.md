@@ -220,31 +220,13 @@ The open challenge is turning architectural confidence into measurable readiness
 
 ---
 
-## 13. What positioning risks should the project avoid?
+## 13. What are the next concrete milestones?
 
-One open strategic question is how CFA should be presented publicly without collapsing into either:
+The architecture is past the initial design phase. The open question is what comes next in terms of measurable progress:
 
-- overclaiming
-- or self-undermining
+- **First external adoption**: someone outside the project uses `cfa.governance` in a real pipeline and reports back
+- **Invariant hardening**: systematically verify which invariants from the whitepaper are enforced at runtime vs. only by convention
+- **Runtime adapter boundary**: define clearly what is generic CFA and what is PySpark-specific, so a second adapter (SQL, dbt, etc.) can be added without rewriting the kernel
+- **Concurrency model decision**: choose between lock-based, queue-based, or version-based target scope isolation and implement it
 
-That means finding the right balance between:
-
-- technical ambition
-- honest limitations
-- adoption realism
-- architectural confidence
-
-This is not just marketing language. It affects whether serious readers interpret CFA as credible or premature.
-
----
-
-## 14. What is the fairest current conclusion?
-
-The fairest current conclusion is:
-
-- CFA is a serious and unusually mature architectural proposal
-- it targets real weaknesses in current agentic systems
-- it still needs broader real-world validation
-- its next gains will come from focused adoption and stronger enforcement, not from infinite conceptual expansion
-
-That is a strong place to continue from, but not a finished one.
+These are more useful than abstract positioning debates because they produce artifacts, not opinions.

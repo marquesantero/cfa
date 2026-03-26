@@ -194,17 +194,11 @@ This is how CFA avoids relying on chat memory as a substitute for operational tr
 
 ## 11. What is the audit trail for?
 
-The audit trail records the path from:
+The audit trail records the full path from request through normalization, policy decision, execution, and state projection.
 
-- request
-- normalization
-- policy decision
-- execution
-- state projection
+Each event is linked to the previous one via SHA-256 hash, forming a tamper-evident chain. That means you can verify after the fact that no event was inserted, removed, or altered.
 
-Its purpose is not only observability, but causal traceability.
-
-That matters when execution affects governed data, cost, compliance, or durable state.
+Its purpose is not only observability, but causal traceability. That matters when execution affects governed data, cost, compliance, or durable state.
 
 ---
 
@@ -219,12 +213,12 @@ The lifecycle layer evaluates recurring flows over time and decides whether they
 - deprecated
 - retired
 
-It uses quantitative signals such as:
+It uses four quantitative indices:
 
-- IFo
-- IFs
-- IFg
-- IDI
+- **IFo** -- operational fluidity: latency, cost, and success rate
+- **IFs** -- semantic fidelity: schema health, drift, and fault rate
+- **IFg** -- governance integrity: binary pass/fail (any violation = 0)
+- **IDI** -- intent drift: how often the system had to replan
 
 This makes recurring execution health something the architecture can reason about explicitly.
 
@@ -401,7 +395,7 @@ Use the full kernel when you want the entire governed flow:
 
 ## 20. What does the Airflow adoption wedge look like?
 
-The smallest orchestration pattern is this:
+The [`integrations/airflow-governance-gate/`](../integrations/airflow-governance-gate/) folder contains a standalone helper that wraps `cfa.governance` for use inside Airflow DAGs. The smallest pattern looks like this:
 
 ```python
 from governance_gate import GovernanceRequest, assert_allowed
