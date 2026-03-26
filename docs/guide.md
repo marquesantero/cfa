@@ -8,7 +8,7 @@ The examples and guide were checked against the current implementation with thes
 
 | Item | Status | Notes |
 | --- | --- | --- |
-| Test suite | Verified | `pytest -q` passes (205 tests as of last run) |
+| Test suite | Verified | `pytest -q` passes |
 | `standalone_resolution.py` | Verified | Runs successfully directly from the repository checkout |
 | `standalone_lifecycle.py` | Verified | Runs successfully directly from the repository checkout |
 | `standalone_governance.py` | API-aligned | Requires Python 3.11+ because `codegen.py` uses `match` |
@@ -324,12 +324,6 @@ if result.state.value == "approved":
 else:
     print(result.blocked_reason or result.state.value)
 ```
-
-## Repository-facing notes
-
-- The GitHub Pages site under `docs/*.html` was intentionally left untouched in this pass.
-- The repository-facing docs were aligned to the implementation instead.
-- The current local environment did not have Python 3.11 installed, so direct runtime validation for the governance/full-kernel examples was limited to API inspection plus the project requirement metadata.
 
 ## Pointers
 
