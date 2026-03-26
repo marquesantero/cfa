@@ -327,6 +327,7 @@ docs/                 repository-facing documentation
 
 - [Usage Guide](./docs/guide.md)
 - [Examples](./examples/)
+- [Airflow Governance Gate](./integrations/airflow-governance-gate/README.md)
 - [Project Pages](https://marquesantero.github.io/cfa/)
 - [Whitepaper PT-BR](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.html)
 - [Whitepaper EN](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.en.html)
