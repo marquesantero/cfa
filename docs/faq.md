@@ -2,7 +2,7 @@
 
 This FAQ is meant to help technical readers understand what CFA is, what it solves, how it works, and how to start evaluating it in practice.
 
-For deeper architectural debates, open questions, and unresolved tradeoffs, see [Open Questions](./open-questions.md).
+For deeper architectural debates, unresolved tradeoffs, and maturity questions, see [Architecture Notes](./architecture-notes.md).
 
 ---
 
@@ -62,7 +62,7 @@ You can still build agentic behavior around CFA, but the architecture itself is 
 
 ---
 
-## 4. What is a `StateSignature`?
+## 4. What is a `StateSignature`, and why does intent formalization matter?
 
 `StateSignature` is the core contract type in CFA.
 
@@ -83,13 +83,7 @@ That makes intent something the system can:
 - replan
 - compare across executions
 
----
-
-## 5. Why is intent formalization so important?
-
-Because operational systems should not execute directly from an implicit interpretation of text.
-
-Once intent is formalized, the system can distinguish between:
+This matters because operational systems should not execute directly from an implicit interpretation of text. Once intent is formalized, the system can distinguish between:
 
 - what was requested
 - what was understood
@@ -100,7 +94,7 @@ Without that step, governance and audit become much weaker.
 
 ---
 
-## 6. What does the `IntentNormalizer` do?
+## 5. What does the `IntentNormalizer` do?
 
 The `IntentNormalizer` transforms natural-language input into a typed semantic result.
 
@@ -115,22 +109,7 @@ This stage exists so the rest of the system works on a contract instead of on ra
 
 ---
 
-## 7. What is the `ConfirmationOrchestrator` for?
-
-It decides whether a normalized request can proceed automatically or should require stronger confirmation.
-
-This is useful when:
-
-- confidence is low
-- ambiguity is high
-- protected data is involved
-- target scope is sensitive
-
-Instead of treating human escalation as an exception, CFA treats it as an architectural mode.
-
----
-
-## 8. What does the `PolicyEngine` do?
+## 6. What does the `PolicyEngine` do?
 
 The `PolicyEngine` evaluates a `StateSignature` against declarative rules and returns one of three outcomes:
 
@@ -150,7 +129,7 @@ Typical policy concerns include:
 
 ---
 
-## 9. What does `REPLAN` mean?
+## 7. What does `REPLAN` mean?
 
 `REPLAN` means the request is not necessarily invalid, but it is not safe or complete in its current form.
 
@@ -162,7 +141,7 @@ It is a useful middle state between unconditional approval and terminal denial.
 
 ---
 
-## 10. What is `State Projection`?
+## 8. What is `State Projection`?
 
 `State Projection` is how approved execution effects are written back into operational context.
 
@@ -177,7 +156,7 @@ This is one of the most distinctive parts of CFA because it treats post-executio
 
 ---
 
-## 11. Why does CFA care so much about partial execution?
+## 9. Why does CFA care so much about partial execution?
 
 Because real operational systems often fail partially rather than cleanly.
 
@@ -198,7 +177,7 @@ That makes the execution record more realistic and more useful for future decisi
 
 ---
 
-## 12. What is the `ContextRegistry`?
+## 10. What is the `ContextRegistry`?
 
 The `ContextRegistry` is the architecture’s explicit model of relevant operational state.
 
@@ -213,13 +192,12 @@ This is how CFA avoids relying on chat memory as a substitute for operational tr
 
 ---
 
-## 13. What is the audit trail for?
+## 11. What is the audit trail for?
 
 The audit trail records the path from:
 
 - request
 - normalization
-- confirmation
 - policy decision
 - execution
 - state projection
@@ -230,7 +208,7 @@ That matters when execution affects governed data, cost, compliance, or durable 
 
 ---
 
-## 14. What is the lifecycle layer?
+## 12. What is the lifecycle layer?
 
 The lifecycle layer evaluates recurring flows over time and decides whether they should be:
 
@@ -252,7 +230,7 @@ This makes recurring execution health something the architecture can reason abou
 
 ---
 
-## 15. Does CFA require an LLM?
+## 13. Does CFA require an LLM?
 
 Not everywhere.
 
@@ -266,7 +244,7 @@ Natural-language resolution usually assumes some semantic backend, but the archi
 
 ---
 
-## 16. When should I use CFA?
+## 14. When should I use CFA?
 
 CFA is a good fit when:
 
@@ -286,7 +264,7 @@ It is especially relevant for:
 
 ---
 
-## 17. When should I not use CFA?
+## 15. When should I not use CFA?
 
 CFA is probably too heavy when:
 
@@ -300,7 +278,7 @@ It is not meant to be the default architecture for every AI use case.
 
 ---
 
-## 18. What is the smallest useful adoption path?
+## 16. What is the smallest useful adoption path?
 
 The strongest small adoption wedge is usually:
 
@@ -317,7 +295,7 @@ That path is attractive because it:
 
 ---
 
-## 19. What does governance-only usage look like?
+## 17. What does governance-only usage look like?
 
 Here is the smallest useful pattern:
 
@@ -357,7 +335,7 @@ print(result.reasoning)
 
 ---
 
-## 20. What does natural-language resolution look like?
+## 18. What does natural-language resolution look like?
 
 ```python
 from cfa.resolution import IntentNormalizer, MockNormalizerBackend
@@ -388,12 +366,21 @@ print(resolution.confirmation_mode.value)
 
 ---
 
-## 21. What does full-kernel usage look like?
+## 19. What does full-kernel usage look like?
 
 ```python
 from cfa import KernelOrchestrator
 
-catalog = {"datasets": {}}
+catalog = {
+    "datasets": {
+        "nfe": {"classification": "high_volume", "size_gb": 4000},
+        "clientes": {
+            "classification": "sensitive",
+            "size_gb": 0.5,
+            "pii_columns": ["cpf", "email"],
+        },
+    }
+}
 
 kernel = KernelOrchestrator(catalog=catalog)
 result = kernel.process("Join NFe with Clientes and persist to Silver")
@@ -404,7 +391,6 @@ print(result.state.value)
 Use the full kernel when you want the entire governed flow:
 
 - intent normalization
-- confirmation
 - policy
 - planning
 - execution control
@@ -413,19 +399,37 @@ Use the full kernel when you want the entire governed flow:
 
 ---
 
-## 22. Is there a concrete orchestration integration example?
+## 20. What does the Airflow adoption wedge look like?
 
-Yes.
+The smallest orchestration pattern is this:
 
-There is a separate minimal adoption wedge here:
+```python
+from governance_gate import GovernanceRequest, assert_allowed
+
+result = assert_allowed(
+    GovernanceRequest(
+        domain="fiscal",
+        intent="reconciliation",
+        target_layer="silver",
+        datasets=(
+            {"name": "nfe", "classification": "high_volume", "size_gb": 4000},
+            {"name": "clientes", "classification": "sensitive", "pii_columns": ["cpf"]},
+        ),
+        no_pii_raw=True,
+        merge_key_required=True,
+        enforce_types=True,
+        partition_by=("processing_date",),
+    )
+)
+```
+
+There is a separate minimal integration example here:
 
 - [Airflow Governance Gate](../integrations/airflow-governance-gate/README.md)
 
-That example keeps the core architecture separate while showing how CFA can act as a lightweight decision layer inside an existing DAG.
-
 ---
 
-## 23. What are the current limitations?
+## 21. What are the current limitations?
 
 Current limitations include:
 
@@ -439,7 +443,7 @@ These limitations do not invalidate the proposal, but they are part of the hones
 
 ---
 
-## 24. What should I read next?
+## 22. What should I read next?
 
 If you want to go deeper, use this order:
 
@@ -448,4 +452,4 @@ If you want to go deeper, use this order:
 3. [Airflow Governance Gate](../integrations/airflow-governance-gate/README.md)
 4. [Whitepaper PT-BR](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.html)
 5. [Whitepaper EN](https://marquesantero.github.io/cfa/cfa-v2-whitepaper.en.html)
-6. [Open Questions](./open-questions.md)
+6. [Architecture Notes](./architecture-notes.md)

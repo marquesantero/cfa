@@ -1,16 +1,14 @@
-# CFA Open Questions
+# CFA Architecture Notes
 
 This document is intentionally separate from the public FAQ.
 
 The FAQ explains what CFA is and how to approach it. This document focuses on the harder part: what is still unresolved, fragile, expensive, or strategically uncertain.
 
-These are not reasons to dismiss CFA. They are the questions most worth debating if the architecture is going to mature.
+These notes are not reasons to dismiss CFA. They are the questions most worth debating if the architecture is going to mature.
 
 ---
 
 ## 1. How strong is the gap between the whitepaper and the implementation?
-
-This is one of the central questions.
 
 The whitepaper expresses a strong architectural contract:
 
@@ -58,7 +56,7 @@ But it also creates:
 - integration effort
 - cognitive load
 
-The unresolved question is not whether overhead exists. It clearly does. The real question is:
+The unresolved question is:
 
 > in which operational contexts is that overhead justified by the risk profile?
 
@@ -66,7 +64,7 @@ The unresolved question is not whether overhead exists. It clearly does. The rea
 
 ## 4. What is the right concurrency model?
 
-Concurrency remains one of the most important unresolved systems questions in CFA.
+Concurrency remains one of the most important systems questions in CFA.
 
 If multiple requests can:
 
@@ -205,44 +203,38 @@ That would move CFA from “promising architecture” toward “credible operati
 
 ---
 
-## 12. Which parts of CFA are strongest today, and which are still more thesis than practice?
+## 12. How should the project measure which parts are ready for production and which are not?
 
-Strongest today:
+This is a more useful question than simply listing “strong” and “weak” areas.
 
-- architectural framing
-- policy-first governance
-- explicit state orientation
-- partial-failure seriousness
-- lifecycle thinking
+Possible evaluation criteria include:
 
-Still more thesis-dependent:
+- invariant enforcement strength
+- operational observability
+- integration complexity
+- external usability
+- failure semantics
+- runtime maturity
 
-- broad production fit
-- concurrency at scale
-- generalized runtime coverage
-- widespread external adoption
-
-Keeping those distinctions explicit is healthy for the project.
+The open challenge is turning architectural confidence into measurable readiness.
 
 ---
 
-## 13. What should not be overstated?
+## 13. What positioning risks should the project avoid?
 
-The architecture should avoid claims like:
+One open strategic question is how CFA should be presented publicly without collapsing into either:
 
-- “CFA solves AI governance definitively”
-- “CFA eliminates hallucination risk”
-- “CFA is already market-proven”
-- “CFA replaces all agent frameworks”
+- overclaiming
+- or self-undermining
 
-Those claims weaken credibility.
+That means finding the right balance between:
 
-A better position is:
-
-- strong thesis
-- serious implementation
+- technical ambition
 - honest limitations
-- clear path for validation and evolution
+- adoption realism
+- architectural confidence
+
+This is not just marketing language. It affects whether serious readers interpret CFA as credible or premature.
 
 ---
 
@@ -255,4 +247,4 @@ The fairest current conclusion is:
 - it still needs broader real-world validation
 - its next gains will come from focused adoption and stronger enforcement, not from infinite conceptual expansion
 
-That is a strong position to be in.
+That is a strong place to continue from, but not a finished one.
