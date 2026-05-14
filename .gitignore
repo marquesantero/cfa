@@ -37,3 +37,6 @@ Thumbs.db
 *.log
 tmp/
 temp/
+
+#Ai tools
+.claude
