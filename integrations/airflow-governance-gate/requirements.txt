@@ -1,0 +1,7 @@
+# Dependencies for the Airflow demo layer.
+# Install the CFA repository itself separately, for example:
+#   pip install -e .
+#
+# Teams should align the Airflow version with their own platform baseline.
+
+apache-airflow>=2.8,<3.0

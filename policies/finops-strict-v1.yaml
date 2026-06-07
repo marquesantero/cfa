@@ -1,0 +1,59 @@
+policy_bundle:
+  version: "finops-strict-v1.0"
+  description: "FinOps-focused rules — aggressive cost control for production"
+  last_updated: "2026-06-06"
+
+  rules:
+    - name: require_partition_filter_for_high_volume
+      condition: missing_partition
+      action: block
+      fault_code: FINOPS_MISSING_TEMPORAL_PREDICATE
+      severity: critical
+      family: semantic
+      message: "High volume dataset without partition filter — full scan risk BLOCKED."
+      min_size_gb: 0.5
+      remediation:
+        - "Add constraints.partition_by with temporal column"
+
+    - name: warn_on_sensitive_without_partition
+      condition: sensitive_without_partition
+      action: block
+      fault_code: FINOPS_SENSITIVE_WITHOUT_PARTITION
+      severity: high
+      family: semantic
+      message: "Sensitive dataset without declared partitioning — BLOCKED."
+      remediation:
+        - "Add partition_by to limit processing scope"
+
+    - name: enforce_cost_ceiling_strict
+      condition: cost_budget_exceeded
+      action: block
+      fault_code: FINOPS_COST_CEILING_EXCEEDED
+      severity: critical
+      family: semantic
+      message: "Estimated cost exceeds budget ceiling."
+      max_dbu: 25.0
+      remediation:
+        - "Reduce dataset scope via partition filter"
+        - "Use aggregation instead of full scan"
+        - "Approve cost override via change request"
+
+    - name: forbid_raw_pii_in_silver_or_gold
+      condition: pii_in_protected_layer
+      action: replan
+      fault_code: GOVERNANCE_RAW_PII_IN_PROTECTED_LAYER
+      severity: critical
+      family: semantic
+      message: "PII detected without treatment in write to protected layer."
+      remediation:
+        - "Apply sha256() on PII columns before join"
+
+    - name: require_merge_key_for_silver_gold
+      condition: missing_merge_key
+      action: block
+      fault_code: CONTRACT_MISSING_MERGE_KEY
+      severity: critical
+      family: semantic
+      message: "Write to Silver/Gold without merge_key — direct append forbidden."
+      remediation:
+        - "Set constraints.merge_key_required=True"

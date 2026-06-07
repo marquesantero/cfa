@@ -1,0 +1,96 @@
+# CFA Behavior Specification — Fiscal Data Governance
+#
+# This YAML defines the governance contract for fiscal ETL pipelines.
+# The Systematizer turns this into an executable BehaviorTaxonomy + PolicyRules.
+
+behavior:
+  name: fiscal_reconciliation
+  description: |
+    # Fiscal Data Reconciliation Governance
+    
+    Pipeline must:
+    - anonymize PII (cpf, email) before writing to Silver
+    - enforce merge_key on all Silver writes
+    - declare partition_by for datasets > 1GB
+    - stay within cost budget of 50 DBU
+    - enforce type contracts on Silver writes
+    - never write raw PII to Gold layer
+
+  failure_modes:
+    - code: raw_pii_in_silver
+      label: Raw PII in Silver layer
+      description: PII columns (cpf, email) detected in a Silver write without anonymization.
+      condition: pii_in_protected_layer
+      severity: critical
+      action: replan
+      target_layer: silver
+      remediation:
+        - Apply sha256() on all PII columns before writing
+        - Enable constraints.no_pii_raw on the signature
+
+    - code: missing_merge_key
+      label: Missing merge key on Silver write
+      description: Attempt to write to Silver without merge_key, risking duplicate data.
+      condition: missing_merge_key
+      severity: critical
+      action: block
+      target_layer: silver
+      remediation:
+        - Set constraints.merge_key_required=True
+        - Define merge key in catalog metadata
+
+    - code: high_volume_scan
+      label: Full scan of high-volume dataset
+      description: Processing a high-volume dataset without partition filter.
+      condition: missing_partition
+      severity: high
+      action: replan
+      min_size_gb: 1.0
+      remediation:
+        - Add partition_by with temporal column (processing_date)
+        - Apply date filter to limit scan scope
+
+    - code: schema_drift
+      label: Schema mismatch on write
+      description: Output schema differs from expected contract.
+      condition: schema_mismatch
+      severity: high
+      action: block
+      target_layer: silver
+      remediation:
+        - Validate schema before writing
+        - Reject writes that don't match contract
+
+    - code: cost_ceiling_exceeded
+      label: Cost budget exceeded
+      description: Estimated cost exceeds configured ceiling.
+      condition: cost_budget_exceeded
+      severity: medium
+      action: replan
+      max_dbu: 50.0
+      remediation:
+        - Reduce dataset scope via partition filter
+        - Approve cost estimate before execution
+
+    - code: gold_layer_pii
+      label: PII in Gold layer
+      description: Writing raw PII to the Gold (curated) layer.
+      condition: pii_in_protected_layer
+      severity: critical
+      action: block
+      target_layer: gold
+      remediation:
+        - Fully anonymize all PII before Gold layer
+        - Use tokenized or aggregated representations
+
+context: |
+  Target is a PySpark ETL pipeline reading from Delta Lake bronze tables
+  and writing to silver/gold with PII anonymization and schema enforcement.
+
+generate:
+  taxonomy: true
+  test_cases: true
+
+pipeline:
+  policy:
+    auto_generate_rules: true

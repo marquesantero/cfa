@@ -1,0 +1,79 @@
+policy_bundle:
+  version: "compliance-strict-v1.0"
+  description: "Regulatory compliance rules — max safety for regulated industries (finance, healthcare, government)"
+  last_updated: "2026-06-06"
+
+  rules:
+    - name: forbid_raw_pii_in_silver_or_gold
+      condition: pii_in_protected_layer
+      action: block
+      fault_code: GOVERNANCE_RAW_PII_IN_PROTECTED_LAYER
+      severity: critical
+      family: semantic
+      message: "PII detected without treatment in write to protected layer — BLOCKED for compliance."
+      remediation:
+        - "Apply sha256() on all PII columns"
+        - "Use tokenized representations for Gold layer"
+
+    - name: require_pii_anonymization_declaration
+      condition: pii_without_policy
+      action: block
+      fault_code: GOVERNANCE_PII_WITHOUT_POLICY
+      severity: critical
+      family: semantic
+      message: "Any PII dataset MUST declare no_pii_raw=True explicitly."
+      remediation:
+        - "Set constraints.no_pii_raw=True"
+        - "Document PII treatment in domain metadata"
+
+    - name: forbid_pii_in_gold_any_circumstance
+      condition: pii_in_protected_layer
+      action: block
+      fault_code: GOVERNANCE_PII_IN_GOLD_FORBIDDEN
+      severity: critical
+      family: semantic
+      message: "PII in Gold layer is NEVER permitted under compliance-strict rules."
+      target_layer: gold
+      remediation:
+        - "Use aggregated data only in Gold"
+        - "Tokenize or de-identify all PII before Gold"
+
+    - name: require_merge_key_for_silver_gold
+      condition: missing_merge_key
+      action: block
+      fault_code: CONTRACT_MISSING_MERGE_KEY
+      severity: critical
+      family: semantic
+      message: "Write to Silver/Gold without merge_key — direct append forbidden."
+      remediation:
+        - "Set constraints.merge_key_required=True"
+
+    - name: enforce_type_checking
+      condition: enforce_types_disabled
+      action: block
+      fault_code: CONTRACT_TYPE_ENFORCEMENT_DISABLED
+      severity: critical
+      family: semantic
+      message: "Type enforcement MUST be enabled for all protected layer writes."
+      remediation:
+        - "Enable constraints.enforce_types=True"
+
+    - name: require_partition_for_any_sensitive
+      condition: sensitive_without_partition
+      action: block
+      fault_code: FINOPS_SENSITIVE_WITHOUT_PARTITION
+      severity: high
+      family: semantic
+      message: "Any dataset classified as sensitive requires partition declaration."
+      remediation:
+        - "Add partition_by to limit processing scope"
+
+    - name: enforce_cost_ceiling
+      condition: cost_budget_exceeded
+      action: block
+      fault_code: FINOPS_INVALID_COST_CEILING
+      severity: high
+      family: semantic
+      message: "Cost ceiling must be explicitly set for compliance audit trail."
+      remediation:
+        - "Set constraints.max_cost_dbu with budgeted value"

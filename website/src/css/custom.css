@@ -1,0 +1,69 @@
+:root {
+  --ifm-color-primary: #3dffa0;
+  --ifm-color-primary-dark: #1de68a;
+  --ifm-color-primary-darker: #0cd97a;
+  --ifm-color-primary-darkest: #00b35f;
+  --ifm-color-primary-light: #5fffae;
+  --ifm-color-primary-lighter: #7dffbe;
+  --ifm-color-primary-lightest: #a3ffd3;
+  --ifm-background-color: #07090f;
+  --ifm-background-surface-color: #0d1018;
+  --ifm-code-background: rgba(61, 255, 160, 0.06);
+  --ifm-code-font-size: 90%;
+  --ifm-font-family-base: 'IBM Plex Sans', -apple-system, sans-serif;
+  --ifm-font-family-monospace: 'IBM Plex Mono', monospace;
+  --ifm-heading-font-family: 'Syne', sans-serif;
+  --ifm-navbar-background-color: rgba(7, 9, 15, 0.85);
+  --ifm-navbar-link-color: #8892a4;
+  --ifm-navbar-link-hover-color: #3dffa0;
+  --ifm-footer-background-color: #07090f;
+  --ifm-footer-link-color: #8892a4;
+  --ifm-footer-link-hover-color: #3dffa0;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+.navbar { backdrop-filter: blur(16px); border-bottom: 1px solid #1a2035; }
+.navbar__title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; }
+.navbar__link { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; letter-spacing: 0.04em; }
+
+.hero--primary { position: relative; }
+.hero--primary::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(61,255,160,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(61,255,160,0.012) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
+h1 { font-size: 2.5rem; }
+h2 { font-size: 1.75rem; }
+
+article .theme-doc-markdown {
+  font-size: 0.925rem;
+  line-height: 1.8;
+}
+
+code {
+  border: 1px solid rgba(61, 255, 160, 0.08);
+}
+
+.theme-doc-sidebar-menu {
+  font-size: 0.875rem;
+}
+
+.menu__link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.menu__link--active {
+  color: var(--ifm-color-primary);
+}
+
+.footer {
+  border-top: 1px solid #1a2035;
+}

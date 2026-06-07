@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cfa-kernel"
+version = "0.1.6"
+description = "CFA — Governed execution for AI agents and data systems"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["governance", "data", "ai", "policy", "audit", "pipeline", "compliance"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.scripts]
+cfa = "cfa.cli:main"
+cfa-mcp = "cfa.mcp:serve"
+
+[project.urls]
+Homepage = "https://marquesantero.github.io/cfa/"
+Repository = "https://github.com/marquesantero/cfa"
+Documentation = "https://marquesantero.github.io/cfa/docs/intro"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "pyyaml>=6.0", "ruff>=0.8"]
+yaml = ["pyyaml>=6.0"]
+otel = ["opentelemetry-api>=1.20", "opentelemetry-sdk>=1.20", "opentelemetry-exporter-otlp-proto-grpc>=1.20"]
+mcp = ["mcp>=1.0"]
+llm = ["openai>=1.0"]
+all = ["cfa-kernel[yaml,otel,mcp,llm]"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cfa"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "W",      # pycodestyle warnings
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "E701",   # multiple statements on one line (colon) — intentional in CLI commands
+    "E702",   # multiple statements on one line (semicolon) — intentional in CLI commands
+    "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise without from inside except
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cfa"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "cfa_governance: mark a test as a CFA governance test",
+    "cfa_policy(policy_bundle): specify the policy bundle version for this test",
+    "cfa_audit: mark a test for audit chain verification",
+    "cfa_backend(backend_name): specify the codegen backend for this test",
+    "cfa_layer(bronze|silver|gold): specify the target layer under test",
+]

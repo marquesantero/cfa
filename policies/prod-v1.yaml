@@ -1,0 +1,81 @@
+policy_bundle:
+  version: "prod-v1.0"
+  description: "Production governance rules — balanced safety and cost control"
+  last_updated: "2026-06-06"
+
+  rules:
+    - name: forbid_raw_pii_in_silver_or_gold
+      condition: pii_in_protected_layer
+      action: replan
+      fault_code: GOVERNANCE_RAW_PII_IN_PROTECTED_LAYER
+      severity: critical
+      family: semantic
+      message: "PII detected without treatment in write to protected layer."
+      remediation:
+        - "Apply sha256() on PII columns before join"
+        - "Or use drop() to remove sensitive columns"
+
+    - name: require_pii_anonymization_declaration
+      condition: pii_without_policy
+      action: block
+      fault_code: GOVERNANCE_PII_WITHOUT_POLICY
+      severity: critical
+      family: semantic
+      message: "Datasets with PII present but no_pii_raw=False without justification."
+      remediation:
+        - "Set constraints.no_pii_raw=True explicitly"
+        - "Or add PII treatment justification to domain"
+
+    - name: require_partition_filter_for_high_volume
+      condition: missing_partition
+      action: replan
+      fault_code: FINOPS_MISSING_TEMPORAL_PREDICATE
+      severity: high
+      family: semantic
+      message: "High volume dataset without partition filter — full scan risk."
+      min_size_gb: 1.0
+      remediation:
+        - "Add constraints.partition_by with temporal column"
+        - "Example: partition_by: [processing_date]"
+
+    - name: warn_on_sensitive_without_partition
+      condition: sensitive_without_partition
+      action: replan
+      fault_code: FINOPS_SENSITIVE_WITHOUT_PARTITION
+      severity: warning
+      family: semantic
+      message: "Sensitive dataset without declared partitioning."
+      remediation:
+        - "Add partition_by to limit processing scope."
+
+    - name: require_merge_key_for_silver_gold
+      condition: missing_merge_key
+      action: block
+      fault_code: CONTRACT_MISSING_MERGE_KEY
+      severity: critical
+      family: semantic
+      message: "Write to Silver/Gold without merge_key — direct append forbidden."
+      remediation:
+        - "Set constraints.merge_key_required=True"
+        - "Ensure the Planner uses merge, not append"
+
+    - name: enforce_type_checking
+      condition: enforce_types_disabled
+      action: replan
+      fault_code: CONTRACT_TYPE_ENFORCEMENT_DISABLED
+      severity: high
+      family: semantic
+      message: "enforce_types=False in write to protected layer."
+      remediation:
+        - "Enable constraints.enforce_types=True"
+        - "Define expected schema in catalog"
+
+    - name: enforce_cost_ceiling
+      condition: cost_budget_exceeded
+      action: block
+      fault_code: FINOPS_INVALID_COST_CEILING
+      severity: high
+      family: semantic
+      message: "max_cost_dbu invalid (must be > 0)."
+      remediation:
+        - "Set constraints.max_cost_dbu with positive value."
