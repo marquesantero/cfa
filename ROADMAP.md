@@ -53,7 +53,7 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 - [x] 1.3.3 Update `website/docs/intro.md` — "production ready" language
 - [x] 1.3.4 Write changelog (v0.1.0 → v1.0.0 highlights)
 - [x] 1.3.5 Tag `v1.0.0` — build `cfa_kernel-1.0.0.tar.gz` + `.whl` in dist/
-- [ ] 1.3.6 Publish to PyPI
+- [x] 1.3.6 Publish to PyPI
 - [ ] 1.3.7 Write announcement blog post (Medium/Dev.to + website blog)
 
 ---

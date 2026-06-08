@@ -30,7 +30,9 @@ Config (claude_desktop_config.json):
 from __future__ import annotations
 
 import json
+import os
 import sys
+import time
 from typing import Any
 
 from cfa.policy.bundle import PolicyBundle
@@ -41,6 +43,25 @@ from ..backends import BackendRegistry
 
 SERVER_NAME = "cfa-mcp"
 SERVER_VERSION = "1.0.0"
+
+# ── Auth ─────────────────────────────────────────────────────────────────────
+
+_API_KEY = os.environ.get("CFA_MCP_API_KEY", "")
+
+# ── Rate limiting (token bucket) ──────────────────────────────────────────────
+
+_MAX_REQUESTS = int(os.environ.get("CFA_MCP_RATE_LIMIT", "60"))
+_RATE_WINDOW = 60
+_request_counts: dict[str, list[float]] = {}
+
+def _check_rate_limit(tool_name: str) -> bool:
+    now = time.time()
+    window = _request_counts.setdefault(tool_name, [])
+    window[:] = [t for t in window if now - t < _RATE_WINDOW]
+    if len(window) >= _MAX_REQUESTS:
+        return False
+    window.append(now)
+    return True
 
 # ── Tool implementations ─────────────────────────────────────────────────────
 
@@ -212,6 +233,59 @@ def tool_list_backends(args: dict[str, Any]) -> dict[str, Any]:
     return {"backends": backends}
 
 
+def tool_lifecycle_status(args: dict[str, Any]) -> dict[str, Any]:
+    """Query lifecycle indices (IFo/IFs/IFg/IDI) for pipelines."""
+    db_path = args.get("db_path", "")
+    pipeline = args.get("pipeline", "")
+
+    try:
+        from cfa.storage import SqliteStorage
+        store = SqliteStorage(db_path) if db_path else SqliteStorage()
+    except Exception:
+        return {"error": "Could not open storage. Provide db_path or ensure default exists."}
+
+    try:
+        rows = store._conn.execute(
+            "SELECT * FROM skill_records WHERE name = ? ORDER BY computed_at DESC LIMIT 10",
+            (pipeline,) if pipeline else ("%",),
+        ).fetchall()
+    except Exception:
+        return {"skills": [], "note": f"No lifecycle data available{f' for {pipeline}' if pipeline else ''}"}
+
+    skills = []
+    for r in rows:
+        skills.append({
+            "name": r[1], "state": r[2],
+            "ifo": r[3], "ifs": r[4], "ifg": r[5], "idi": r[6],
+            "execution_count": r[7], "computed_at": r[16] if len(r) > 16 else "",
+        })
+    return {"skills": skills}
+
+
+def tool_compliance_check(args: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate a pipeline intent against a named compliance bundle (EU AI Act, LGPD, etc.)."""
+    intent = args.get("intent", "")
+    bundle_name = args.get("bundle", "prod-v1")
+
+    from cfa.core.kernel import KernelConfig, KernelOrchestrator
+
+    catalog = args.get("catalog", {})
+    kernel = KernelOrchestrator(
+        catalog=catalog,
+        config=KernelConfig(policy_bundle_version=bundle_name),
+    )
+    result = kernel.process(intent)
+
+    return {
+        "intent": intent,
+        "bundle": bundle_name,
+        "decision": result.state.value.upper(),
+        "faults": [{"code": f.code, "severity": f.severity.value, "message": f.message} for f in result.policy_result.faults] if result.policy_result else [],
+        "blocked_reason": result.blocked_reason,
+        "signature_hash": result.signature.signature_hash if result.signature else "",
+    }
+
+
 # ── Tool registry ────────────────────────────────────────────────────────────
 
 TOOLS = {
@@ -266,6 +340,30 @@ TOOLS = {
         },
         "handler": tool_list_backends,
     },
+    "cfa_lifecycle_status": {
+        "description": "Query lifecycle indices (IFo/IFs/IFg/IDI) for governed pipelines from CFA storage.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "db_path": {"type": "string", "description": "Path to CFA SQLite database"},
+                "pipeline": {"type": "string", "description": "Optional: filter by pipeline name"},
+            },
+        },
+        "handler": tool_lifecycle_status,
+    },
+    "cfa_compliance_check": {
+        "description": "Evaluate a pipeline intent against a compliance bundle (e.g., eu-ai-act-v1, lgpd-v1). Returns decision, faults, and block reason.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "intent": {"type": "string", "description": "Natural-language pipeline intent to evaluate"},
+                "bundle": {"type": "string", "description": "Compliance bundle name (default: prod-v1)"},
+                "catalog": {"type": "object", "description": "Optional: data catalog dict"},
+            },
+            "required": ["intent"],
+        },
+        "handler": tool_compliance_check,
+    },
 }
 
 
@@ -283,6 +381,12 @@ def _rpc_response(id: Any, result: Any) -> dict[str, Any]:
 def _handle_request(req: dict[str, Any]) -> dict[str, Any] | None:
     method = req.get("method", "")
     req_id = req.get("id")
+
+    # Auth check (skip for initialize + ping)
+    if _API_KEY and method not in ("initialize", "ping"):
+        key = req.get("params", {}).get("_meta", {}).get("api_key", "")
+        if key != _API_KEY:
+            return _rpc_error(req_id, -32001, "Unauthorized: set CFA_MCP_API_KEY")
 
     if method == "initialize":
         return _rpc_response(req_id, {
@@ -308,6 +412,9 @@ def _handle_request(req: dict[str, Any]) -> dict[str, Any] | None:
     if method == "tools/call":
         tool_name = req.get("params", {}).get("name", "")
         tool_args = req.get("params", {}).get("arguments", {})
+
+        if not _check_rate_limit(tool_name):
+            return _rpc_error(req_id, -32002, f"Rate limit exceeded: {_MAX_REQUESTS}/{_RATE_WINDOW}s per tool")
 
         tool = TOOLS.get(tool_name)
         if not tool:

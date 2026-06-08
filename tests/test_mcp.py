@@ -46,6 +46,7 @@ class TestTools:
         assert names == {
             "cfa_evaluate_signature", "cfa_describe_rules",
             "cfa_explain_fault", "cfa_audit_check", "cfa_list_backends",
+            "cfa_lifecycle_status", "cfa_compliance_check",
         }
 
     def test_each_tool_has_schema(self):

@@ -408,7 +408,7 @@ class TestJourney4_AIDeveloper:
         """Verify MCP tools are accessible for AI agents."""
         from cfa.mcp import TOOLS
 
-        assert len(TOOLS) == 5
+        assert len(TOOLS) >= 5
         print(f"  → {len(TOOLS)} MCP tools available: {list(TOOLS.keys())}")
 
     def test_04_mcp_evaluate_signature(self):

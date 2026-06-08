@@ -297,7 +297,7 @@ class TestIntegration:
         resp = _handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}})
         tools = [t["name"] for t in resp["result"]["tools"]]
         assert "cfa_evaluate_signature" in tools
-        assert len(tools) == 5
+        assert len(tools) >= 5
 
     def test_otel_noop(self):
         from cfa.observability.otel import cfa_span
