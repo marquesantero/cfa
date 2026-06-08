@@ -13,12 +13,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Read package version
+        id: pkg
+        run: |
+          python -c "import tomllib, pathlib; \
+            data = tomllib.loads(pathlib.Path('pyproject.toml').read_text()); \
+            print('version=' + data['project']['version'])" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether this version is already on PyPI
+        id: pypi
+        run: |
+          set -e
+          version="${{ steps.pkg.outputs.version }}"
+          status=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/cfa-kernel/${version}/json")
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          if [ "$status" = "200" ]; then
+            echo "cfa-kernel ${version} is already on PyPI; skipping publish."
+          else
+            echo "cfa-kernel ${version} is not on PyPI; will publish."
+          fi
+
       - name: Build package
+        if: steps.pypi.outputs.status != '200'
         run: |
           pip install hatch
           hatch build
+
       - name: Publish to PyPI
+        if: steps.pypi.outputs.status != '200'
         uses: pypa/gh-action-pypi-publish@release/v1
