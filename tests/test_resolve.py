@@ -89,8 +89,28 @@ class TestMockBackend:
         )
         assert len(res.environment_constraints_injected) > 0
 
-    def test_detects_fiscal_domain(self):
+    def test_default_domain_is_general_without_injected_keywords(self):
+        # 1.1.0: the production default no longer ships fiscal/PT-BR
+        # domain keywords. Domain detection requires the caller to supply
+        # ``domain_keywords`` for their vocabulary.
         normalizer = IntentNormalizer(backend=MockNormalizerBackend())
+        res = normalizer.normalize(
+            "Processar nfe fiscal na Silver",
+            environment_state={"datasets": {}},
+            catalog=CATALOG,
+        )
+        assert res.signature.domain == "general"
+
+    def test_detects_custom_domain_via_injected_keywords(self):
+        # Custom domain detection by injecting application-specific keywords.
+        # The fiscal/PT-BR keywords formerly hardcoded into the production
+        # backend now live in ``examples/fiscal_pt_br_normalizer.py``.
+        backend = MockNormalizerBackend(
+            domain_keywords={
+                "fiscal_data_processing": ["nfe", "nota fiscal", "fiscal", "tribut"],
+            }
+        )
+        normalizer = IntentNormalizer(backend=backend)
         res = normalizer.normalize(
             "Processar nfe fiscal na Silver",
             environment_state={"datasets": {}},

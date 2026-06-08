@@ -72,26 +72,34 @@ class NormalizerBackend(ABC):
     def resolve(self, inp: NormalizerInput) -> NormalizerOutput: ...
 
 
-# ── Shared keyword maps ───────────────────────────────────────────────────────
+# ── Default keyword maps ─────────────────────────────────────────────────────
+#
+# These defaults are intentionally minimal and English-only. They cover the
+# medallion layer names (CFA's primitive ontology) and a small set of generic
+# transformation verbs. They do NOT include domain-specific terms — domain
+# detection requires the caller to supply ``domain_keywords`` for their
+# vocabulary. Override any of the three maps via the ``RuleBasedNormalizerBackend``
+# constructor.
+#
+# For an example of extending the backend with Portuguese (fiscal/NFe) keywords,
+# see ``examples/fiscal_pt_br_normalizer.py``.
 
-_LAYER_KEYWORDS: dict[TargetLayer, list[str]] = {
-    TargetLayer.GOLD: ["gold", "ouro", "master", "curated", "final"],
-    TargetLayer.SILVER: ["silver", "prata", "refined", "trusted", "join", "reconcil"],
+DEFAULT_LAYER_KEYWORDS: dict[TargetLayer, list[str]] = {
+    TargetLayer.GOLD: ["gold", "master", "curated", "final"],
+    TargetLayer.SILVER: ["silver", "refined", "trusted", "join", "reconcil"],
     TargetLayer.BRONZE: ["bronze", "raw", "ingest", "landing"],
 }
 
-_DOMAIN_KEYWORDS: dict[str, list[str]] = {
-    "fiscal_data_processing": ["nfe", "nota fiscal", "fiscal", "tribut"],
-    "customer_data": ["client", "customer", "cpf", "cadastro"],
-    "financial_data": ["payment", "transac", "financ", "pagamento"],
+DEFAULT_INTENT_KEYWORDS: dict[str, list[str]] = {
+    "reconciliation_and_persist": ["join", "reconcil", "merg"],
+    "ingest": ["ingest", "load", "import"],
+    "aggregate_and_persist": ["aggregat", "summ", "group"],
+    "transform_and_persist": [],  # fallback when nothing matches
 }
 
-_INTENT_KEYWORDS: dict[str, list[str]] = {
-    "reconciliation_and_persist": ["join", "reconcil", "merg"],
-    "ingest": ["ingest", "load", "import", "carregar"],
-    "aggregate_and_persist": ["aggregat", "summ", "group"],
-    "transform_and_persist": [],
-}
+# No default domain detection. Domain is application-specific — every project
+# has its own vocabulary. Supply ``domain_keywords`` to the backend to enable.
+DEFAULT_DOMAIN_KEYWORDS: dict[str, list[str]] = {}
 
 
 # ── Rule-based production backend ────────────────────────────────────────────
@@ -104,11 +112,28 @@ class RuleBasedNormalizerBackend(NormalizerBackend):
     semantic oracle: if ``strict`` is enabled and the intent cannot be mapped to
     catalog datasets with enough confidence, the kernel blocks before policy
     evaluation instead of silently approving an underspecified operation.
+
+    Keyword maps are injectable. The defaults are minimal and English-only —
+    layers (CFA's medallion primitive) and a small set of generic verbs. For a
+    real project, pass ``domain_keywords`` (and optionally ``layer_keywords``,
+    ``intent_keywords``) tailored to your vocabulary. See
+    ``examples/fiscal_pt_br_normalizer.py`` for a Portuguese/NFe extension.
     """
 
-    def __init__(self, *, strict: bool = False, min_confidence: float = 0.65) -> None:
+    def __init__(
+        self,
+        *,
+        strict: bool = False,
+        min_confidence: float = 0.65,
+        layer_keywords: dict[TargetLayer, list[str]] | None = None,
+        domain_keywords: dict[str, list[str]] | None = None,
+        intent_keywords: dict[str, list[str]] | None = None,
+    ) -> None:
         self.strict = strict
         self.min_confidence = min_confidence
+        self.layer_keywords = layer_keywords if layer_keywords is not None else DEFAULT_LAYER_KEYWORDS
+        self.domain_keywords = domain_keywords if domain_keywords is not None else DEFAULT_DOMAIN_KEYWORDS
+        self.intent_keywords = intent_keywords if intent_keywords is not None else DEFAULT_INTENT_KEYWORDS
 
     def resolve(self, inp: NormalizerInput) -> NormalizerOutput:
         raw = inp.raw_intent.lower()
@@ -194,7 +219,7 @@ class RuleBasedNormalizerBackend(NormalizerBackend):
         return "high"
 
     def _detect_layer(self, raw: str) -> str:
-        for layer, keywords in _LAYER_KEYWORDS.items():
+        for layer, keywords in self.layer_keywords.items():
             if any(kw in raw for kw in keywords):
                 return layer.value
         return "silver"
@@ -214,13 +239,13 @@ class RuleBasedNormalizerBackend(NormalizerBackend):
         return found
 
     def _detect_domain(self, raw: str) -> str:
-        for domain, keywords in _DOMAIN_KEYWORDS.items():
+        for domain, keywords in self.domain_keywords.items():
             if any(kw in raw for kw in keywords):
                 return domain
         return "general"
 
     def _detect_intent(self, raw: str) -> str:
-        for intent_name, keywords in _INTENT_KEYWORDS.items():
+        for intent_name, keywords in self.intent_keywords.items():
             if keywords and any(w in raw for w in keywords):
                 return intent_name
         return "transform_and_persist"
@@ -241,14 +266,27 @@ class RuleBasedNormalizerBackend(NormalizerBackend):
 class MockNormalizerBackend(NormalizerBackend):
     """Deterministic backend for tests. Uses keyword matching.
 
-    This class delegates to the production RuleBasedNormalizerBackend internally
-    so test behaviour stays consistent with production. The name is preserved for
-    backward-compatible test imports.
+    Delegates to ``RuleBasedNormalizerBackend`` with optional injected
+    keyword maps so tests can mirror production behaviour. By default uses
+    the generic English-only defaults; pass ``domain_keywords`` when a test
+    relies on a specific domain vocabulary.
     """
 
+    def __init__(
+        self,
+        *,
+        layer_keywords: dict[TargetLayer, list[str]] | None = None,
+        domain_keywords: dict[str, list[str]] | None = None,
+        intent_keywords: dict[str, list[str]] | None = None,
+    ) -> None:
+        self._backend = RuleBasedNormalizerBackend(
+            layer_keywords=layer_keywords,
+            domain_keywords=domain_keywords,
+            intent_keywords=intent_keywords,
+        )
+
     def resolve(self, inp: NormalizerInput) -> NormalizerOutput:
-        backend = RuleBasedNormalizerBackend()
-        return backend.resolve(inp)
+        return self._backend.resolve(inp)
 
 
 # ── Intent Normalizer ────────────────────────────────────────────────────────

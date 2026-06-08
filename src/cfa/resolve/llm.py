@@ -35,9 +35,9 @@ catalog as ground truth.
 
 ## Rules
 
-1. **domain**: Classify the business domain. Choose from: fiscal_data_processing, \
-customer_data, financial_data, inventory, sales, general.
-   Use "general" only if no specific domain matches.
+1. **domain**: Classify the business domain as a stable snake_case identifier \
+that reflects the application's vocabulary (for example: customer_data, \
+inventory, sales). Use "general" only if no specific domain matches.
 
 2. **intent**: Classify the operation type. Choose from:
    - reconciliation_and_persist (join/merge/reconcile datasets and write)
