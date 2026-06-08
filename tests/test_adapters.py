@@ -1,15 +1,15 @@
-"""Tests for cfa.adapters — framework governance guards."""
+"""Tests for cfa.adapters — universal governance guard.
+
+Note: 0.2.0 removed the per-framework adapter shims (langgraph/crewai/autogen/
+dspy/openai_agents). They were aliases of the same ``cfa_guard``. Use
+``cfa.adapters.cfa_guard`` directly with any framework.
+"""
 
 from __future__ import annotations
 
 import pytest
 
 from cfa.adapters import CFAGuard, cfa_guard
-from cfa.adapters.autogen import cfa_agent_guard
-from cfa.adapters.crewai import cfa_crew_guard
-from cfa.adapters.dspy import cfa_module_guard
-from cfa.adapters.langgraph import cfa_guard as langgraph_guard
-from cfa.adapters.openai_agents import cfa_tool_guard
 
 CATALOG = {
     "datasets": {
@@ -70,19 +70,19 @@ class TestCFAGuard:
             return "safe"
         assert my_safe_operation() == "safe"
 
+    def test_guard_caches_kernel_between_calls(self):
+        """0.2.0: CFAGuard reuses a single KernelOrchestrator across calls."""
+        guard = CFAGuard(catalog=CATALOG)
 
-class TestFrameworkAdapters:
-    def test_langgraph_adapter_exists(self):
-        assert callable(langgraph_guard)
+        @guard.guard("Join NFe with Clientes persist Silver")
+        def call_once():
+            return 1
 
-    def test_openai_agents_adapter_exists(self):
-        assert callable(cfa_tool_guard)
+        @guard.guard("Join NFe with Clientes persist Silver")
+        def call_again():
+            return 2
 
-    def test_crewai_adapter_exists(self):
-        assert callable(cfa_crew_guard)
-
-    def test_autogen_adapter_exists(self):
-        assert callable(cfa_agent_guard)
-
-    def test_dspy_adapter_exists(self):
-        assert callable(cfa_module_guard)
+        call_once()
+        call_again()
+        # Internal cache populated after first call
+        assert guard._kernel is not None

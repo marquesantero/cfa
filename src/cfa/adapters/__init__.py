@@ -1,3 +1,23 @@
+"""CFA adapter — universal governance guard for any Python callable.
+
+Use `cfa_guard` (or `CFAGuard`) to wrap any function — agent tool, pipeline
+step, Airflow task, Lambda handler — with a CFA policy check that runs before
+the function executes. The check returns one of three outcomes:
+
+- ``approve`` — the wrapped function runs.
+- ``replan`` — in ``mode="block"``, raises ``PermissionError``. In
+  ``mode="warn"``/``mode="audit"``, the function runs and the decision is
+  recorded.
+- ``block`` — same handling as ``replan`` per ``mode``.
+
+This module is framework-agnostic. Prior releases shipped per-framework shims
+(``cfa.adapters.langgraph``, ``crewai``, ``autogen``, ``dspy``,
+``openai_agents``) that were all aliases of this same ``cfa_guard``. They
+were removed in 0.2.0 to stop implying framework-specific behavior that did
+not exist. See ``docs/integrations/use-cfa-guard-with-frameworks.md`` for
+the recommended usage pattern with each agent framework.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Callable  # noqa: F401
@@ -8,20 +28,27 @@ from cfa.core.kernel import KernelConfig, KernelOrchestrator
 
 
 class CFAGuard:
-    """Base governance guard for any callable.
+    """Reusable governance guard for any callable.
 
-    Wraps a function with CFA policy validation before execution.
-    The function's first argument or a provided intent string is
-    evaluated against the policy engine.
+    A single ``CFAGuard`` instance constructs the underlying
+    ``KernelOrchestrator`` lazily on first use and caches it for every
+    subsequent guarded call. Use this directly when you want one guard to
+    govern multiple functions with the same policy + catalog.
 
-    Usage:
+    Usage::
+
         guard = CFAGuard(policy_bundle="prod-v1", catalog=my_catalog)
 
         @guard("aggregate sales data")
         def my_pipeline(): ...
 
-        @guard  # uses function name/docstring as intent
-        def another_pipeline(): ...
+        @guard.guard("publish to gold")
+        def publish(): ...
+
+        @guard
+        def another_pipeline():
+            \"\"\"join NFe with Clientes persist Silver\"\"\"
+            ...
     """
 
     def __init__(
@@ -40,10 +67,22 @@ class CFAGuard:
         self._catalog = catalog
         self._mode = mode
         self._kernel_kwargs = kernel_kwargs
+        # Lazily constructed on first guarded call, then reused.
+        self._kernel: KernelOrchestrator | None = None
+
+    def _get_kernel(self) -> KernelOrchestrator:
+        if self._kernel is None:
+            self._kernel = KernelOrchestrator(
+                catalog=self._catalog,
+                config=self._config,
+                **self._kernel_kwargs,
+            )
+        return self._kernel
 
     def __call__(self, fn_or_intent):
         if isinstance(fn_or_intent, str):
             intent = fn_or_intent
+
             def decorator(fn):
                 @wraps(fn)
                 def wrapper(*args, **kwargs):
@@ -53,7 +92,7 @@ class CFAGuard:
             return decorator
 
         fn = fn_or_intent
-        intent = fn.__doc__ or fn.__name__ if hasattr(fn, "__doc__") else str(fn)
+        intent = (fn.__doc__ or fn.__name__) if hasattr(fn, "__doc__") else str(fn)
 
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -72,10 +111,7 @@ class CFAGuard:
         return decorator
 
     def _check(self, intent: str) -> None:
-        kernel = KernelOrchestrator(
-            catalog=self._catalog, config=self._config, **self._kernel_kwargs
-        )
-        result = kernel.process(intent)
+        result = self._get_kernel().process(intent)
         if not result.is_executable and self._mode == "block":
             raise PermissionError(
                 f"CFA blocked intent '{intent[:80]}': {result.blocked_reason}"
@@ -92,11 +128,19 @@ def cfa_guard(
 ):
     """Universal CFA governance guard for any callable or agent tool.
 
+    Each call to this function constructs a new ``CFAGuard`` (and therefore a
+    new ``KernelOrchestrator`` is created lazily on first invocation of the
+    wrapped function). For multiple guarded functions sharing the same
+    configuration, instantiate ``CFAGuard`` directly so a single kernel is
+    reused across all of them.
+
     Args:
-        intent: Intent string to validate. If None, uses function docstring/name.
-        policy_bundle: Policy bundle version or path to YAML file.
+        intent: Intent string to validate. If ``None``, uses the wrapped
+            function's docstring (or name as fallback).
+        policy_bundle: Policy bundle version or path to a YAML file.
         catalog: Data catalog with dataset metadata.
-        mode: 'block' (raise), 'warn' (log), or 'audit' (silent record).
+        mode: ``'block'`` (raise on block/replan), ``'warn'`` (log and
+            proceed), or ``'audit'`` (silently record).
     """
     guard = CFAGuard(policy_bundle=policy_bundle, catalog=catalog, mode=mode, **kwargs)
     if intent:

@@ -443,20 +443,16 @@ class TestJourney4_AIDeveloper:
         assert len(data["remediation"]) >= 1
         print(f"  → explained: {data['rule_name']}")
 
-    def test_06_all_five_adapters_import(self):
-        """All 5 framework adapters import correctly."""
-        from cfa.adapters.autogen import cfa_agent_guard as ag
-        from cfa.adapters.crewai import cfa_crew_guard as cr
-        from cfa.adapters.dspy import cfa_module_guard as dspy
-        from cfa.adapters.langgraph import cfa_guard as lg
-        from cfa.adapters.openai_agents import cfa_tool_guard as oai
+    def test_06_universal_guard_imports(self):
+        """The single cfa_guard decorator works with any agent framework.
 
-        assert callable(lg)
-        assert callable(oai)
-        assert callable(cr)
-        assert callable(ag)
-        assert callable(dspy)
-        print("  → all 5 adapters imported")
+        0.2.0 removed the per-framework adapter shims (langgraph/crewai/
+        autogen/dspy/openai_agents). They were aliases of cfa_guard.
+        """
+        from cfa.adapters import CFAGuard, cfa_guard
+        assert callable(cfa_guard)
+        assert callable(CFAGuard)
+        print("  → cfa_guard available for any framework")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

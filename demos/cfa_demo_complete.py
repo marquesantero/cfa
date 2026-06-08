@@ -629,7 +629,7 @@ print("\n  ✓ Runtime Gate demo complete")
 
 # COMMAND ----------
 
-from cfa.adapters.langgraph import cfa_guard
+from cfa.adapters import cfa_guard
 
 section("LANGGRAPH ADAPTER")
 

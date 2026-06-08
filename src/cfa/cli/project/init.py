@@ -56,7 +56,7 @@ def test_pipeline():
 def _generate_langgraph(dir_path: Path) -> None:
     (dir_path / "agent.py").write_text("""\
 from langgraph.graph import StateGraph
-from cfa.adapters.langgraph import cfa_guard
+from cfa.adapters import cfa_guard
 
 class AgentState(dict):
     pass
