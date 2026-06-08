@@ -282,6 +282,17 @@ All documentation at **[marquesantero.github.io/cfa](https://marquesantero.githu
 - [Architecture Notes](https://marquesantero.github.io/cfa/docs/architecture-notes)
 - [FAQ](https://marquesantero.github.io/cfa/docs/faq)
 
+## Demos
+
+Two complete notebooks, tested on Databricks with CFA v0.1.9, 0 errors:
+
+| File | Format | Description |
+|------|--------|-------------|
+| `demos/cfa_demo_complete` | `.dbc` / `.py` | Rule-based governance — APPROVE, REPLAN, BLOCK, codegen, audit, storage |
+| `demos/cfa_llm_demo_complete` | `.dbc` / `.py` | LLM-powered — semantic normalizer, systematizer, strict mode, compare |
+
+Import the `.dbc` into Databricks or run the `.py` files anywhere.
+
 ## License
 
 [MIT](./LICENSE) · [Antero Marques](https://github.com/marquesantero)
