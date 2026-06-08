@@ -24,17 +24,19 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 1.1 Define the public API surface
 
-- [ ] 1.1.1 Audit `src/cfa/__init__.py` — decide what is top-level vs submodule
-- [ ] 1.1.2 Freeze `StateSignature` constructor (required fields, defaults, types)
-- [ ] 1.1.3 Freeze `PolicyEngine` constructor + `evaluate()` signature
-- [ ] 1.1.4 Freeze `PolicyResult` fields (action, faults, reasoning, etc.)
-- [ ] 1.1.5 Freeze `RuntimeGate` constructor + `validate()`, `guard()`, `scope()`
-- [ ] 1.1.6 Freeze `GateConfig`, `GateResult` fields
-- [ ] 1.1.7 Freeze `KernelConfig` fields
-- [ ] 1.1.8 Freeze `KernelOrchestrator` constructor + `process()`
-- [ ] 1.1.9 Freeze `KernelResult` fields
-- [ ] 1.1.10 Freeze `AuditTrail` constructor + `record()`, `verify_chain()`, `events`
-- [ ] 1.1.11 Freeze `OpenAILMProvider` + `LLMNormalizerBackend` (LLM surface)
+- [x] 1.1.1 Audit `src/cfa/__init__.py` — decide what is top-level vs submodule
+- [x] 1.1.2 Freeze `StateSignature` constructor (required fields, defaults, types)
+- [x] 1.1.3 Freeze `PolicyEngine` constructor + `evaluate()` signature
+- [x] 1.1.4 Freeze `PolicyResult` fields (action, faults, reasoning, etc.)
+- [x] 1.1.5 Freeze `RuntimeGate` constructor + `validate()`, `guard()`, `scope()`
+- [x] 1.1.6 Freeze `GateConfig`, `GateResult` fields
+- [x] 1.1.7 Freeze `KernelConfig` fields
+- [x] 1.1.8 Freeze `KernelOrchestrator` constructor + `process()`
+- [x] 1.1.9 Freeze `KernelResult` fields
+- [x] 1.1.10 Freeze `AuditTrail` constructor + `record()`, `verify_chain()`, `events`
+- [x] 1.1.11 Freeze `OpenAILMProvider` + `LLMNormalizerBackend` (LLM surface)
+
+**Done**: Added `PolicyResult` to `cfa.policy` lazy loader. Added `KernelResult` to `cfa.core` lazy loader. MCP public API is `serve()`.
 
 ### 1.2 Deprecate / hide internal-only modules
 

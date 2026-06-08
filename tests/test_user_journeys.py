@@ -34,7 +34,7 @@ class TestJourney1_FirstTimeUser:
     def test_01_install_and_version(self):
         """User: pip install cfa && python -c 'import cfa; print(cfa.__version__)'"""
         import cfa
-        assert cfa.__version__.startswith("0.1.")
+        assert cfa.__version__.startswith("1.")
 
     def test_02_first_evaluate(self):
         """User: cfa evaluate 'my first governance check'"""

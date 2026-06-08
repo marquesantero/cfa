@@ -4,6 +4,7 @@ from cfa._lazy import LazyLoader
 __getattr__ = LazyLoader({
     "KernelOrchestrator": ("cfa.core.kernel", "KernelOrchestrator"),
     "KernelConfig": ("cfa.core.kernel", "KernelConfig"),
+    "KernelResult": ("cfa.core.kernel", "KernelResult"),
     "PipelinePhase": ("cfa.core.kernel", "PipelinePhase"),
     "ExecutionPlanner": ("cfa.core.planner", "ExecutionPlanner"),
     "ExecutionPlan": ("cfa.core.planner", "ExecutionPlan"),

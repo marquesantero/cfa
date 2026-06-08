@@ -1,4 +1,4 @@
-# CFA v0.1.9
+# CFA v1.0.0
 
 [![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/marquesantero/cfa/graph/badge.svg?token=P5NFQBZGYT)](https://codecov.io/github/marquesantero/cfa)
@@ -290,7 +290,7 @@ All documentation at **[marquesantero.github.io/cfa](https://marquesantero.githu
 
 ## Demos
 
-Two complete notebooks, tested on Databricks with CFA v0.1.9, 0 errors:
+Two complete notebooks, tested on Databricks with CFA v1.0.0, 0 errors:
 
 | File | Format | Description |
 |------|--------|-------------|

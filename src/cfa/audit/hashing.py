@@ -1,3 +1,4 @@
+# NOTE: This module is internal to CFA — not part of the public API. Use at your own risk.
 """Deterministic content-addressable hashing for CFA governance artifacts.
 
 Every artifact that participates in a governed decision (catalog, policy bundle,

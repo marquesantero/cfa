@@ -4,6 +4,7 @@ from cfa._lazy import LazyLoader
 __getattr__ = LazyLoader({
     "PolicyEngine": ("cfa.policy.engine", "PolicyEngine"),
     "PolicyRule": ("cfa.policy.engine", "PolicyRule"),
+    "PolicyResult": ("cfa.policy.engine", "PolicyResult"),
     "build_default_ruleset": ("cfa.policy.engine", "build_default_ruleset"),
     "PolicyBundle": ("cfa.policy.bundle", "PolicyBundle"),
     "validate_policy_bundle_data": ("cfa.policy.bundle", "validate_policy_bundle_data"),
