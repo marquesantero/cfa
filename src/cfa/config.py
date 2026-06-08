@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -35,7 +36,10 @@ class CfaConfig:
             import yaml
             data = yaml.safe_load(raw)
         except ImportError:
-            raise ImportError("PyYAML required for YAML config. Install: pip install pyyaml")
+            raise ImportError(
+                "PyYAML required for YAML config. Install with: "
+                "pip install 'cfa-kernel[yaml]'"
+            )
         return cls._from_dict(data or {}, str(path))
 
     @classmethod
@@ -46,10 +50,25 @@ class CfaConfig:
 
     @classmethod
     def discover(cls, start: str | Path | None = None) -> CfaConfig | None:
+        """Walk up from ``start`` looking for a CFA config file.
+
+        Order: ``cfa.yaml``, ``cfa.yml``, ``.cfa/config.yaml``, ``cfa.json``.
+        Returns ``None`` if no file is found. If a YAML file is found but
+        PyYAML is not installed, prints a hint to stderr and returns
+        ``None`` so the caller proceeds with built-in defaults instead
+        of crashing.
+        """
         current = Path(start) if start else Path.cwd()
         for candidate in [current / "cfa.yaml", current / "cfa.yml", current / ".cfa" / "config.yaml"]:
             if candidate.exists():
-                return cls.from_yaml(candidate)
+                try:
+                    return cls.from_yaml(candidate)
+                except ImportError as e:
+                    print(
+                        f"cfa: skipping {candidate} ({e}). Using built-in defaults.",
+                        file=sys.stderr,
+                    )
+                    return None
         if (current / "cfa.json").exists():
             return cls.from_json(current / "cfa.json")
         return None

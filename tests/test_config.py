@@ -51,6 +51,26 @@ def test_config_discover_none():
     assert config is None
 
 
+def test_config_discover_pyyaml_missing_returns_none_with_hint(monkeypatch, capsys):
+    """If a YAML config exists but PyYAML is not installed, discover() should
+    print a hint and return None — not crash the CLI."""
+
+    def _raise_yaml(_):
+        raise ImportError(
+            "PyYAML required for YAML config. Install with: pip install 'cfa-kernel[yaml]'"
+        )
+
+    monkeypatch.setattr(CfaConfig, "from_yaml", classmethod(lambda cls, p: _raise_yaml(p)))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "cfa.yaml").write_text("version: '1.0'\n", encoding="utf-8")
+        config = CfaConfig.discover(tmp)
+        assert config is None
+        err = capsys.readouterr().err
+        assert "skipping" in err
+        assert "cfa-kernel[yaml]" in err
+
+
 def test_cli_status_no_config(capsys):
     from cfa.cli import main
     main(["status", "--format", "json"])
