@@ -10,53 +10,74 @@ edições recentes feitas no original. Se algo parecer divergir, consulte
 a versão em inglês ou abra uma [issue](https://github.com/marquesantero/cfa/issues).
 :::
 
-CFA é um gate de governança tipado e pré-execução para agentes de IA e
-pipelines de dados.
+**Um gate de governança tipado e pré-execução para agentes de IA e
+pipelines de dados.**
 
-Você declara o que pretende fazer como uma `StateSignature`. O CFA responde
-`approve`, `replan(remediations)` ou `block(reason)` — deterministicamente —
-e grava a decisão em uma cadeia SHA-256 verificável offline.
+Você declara o que pretende fazer como uma `StateSignature`. O CFA
+responde `approve`, `replan(remediations)` ou `block(reason)` —
+deterministicamente — em **menos de 3 ms p99** num kernel quente, e
+grava a decisão numa cadeia SHA-256 verificável offline com
+`cfa audit verify`. Sem rede. Sem servidor. Sem chaves.
 
-A versão atual é `1.1.0` — um ciclo editorial: consolidação de pacotes
-(20 → 16), seis ADRs novas, suite de baselines de performance e site
-reescrito. As cinco primitivas distintivas (`StateSignature` tipada,
-`REPLAN`, cadeia de hash, catálogo operacional, determinístico por
-default) não mudaram. Veja o
-[changelog](https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md)
-e o [roadmap](https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md).
+## Por que o CFA existe
 
-## O que o CFA faz
+Seis coisas concretas que o CFA faz hoje e nenhuma ferramenta vizinha
+entrega junto:
 
-1. **Recebe um contrato.** Uma `StateSignature` (JSON, YAML ou linguagem
-   natural passada por um normalizer).
-2. **Valida o contrato.** Estrutura, enums, campos obrigatórios.
-3. **Faz cross-reference com o catálogo.** Os datasets têm que existir com
-   metadados correspondentes.
-4. **Avalia políticas declarativas.** PII, FinOps, merge keys, partições,
-   tetos de custo.
-5. **Decide.** `approve` / `replan(remediations)` / `block(reason)`.
-6. **Registra uma decisão auditável.** Cadeia SHA-256 mais hashes de
-   artefato para catálogo, policy bundle e signature.
-7. **Acompanha saúde de ciclo de vida.** Índices IFo, IFs, IFg, IDI por
-   pipeline (documentação aprofundada em `docs/lifecycle-indices` quando
-   1.4.0 chegar).
+### 1. Remediação estruturada, não apenas sim/não
 
-## O que o CFA **não é**
+Quando uma regra com fix possível falha, o CFA devolve o fix como dado.
+O caller — agente LLM, passo de CI, humano — aplica e reenvia. O loop
+de recuperação é parte do contrato, com limite de três tentativas, e
+fica gravado na auditoria.
 
-- **Não é uma ferramenta de observabilidade de LLM.** Decide antes da
-  execução, não depois. Combine com LangSmith, Phoenix ou Patronus para
-  traces e eval.
-- **Não é um motor de política genérico.** Combine com OPA quando precisar
-  de policy-as-code em infra, APIs e CI/CD. O CFA ganha quando as políticas
-  são *dataset-aware* (PII, partição, classificação, merge key).
-- **Não é um catálogo de dados.** Combine com Unity Catalog, Atlan ou
-  DataHub para descoberta, lineage e controle de acesso. O CFA lê
-  catálogos; não substitui.
-- **Não é validação de dado em repouso.** Combine com Great Expectations
-  ou Soda para expectativas sobre dado já escrito. O CFA decide antes da
-  escrita.
+```json
+{
+  "action": "replan",
+  "interventions": [
+    "Set constraints.no_pii_raw=True",
+    "Apply sha256() on PII columns before the join"
+  ]
+}
+```
 
-Veja [Compare](./compare) para tabelas lado a lado.
+### 2. Cadeia de auditoria verificável offline
+
+Cada decisão é um evento content-hashed encadeado numa cadeia SHA-256.
+`cfa audit verify` reproduz a cadeia em qualquer máquina que tenha o
+arquivo JSONL — sem vendor, sem servidor, sem chave de API, sem rede.
+
+```bash
+$ cfa audit verify --file audit.jsonl
+OK · 1 274 events verified · last_hash=a4f3…6c01
+```
+
+### 3. Primitivas de política dataset-aware
+
+Colunas PII, particionamento, classificação, merge keys, target layer
+— primitivas de primeira classe, não metadados que você re-codifica
+em Rego. Uma regra real cabe em seis linhas YAML.
+
+### 4. Uma signature, três backends de produção
+
+A mesma `StateSignature` aprovada gera código para **PySpark + Delta
+Lake**, **SQL ANSI com `MERGE INTO`** ou **modelos dbt com schema.yml**.
+
+### 5. Servidor MCP funcionando hoje
+
+Qualquer agente compatível com MCP (Claude Desktop, Cursor, Continue,
+LangGraph custom) chama o CFA antes de tocar produção. Cinco
+ferramentas expostas via JSON-RPC.
+
+### 6. Determinístico por padrão; LLM é opt-in
+
+O path de decisão é função pura de `(signature, policy_bundle, catalog)`.
+Mesma entrada → mesma decisão → mesmo hash, sempre, sem chamada de
+rede. LLMs participam só na borda de entrada (intent → signature) e
+apenas se você pedir via extra `[llm]`.
+
+Cada uma dessas decisões tem ADR registrada em
+[`docs/adr/`](https://github.com/marquesantero/cfa/tree/main/docs/adr).
 
 ## Instalação rápida
 
@@ -67,18 +88,27 @@ cfa evaluate "Join NFe with Clientes and persist to Silver" \
   --catalog .cfa/catalog.json
 ```
 
-## As cinco primitivas
+Para um gate de CI real, a forma decorator de quatro linhas:
 
-Estas são as partes do CFA deliberadamente distintivas. Não vão mudar
-entre releases.
+```python
+from cfa.adapters import cfa_guard
 
-| Primitiva | Onde mora |
-|-----------|-----------|
-| `StateSignature` tipada e content-hashed | `cfa.types.StateSignature` |
-| `REPLAN` como cidadão de primeira classe | `cfa.policy.PolicyResult` + `cfa.types.PolicyAction` |
-| Cadeia SHA-256 verificável offline | `cfa.audit.AuditTrail.verify_chain()` |
-| Catálogo operacional (PII, partição, classificação, merge_key como primitivas de regra) | `cfa.types.DatasetRef` + `cfa.policy.catalog` |
-| Determinístico por default; LLM como normalizer opcional | `cfa.normalizer.base.NormalizerBackend` |
+@cfa_guard("Join NFe with Clientes anonymize CPF persist Silver",
+           policy_bundle="policies/prod-v1.yaml", catalog=CATALOG)
+def my_pipeline(): ...
+```
+
+O decorator cacheia um único `KernelOrchestrator` por guard e adiciona
+~2.4 ms p99 à sua chamada.
+
+## Onde o CFA combina (em vez de substituir)
+
+CFA **não** é ferramenta de observabilidade de LLM, motor de política
+genérico, catálogo de dados, nem validação de dado em repouso. Combine
+respectivamente com LangSmith / Phoenix / Patronus, OPA, Unity Catalog /
+Atlan / DataHub, e Great Expectations / Soda.
+
+Veja [Compare](./compare) para tabelas lado a lado.
 
 ## Para onde ir agora
 

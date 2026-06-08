@@ -4,48 +4,109 @@ sidebar_position: 1
 
 # Introduction
 
-CFA is a typed, pre-execution governance gate for AI agents and data pipelines.
+**A typed, pre-execution governance gate for AI agents and data pipelines.**
 
 You declare what you intend to do as a `StateSignature`. CFA answers
 `approve`, `replan(remediations)`, or `block(reason)` — deterministically —
-and writes the decision into a SHA-256 hash chain you can verify offline.
+in **under 3 ms p99** on a warm kernel, and writes the decision into a
+SHA-256 hash chain you can verify offline with `cfa audit verify`. No
+network. No server. No keys.
 
-The current release is `1.1.0` — an editorial cycle: package consolidation
-(20 → 16 subpackages), six new ADRs, a perf baseline suite, and a rewritten
-site. The five distinctive primitives (typed `StateSignature`, `REPLAN`,
-hash chain, operational catalog, deterministic-by-default) are unchanged.
-See the [changelog](https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md)
-and the [roadmap](https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md).
+## Why CFA exists
 
-## What CFA does
+Six things CFA does today that no adjacent tool gives you together:
 
-1. **Receives a contract.** A `StateSignature` (JSON, YAML, or natural
-   language passed through a normalizer).
-2. **Validates the contract.** Structure, enums, required fields.
-3. **Cross-references the catalog.** Datasets must exist with matching
-   metadata.
-4. **Evaluates declarative policies.** PII, FinOps, merge keys, partitions,
-   cost ceilings.
-5. **Decides.** `approve` / `replan(remediations)` / `block(reason)`.
-6. **Records an auditable decision.** SHA-256 hash chain plus artifact
-   hashes for catalog, policy bundle, and signature.
-7. **Tracks lifecycle health.** IFo, IFs, IFg, IDI indices per pipeline
-   (covered in `docs/lifecycle-indices` once 1.4.0 lands).
+### 1. Structured remediation, not just yes/no
 
-## What CFA is **not**
+When a fixable rule fails, CFA returns the fix as data. The caller — an
+LLM agent, a CI step, a human — applies the remediation and retries.
+The recovery loop is part of the contract, bounded at three attempts,
+and recorded in the audit trail.
 
-- **Not an LLM observability tool.** It decides before execution, not after.
-  Pair with LangSmith, Phoenix, or Patronus for traces and eval.
-- **Not a generic policy engine.** Pair with OPA when you need policy-as-code
-  across infra, APIs, and CI/CD. CFA wins when the policies are
-  dataset-aware (PII, partition, classification, merge key).
-- **Not a data catalog.** Pair with Unity Catalog, Atlan, or DataHub for
-  discovery, lineage, and access control. CFA reads catalogs; it does not
-  replace them.
-- **Not a data-quality-at-rest tool.** Pair with Great Expectations or Soda
-  for expectations on already-written data. CFA decides before the write.
+```json
+{
+  "action": "replan",
+  "faults": [
+    {
+      "code": "GOVERNANCE_RAW_PII_IN_PROTECTED_LAYER",
+      "severity": "critical",
+      "message": "PII detected without treatment in write to protected layer."
+    }
+  ],
+  "interventions": [
+    "Set constraints.no_pii_raw=True",
+    "Apply sha256() on PII columns before the join"
+  ]
+}
+```
 
-See [Compare](./compare) for side-by-side breakdowns.
+### 2. Offline-verifiable audit chain
+
+Every decision is a content-hashed event linked into a SHA-256 chain.
+`cfa audit verify` replays the chain on any host that has the JSONL
+file — no vendor, no server, no API key, no network call.
+
+```bash
+$ cfa audit verify --file audit.jsonl
+OK · 1 274 events verified · last_hash=a4f3…6c01
+```
+
+This is the kind of evidence a compliance reviewer can take home on a
+flash drive and re-verify a year later.
+
+### 3. Dataset-aware policy primitives baked in
+
+PII columns, partitioning, classification, merge keys, target layer —
+these are first-class primitives, not metadata you re-encode in Rego.
+A typical rule fits in six YAML lines:
+
+```yaml
+- name: forbid_raw_pii
+  condition: pii_in_protected_layer
+  action: block
+  fault_code: GOVERNANCE_RAW_PII
+  severity: critical
+  remediation:
+    - "Apply sha256() on PII columns before the write"
+```
+
+The same primitives drive cost ceilings, partition enforcement on
+high-volume datasets, merge-key requirements for Silver/Gold writes,
+and schema contract enforcement.
+
+### 4. One signature, three production backends
+
+The same approved `StateSignature` compiles to **PySpark + Delta Lake**,
+**ANSI SQL with `MERGE INTO`**, or **dbt models with `schema.yml`**.
+Each backend declares its own forbidden tokens for static validation.
+New backends register through `BackendRegistry` without touching the
+kernel.
+
+### 5. MCP server, working today
+
+Any MCP-compatible agent (Claude Desktop, Cursor, Continue, custom
+LangGraph nodes) calls CFA before it touches production data. Five
+tools exposed:
+
+- `cfa_evaluate_signature` — submit an intent, get a decision.
+- `cfa_describe_rules` — list active policy rules.
+- `cfa_explain_fault` — get remediation for a fault code.
+- `cfa_audit_check` — verify the audit chain.
+- `cfa_list_backends` — list registered codegen backends.
+
+### 6. Deterministic by default; LLM is opt-in
+
+The decision path is a pure function of `(signature, policy_bundle,
+catalog)`. Same inputs produce the same decision and the same hash,
+every time, with no network call. LLMs participate only on the front
+edge (intent → signature) and only if you ask for them via the `[llm]`
+extra. Compliance reviewers can replay every historical decision from
+JSON.
+
+Each of these is recorded as an
+[Architecture Decision Record](https://github.com/marquesantero/cfa/tree/main/docs/adr).
+The reasoning, the alternatives we rejected, and the boundaries are
+written down.
 
 ## Quick install
 
@@ -56,12 +117,26 @@ cfa evaluate "Join NFe with Clientes and persist to Silver" \
   --catalog .cfa/catalog.json
 ```
 
+For a real CI gate, the four-line decorator form:
+
+```python
+from cfa.adapters import cfa_guard
+
+@cfa_guard("Join NFe with Clientes anonymize CPF persist Silver",
+           policy_bundle="policies/prod-v1.yaml", catalog=CATALOG)
+def my_pipeline(): ...
+```
+
+The decorator caches a single `KernelOrchestrator` per guard and adds
+~2.4 ms p99 to your call.
+
 ## Core concepts
 
 ### StateSignature
 
 The universal contract. Any system — CLI, API, agent, orchestrator — can
-produce one. It is content-hashed: same content always yields the same hash.
+produce one. It is content-hashed: same content always yields the same
+hash.
 
 ```json
 {
@@ -91,7 +166,7 @@ produce one. It is content-hashed: same content always yields the same hash.
 
 ### Policy bundle
 
-Declarative YAML. No code required to define governance rules:
+Declarative YAML. No code required:
 
 ```yaml
 policy_bundle:
@@ -104,12 +179,12 @@ policy_bundle:
       severity: critical
       message: "PII in protected layer without anonymization."
       remediation:
-        - "Apply sha256 on PII columns before the operation"
+        - "Apply sha256() on PII columns before the operation"
 ```
 
 ### Decision
 
-Every decision is structured and versioned:
+Every decision is structured, versioned, and chained:
 
 ```json
 {
@@ -131,21 +206,23 @@ Every decision is structured and versioned:
 }
 ```
 
-The `audit_event_hash` chains into the previous event. The chain is
-verifiable offline with `cfa audit verify`.
+The `audit_event_hash` chains into the previous event.
 
-## The five primitives
+## Where CFA pairs (instead of replacing)
 
-These are the parts of CFA that are deliberately distinctive. They are not
-expected to change between releases.
+CFA is **not** an LLM observability tool, a generic policy engine, a
+data catalog, or a data-quality-at-rest tool. Pair with
+[LangSmith](https://www.langchain.com/langsmith) /
+[Phoenix](https://phoenix.arize.com/) /
+[Patronus](https://www.patronus.ai/),
+[OPA](https://www.openpolicyagent.org/),
+[Unity Catalog](https://www.databricks.com/product/unity-catalog) /
+[Atlan](https://atlan.com/) /
+[DataHub](https://datahubproject.io/), and
+[Great Expectations](https://greatexpectations.io/) /
+[Soda](https://www.soda.io/) respectively.
 
-| Primitive | Where it lives |
-|-----------|----------------|
-| Typed, content-hashed `StateSignature` | `cfa.types.StateSignature` |
-| `REPLAN` as a first-class outcome | `cfa.policy.PolicyResult` + `cfa.types.PolicyAction` |
-| Offline-verifiable SHA-256 audit chain | `cfa.audit.AuditTrail.verify_chain()` |
-| Operational catalog (PII, partition, classification, merge_key as policy primitives) | `cfa.types.DatasetRef` + `cfa.policy.catalog` |
-| Deterministic by default; LLM as optional normalizer | `cfa.normalizer.base.NormalizerBackend` |
+The [Compare](./compare) page has the side-by-side breakdowns.
 
 ## Where to go next
 
@@ -155,7 +232,10 @@ expected to change between releases.
 - **[Policy Bundles](./policy-bundles)** — declarative YAML policy rules.
 - **[Backends](./backends)** — PySpark, SQL, dbt code generation.
 - **[MCP Server](./mcp-server)** — expose CFA to AI agents.
-- **[Use cfa_guard with any framework](./integrations/use-cfa-guard-with-frameworks)** — LangGraph, CrewAI, AutoGen, DSPy, OpenAI Agents SDK.
-- **[Compare](./compare)** — CFA vs OPA, LangSmith, Great Expectations, Unity Catalog.
-- **[Architecture Notes](./architecture-notes)** — design decisions and trade-offs.
+- **[Use cfa_guard with any framework](./integrations/use-cfa-guard-with-frameworks)**
+  — LangGraph, CrewAI, AutoGen, DSPy, OpenAI Agents SDK.
+- **[Compare](./compare)** — CFA vs OPA, LangSmith, Great Expectations,
+  Unity Catalog.
+- **[Architecture Notes](./architecture-notes)** — design decisions and
+  trade-offs.
 - **[FAQ](./faq)**.

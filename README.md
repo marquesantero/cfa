@@ -3,7 +3,7 @@
 [![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/marquesantero/cfa/graph/badge.svg?token=P5NFQBZGYT)](https://codecov.io/github/marquesantero/cfa)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Tests](https://img.shields.io/badge/tests-535%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-536%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/cfa-kernel)](https://pypi.org/project/cfa-kernel/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
@@ -11,35 +11,103 @@
 
 **A typed, pre-execution governance gate for AI agents and data pipelines.**
 
-You declare what you intend to do as a `StateSignature`. CFA answers `approve`, `replan(remediations)`, or `block(reason)` — deterministically — and writes the decision into a SHA-256 hash chain you can verify offline.
+You declare what you intend to do as a `StateSignature`. CFA answers
+`approve`, `replan(remediations)`, or `block(reason)` — deterministically —
+in **under 3 ms p99** on a warm kernel, and writes the decision into a
+SHA-256 hash chain you can verify offline with `cfa audit verify`. No
+network. No server. No keys.
 
-> **Status:** `1.1.0` is the current release. It was an editorial cycle — consolidated 20 packages into 16, recorded six [ADRs](docs/adr/) for the distinctive primitives, landed a perf baseline suite. The next release (`1.2.0`) introduces the first real integration: `cfa dbt check`. See the [CHANGELOG](CHANGELOG.md) and the [roadmap](drafts/ROADMAP.md).
+## Why CFA exists
 
-## What CFA is
+Six things CFA does today that no adjacent tool gives you together:
 
-A small, deterministic library that sits between *whoever asked for a governed write* (a human, an LLM agent, an orchestrator) and *whatever runs the write* (PySpark, SQL, dbt, anything). Three outcomes per request:
+1. **Structured remediation, not just yes/no.** When a fixable rule fails,
+   CFA returns the fix as data. The caller — an LLM agent, a CI step, a
+   human — applies it and retries. The recovery loop is part of the
+   contract, bounded at three attempts, and audited.
+   ```json
+   { "action": "replan",
+     "faults": [{"code": "GOVERNANCE_RAW_PII_IN_PROTECTED_LAYER", ...}],
+     "interventions": [
+       "Set constraints.no_pii_raw=True",
+       "Apply sha256() on PII columns before the join"
+     ]
+   }
+   ```
 
-- **`approve`** — the intent passes every rule. Return the decision; let the caller proceed.
-- **`replan(remediations)`** — the intent fails a fixable rule. Return a structured list of corrections the caller can apply and resubmit.
-- **`block(reason)`** — the intent fails an unrecoverable rule. Return a typed fault with code, severity, and remediation hints.
+2. **Offline-verifiable audit chain.** Every decision is a
+   content-hashed event linked into a SHA-256 chain. `cfa audit verify`
+   replays the chain on any host that has the JSONL file. No vendor, no
+   server, no API key.
+   ```bash
+   $ cfa audit verify --file audit.jsonl
+   OK · 1 274 events verified · last_hash=a4f3…6c01
+   ```
 
-Every decision is content-hashed and appended to a tamper-evident chain.
+3. **Dataset-aware policy primitives baked in.** PII columns,
+   partitioning, classification, merge keys, target layer — these are
+   first-class primitives, not metadata you re-encode in Rego. A typical
+   rule fits in six YAML lines:
+   ```yaml
+   - name: forbid_raw_pii
+     condition: pii_in_protected_layer
+     action: block
+     fault_code: GOVERNANCE_RAW_PII
+     severity: critical
+     remediation: ["Apply sha256() on PII columns before the write"]
+   ```
 
-## What CFA is **not**
+4. **One signature, three production backends.** The same approved
+   `StateSignature` compiles to PySpark + Delta Lake, ANSI SQL with
+   `MERGE INTO`, or dbt models with `schema.yml`. Each backend declares
+   its own forbidden tokens for static validation. New backends register
+   through `BackendRegistry` without touching the kernel.
 
-- **Not an LLM observability tool.** It runs before execution, not after. Use [LangSmith](https://www.langchain.com/langsmith), [Phoenix](https://phoenix.arize.com/), or [Patronus](https://www.patronus.ai/) for traces and eval.
-- **Not a generic policy engine.** Use [OPA](https://www.openpolicyagent.org/) when you need generic policy-as-code with Rego across infra, APIs, and CI/CD. CFA wins only when the policies are dataset-aware (PII, partition, classification, merge key).
-- **Not a data catalog.** Use [Unity Catalog](https://www.databricks.com/product/unity-catalog), [Atlan](https://atlan.com/), or [DataHub](https://datahubproject.io/) for discovery, lineage, and access control. CFA reads catalogs; it does not replace them.
-- **Not a data-quality-at-rest tool.** Use [Great Expectations](https://greatexpectations.io/) or [Soda](https://www.soda.io/) when you need expectations on data already written. CFA decides *before* the write.
+5. **MCP server, working today.** Any MCP-compatible agent (Claude
+   Desktop, Cursor, Continue, custom LangGraph nodes) calls CFA before
+   it touches production data. Five tools: `cfa_evaluate_signature`,
+   `cfa_describe_rules`, `cfa_explain_fault`, `cfa_audit_check`,
+   `cfa_list_backends`.
 
-## Quick Start
+6. **Deterministic by default; LLM is opt-in.** The decision path is a
+   pure function of `(signature, policy_bundle, catalog)`. Same inputs
+   produce the same decision and the same hash, every time, with no
+   network call. LLMs participate only on the front edge (intent →
+   signature) and only if you ask for them via the `[llm]` extra.
+
+Each of these is a recorded
+[Architecture Decision Record](docs/adr/). The reasoning, the
+alternatives we rejected, and the boundaries are written down.
+
+## Quick start
 
 ```bash
 pip install cfa-kernel
-# or: pip install git+https://github.com/marquesantero/cfa.git
 cfa init
-cfa evaluate "Join NFe with Clientes and persist to Silver" --catalog .cfa/catalog.json
+cfa evaluate "Join NFe with Clientes and persist to Silver" \
+  --catalog .cfa/catalog.json
 ```
+
+For a real CI gate, the four-line decorator form:
+
+```python
+from cfa.adapters import cfa_guard
+
+@cfa_guard("Join NFe with Clientes anonymize CPF persist Silver",
+           policy_bundle="policies/prod-v1.yaml", catalog=CATALOG)
+def my_pipeline(): ...
+```
+
+The decorator caches a single `KernelOrchestrator` per guard and adds
+~2.4 ms p99 to your call. Production-friendly.
+
+## Where CFA pairs (instead of replacing)
+
+CFA is **not** an LLM observability tool, a generic policy engine, a
+data catalog, or a data-quality-at-rest tool. Pair with LangSmith /
+Phoenix / Patronus, OPA, Unity Catalog / Atlan / DataHub, and Great
+Expectations / Soda respectively. The [Compare](https://marquesantero.github.io/cfa/docs/compare)
+page has the side-by-side breakdowns.
 
 ## What CFA does
 
@@ -66,7 +134,7 @@ All interfaces are backend-agnostic. CFA evaluates a `StateSignature` contract �
 | `cfa.testing` | CI/CD | `evaluate("intent", catalog=catalog)` with pytest |
 | `cfa.runtime` | Production | `RuntimeGate` as decorator/context-manager |
 | `cfa.mcp` | AI agents | MCP server for any MCP-compatible client |
-| `cfa.adapters` | AI frameworks | LangGraph, OpenAI Agents, CrewAI, AutoGen, DSPy |
+| `cfa.adapters` | Any framework | Universal `cfa_guard` decorator (LangGraph, CrewAI, AutoGen, DSPy, OpenAI Agents SDK) |
 
 ## Architecture
 
@@ -318,15 +386,21 @@ Import the `.dbc` into Databricks or run the `.py` files anywhere.
 
 ## Roadmap
 
-The active plan is in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The short version:
+The full plan lives in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The short
+version:
 
-- **1.1.0 (next)** — editorial focus. Package consolidation. Deprecation shims for per-framework adapters (`cfa.adapters.langgraph` and friends). Site rewrite. No new features.
-- **1.2.0** — first real integration. `cfa dbt check` reads `target/manifest.json`, derives a signature for each model, runs the policy bundle.
+- **1.1.0 (current)** — distinctive primitives recorded as ADRs, package
+  layout consolidated, perf baselines landed, site rewritten.
+- **1.2.0 (next)** — `cfa dbt check` reads `target/manifest.json`,
+  derives a signature per model, runs the policy bundle in CI.
 - **1.3.0** — Airflow `CFAGateOperator` (provider package).
-- **1.4.0** — Lifecycle indices (IFo/IFs/IFg/IDI) documented and produtized.
-- **1.5.0** — MCP server as a governance authority for LLM agents.
-- **1.6.0** — Extra backends (Snowflake, BigQuery, Iceberg).
-- **2.0.0** — re-stabilized API, removal of 1.x deprecation shims, third-party security audit.
+- **1.4.0** — Lifecycle indices (IFo/IFs/IFg/IDI) produtized as a
+  promotion/demotion dashboard.
+- **1.5.0** — MCP server positioned as a governance authority for LLM
+  agents, with a reference implementation.
+- **1.6.0** — Snowflake, BigQuery, and Iceberg backends.
+- **2.0.0** — semver-strict API freeze, third-party security audit,
+  cross-language SDKs.
 
 ## Contributing
 

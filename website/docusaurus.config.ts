@@ -53,11 +53,11 @@ const config: Config = {
     image: 'img/cfa-social-card.png',
     colorMode: { respectPrefersColorScheme: true },
     announcementBar: {
-      id: 'status-1-1-0',
+      id: 'cfa-1-1-0',
       content:
-        '<strong>1.1.0 released</strong> — editorial cycle: consolidated layout, perf baselines, ADRs · ' +
-        '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md">changelog</a> · ' +
-        '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md">roadmap</a>',
+        '<strong>CFA 1.1.0</strong> — pre-execution governance with structured remediation, ' +
+        'offline-verifiable SHA-256 audit, and sub-3 ms p99 · ' +
+        '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md">changelog</a>',
       backgroundColor: '#0d1525',
       textColor: '#3dffa0',
       isCloseable: false,
