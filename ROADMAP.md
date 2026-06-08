@@ -9,6 +9,9 @@
 - [ ] 0.5 Verify `.github/workflows/ci.yml` passes on push
 - [ ] 0.6 Verify `.github/workflows/deploy-pypi.yml` ready
 - [ ] 0.7 Verify `.github/workflows/deploy-docs.yml` deploys to gh-pages
+- [ ] 0.8 Write `SECURITY.md` — threat model (MCP injection, audit chain replay attacks, YAML parser fuzzing)
+- [ ] 0.9 Define release contingency plan (hotfix branch, incident comms channel, PyPI unpublish criteria)
+- [ ] 0.10 Run `pip-audit` and `safety check` — zero critical vulnerabilities
 
 ---
 
@@ -58,7 +61,10 @@
 - [ ] 2.1.5 Add tool: `cfa_verify_chain` — verify audit hash chain
 - [ ] 2.1.6 Add tool: `cfa_lifecycle_status` — expose IFo/IFs/IFg/IDI
 - [ ] 2.1.7 Add tool: `cfa_compliance_check` — check against bundle
-- [ ] 2.1.8 Test with Claude Desktop, Cursor, Windsurf
+- [ ] 2.1.8 Define SLOs: tool call latency p99 < 500ms, uptime > 99%
+- [ ] 2.1.9 Load test: 100 req/s sustained for 10 minutes
+- [ ] 2.1.10 Fuzz test MCP tool inputs (property-based testing with Hypothesis)
+- [ ] 2.1.11 Test with Claude Desktop, Cursor, Windsurf
 
 ### 2.2 Distribution
 
@@ -87,7 +93,7 @@
 - [ ] 3.1.4 Template: `langgraph-cfa` — LangGraph agent + cfa_guard
 - [ ] 3.1.5 Template: `dbt-cfa` — dbt models + CFA validation step
 - [ ] 3.1.6 Template: `mcp-cfa` — MCP server skeleton with CFA tools
-- [ ] 3.1.7 Template: `streaming-stub` — Structured Streaming + CFA stub
+- [ ] 3.1.7 Template: `streaming-placeholder` — Structured Streaming stub with explicit README: "Experimental — streaming governance coming in v1.3"
 
 ### 3.2 Onboarding flow
 
@@ -131,6 +137,15 @@
 - [ ] 4.4.1 Define writing guidelines (professional, not academic; confident, not salesy)
 - [ ] 4.4.2 Audit all docs for consistency
 - [ ] 4.4.3 Sync EN and PT-BR docs for all critical pages
+
+### 4.5 PT-BR Critical Sync (MANDATORY — Brazilian market is primary target)
+
+- [ ] 4.5.1 Rewrite `guide.md` PT-BR (39 → full translation matching EN)
+- [ ] 4.5.2 Complete `architecture-notes.md` PT-BR (7 missing sections)
+- [ ] 4.5.3 Complete `policy-bundles.md` PT-BR (3 missing conditions + programmatic section)
+- [ ] 4.5.4 Complete `behavior-spec.md` PT-BR (add Python code examples)
+- [ ] 4.5.5 Complete `reporting.md` PT-BR (add `generate_report()` API examples)
+- [ ] 4.5.6 Verify LGPD terminology consistency across all PT-BR docs
 
 ---
 
@@ -268,14 +283,14 @@
 
 ## 10. Metrics & Iteration (Week 11-12)
 
-### 10.1 Success metrics (6-month targets)
+### 10.1 Success metrics (6-month targets — conservative / stretch)
 
-- [ ] 10.1.1 GitHub: 1,000 stars
-- [ ] 10.1.2 PyPI: 100 downloads/day
+- [ ] 10.1.1 GitHub: 300 stars conservative / 1,000 stretch
+- [ ] 10.1.2 PyPI: 30 downloads/day conservative / 100 stretch
 - [ ] 10.1.3 MCP: listed in 3+ marketplaces
-- [ ] 10.1.4 Community: 100+ Discord members
-- [ ] 10.1.5 Case studies: 3 public (company X uses CFA for Y)
-- [ ] 10.1.6 Blog: 12 posts published (1/week)
+- [ ] 10.1.4 Community: 50 Discord members conservative / 100 stretch
+- [ ] 10.1.5 Case studies: 1 public conservative / 3 stretch
+- [ ] 10.1.6 Blog: 12 posts published
 
 ### 10.2 Feedback loop
 
@@ -283,6 +298,28 @@
 - [ ] 10.2.2 Analyze GitHub issues: top 3 pain points
 - [ ] 10.2.3 Analyze MCP usage: which tools are used most
 - [ ] 10.2.4 Prioritize Horizon 2 items based on feedback
+
+---
+
+## 11. Sustainability Plan
+
+### 11.1 Funding
+
+- [ ] 11.1.1 Identify 3 potential enterprise sponsors (month 3)
+- [ ] 11.1.2 Apply for 1 open-source grant (CNCF, Linux Foundation AI, NLnet)
+- [ ] 11.1.3 Explore GitHub Sponsors setup
+
+### 11.2 Bus factor mitigation
+
+- [ ] 11.2.1 Document architecture for external contributors (`ARCHITECTURE.md`)
+- [ ] 11.2.2 Record 3 codebase walkthrough videos (kernel, policy engine, MCP)
+- [ ] 11.2.3 Tag 10+ "good first issue" tickets
+
+### 11.3 Maintainer health
+
+- [ ] 11.3.1 Define maintainer vacation policy (who covers PR review?)
+- [ ] 11.3.2 Set up CODEOWNERS file
+- [ ] 11.3.3 Plan burnout checkpoints (monthly retro: how am I doing?)
 
 ---
 
