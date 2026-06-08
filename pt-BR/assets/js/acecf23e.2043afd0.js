@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([["3220"],{1912(e){e.exports=JSON.parse('{"blogBasePath":"/cfa/pt-BR/blog","blogTitle":"Blog","authorsListPath":"/cfa/pt-BR/blog/authors"}')}}]);
