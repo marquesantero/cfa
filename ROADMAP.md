@@ -122,7 +122,7 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 4.1 Quickstart
 
-- [ ] 4.1.1 Write 5-minute quickstart (< 500 words, copy-paste runnable)
+- [x] 4.1.1 Write 5-minute quickstart with templates, LLM, MCP sections
 - [ ] 4.1.2 Embed on website landing page above the fold
 - [ ] 4.1.3 Test quickstart on clean Ubuntu, macOS, Windows (PowerShell)
 
@@ -148,11 +148,11 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 4.5 PT-BR Critical Sync (MANDATORY — Brazilian market is primary target)
 
-- [ ] 4.5.1 Rewrite `guide.md` PT-BR (39 → full translation matching EN)
-- [ ] 4.5.2 Complete `architecture-notes.md` PT-BR (7 missing sections)
-- [ ] 4.5.3 Complete `policy-bundles.md` PT-BR (3 missing conditions + programmatic section)
-- [ ] 4.5.4 Complete `behavior-spec.md` PT-BR (add Python code examples)
-- [ ] 4.5.5 Complete `reporting.md` PT-BR (add `generate_report()` API examples)
+- [x] 4.5.1 Rewrite `guide.md` PT-BR (39 -> full translation matching EN)
+- [x] 4.5.2 Complete `architecture-notes.md` PT-BR (7 missing sections)
+- [x] 4.5.3 Complete `policy-bundles.md` PT-BR (3 missing conditions + programmatic section)
+- [x] 4.5.4 Complete `behavior-spec.md` PT-BR (add Python code examples)
+- [x] 4.5.5 Complete `reporting.md` PT-BR (add `generate_report()` API examples)
 - [ ] 4.5.6 Verify LGPD terminology consistency across all PT-BR docs
 
 ---
