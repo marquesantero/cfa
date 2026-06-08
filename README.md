@@ -384,23 +384,69 @@ Two complete notebooks, tested on Databricks with CFA 1.0.0, 0 errors:
 
 Import the `.dbc` into Databricks or run the `.py` files anywhere.
 
+## Extending CFA
+
+CFA is built so that adding a **vertical** (a new domain to govern —
+infrastructure, agent tool calls, financial transactions, ML deploys)
+or an **integration** (a new way to feed signatures in and emit decisions
+out) is a pip-installable package. You do not edit the kernel.
+
+```toml
+# pyproject.toml of your plugin
+[project.entry-points."cfa.verticals"]
+myapp = "cfa_vertical_myapp.vertical:MyappVertical"
+
+[project.entry-points."cfa.integrations"]
+mytool = "cfa_int_mytool.integration:MyToolIntegration"
+
+[project.entry-points."cfa.decision_sinks"]
+slack = "cfa_sink_slack.sink:SlackWebhookSink"
+```
+
+Reference contracts:
+[ADR-0007](docs/adr/0007-layered-architecture.md),
+[ADR-0009](docs/adr/0009-vertical-protocol.md),
+[ADR-0010](docs/adr/0010-integration-protocol.md).
+Full guide: [Extending CFA](https://marquesantero.github.io/cfa/docs/extending).
+
 ## Roadmap
 
-The full plan lives in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The short
-version:
+CFA is built around one idea: **a typed layer between intent and
+execution.** Data writes were the first vertical because the maintainer
+is a data engineer with primitives that were easy to test. The kernel
+itself is domain-agnostic — every additional vertical (infrastructure,
+agent tool calls, financial transactions, schema migrations, ML deploys)
+plugs in as an external package via the
+[Vertical](docs/adr/0009-vertical-protocol.md) contract.
 
-- **1.1.0 (current)** — distinctive primitives recorded as ADRs, package
-  layout consolidated, perf baselines landed, site rewritten.
-- **1.2.0 (next)** — `cfa dbt check` reads `target/manifest.json`,
-  derives a signature per model, runs the policy bundle in CI.
-- **1.3.0** — Airflow `CFAGateOperator` (provider package).
-- **1.4.0** — Lifecycle indices (IFo/IFs/IFg/IDI) produtized as a
-  promotion/demotion dashboard.
-- **1.5.0** — MCP server positioned as a governance authority for LLM
-  agents, with a reference implementation.
-- **1.6.0** — Snowflake, BigQuery, and Iceberg backends.
-- **2.0.0** — semver-strict API freeze, third-party security audit,
-  cross-language SDKs.
+The full plan lives in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The
+short version:
+
+- **1.1.0 (current)** — five distinctive primitives recorded as ADRs;
+  layout consolidated; perf baselines landed; site rewritten.
+- **1.1.x (in progress)** — Phase 0 plugin contracts:
+  [Vertical](docs/adr/0009-vertical-protocol.md),
+  [Integration + DecisionSink](docs/adr/0010-integration-protocol.md),
+  [ConditionRegistry](docs/adr/0011-condition-registry.md),
+  [per-vertical backends](docs/adr/0012-per-vertical-backends.md).
+- **1.2.0 (next)** — first-party `data` vertical extracted into
+  `cfa.verticals.data` (no breaking changes for end users); marquee
+  integration `cfa dbt check` reads `target/manifest.json`, derives a
+  signature per model, runs the policy bundle in CI.
+- **1.3.0** — `cfa.verticals.agent` (LLM tool calls); reference
+  LangGraph + Claude demo; MCP server positioned as the authority every
+  agent consults before acting.
+- **1.4.0** — `cfa.verticals.infra` (Terraform / Pulumi plans);
+  marquee integration `cfa terraform check`.
+- **1.5.0** — Live dashboard + `cfa serve` polish; Airflow
+  `CFAGateOperator` (provider package); Slack / OTel / GitHub PR
+  DecisionSinks shipped.
+- **1.6.0** — Lifecycle indices (IFo / IFs / IFg / IDI) produtized as a
+  promotion/demotion dashboard; Snowflake / BigQuery / Iceberg backends
+  in the data vertical.
+- **2.0.0** — semver-strict API freeze; removal of 1.x compatibility
+  shims; third-party security audit; CFA Protocol spec and
+  cross-language SDKs (Go first, TypeScript next).
 
 ## Contributing
 

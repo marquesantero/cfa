@@ -3,10 +3,11 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   docsSidebar: [
     'intro',
+    'compare',
     {
       type: 'category',
       label: 'Core',
-      items: ['whitepaper', 'getting-started', 'guide'],
+      items: ['getting-started', 'guide', 'whitepaper'],
     },
     {
       type: 'category',
@@ -16,8 +17,9 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Integrations',
-      items: ['integrations/langgraph', 'integrations/openai-agents'],
+      items: ['integrations/use-cfa-guard-with-frameworks'],
     },
+    'extending',
     'faq',
     'architecture-notes',
   ],

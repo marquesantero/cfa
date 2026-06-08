@@ -7,6 +7,54 @@ uses [SemVer](https://semver.org/).
 Architectural decisions referenced from each release live in
 [`docs/adr/`](docs/adr/).
 
+## [Unreleased]
+
+The work that follows 1.1.0 lays the architecture for everything
+1.2.0 → 2.0 will ship. It is **purely additive**: no existing API
+changes, no behavior changes, no version bump. CFA becomes a
+plugin-shaped kernel where verticals (data, agent, infra, …) and
+integrations (dbt, Airflow, GitHub, Slack, …) are pip-installable
+external packages that the kernel discovers via Python entry points.
+
+### Added
+
+- Six new ADRs in `docs/adr/`:
+  [0007](docs/adr/0007-layered-architecture.md) layered architecture,
+  [0008](docs/adr/0008-generic-signature.md) generic `StateSignature`,
+  [0009](docs/adr/0009-vertical-protocol.md) Vertical protocol,
+  [0010](docs/adr/0010-integration-protocol.md) Integration + DecisionSink,
+  [0011](docs/adr/0011-condition-registry.md) ConditionRegistry,
+  [0012](docs/adr/0012-per-vertical-backends.md) per-vertical backends.
+- `cfa.core.vertical` — `Vertical` protocol and `VerticalRegistry`
+  singleton with lazy entry-point discovery via the
+  `cfa.verticals` group.
+- `cfa.core.integration` — `Integration` and `DecisionSink` protocols
+  plus their registries (`cfa.integrations` and `cfa.decision_sinks`
+  entry-point groups). `IntegrationInputError` exception for typed
+  reporting of malformed input.
+- `cfa.core.conditions.ConditionRegistry` — object-oriented form of the
+  pre-existing module-level registry. `ConditionSpec` data class with
+  `name`, `factory`, `doc`, and `expected_params`. `describe()` and
+  `describe_all()` for introspection. The data-vertical conditions
+  shipped today register at import time with proper docstrings and
+  parameter descriptions.
+- `website/docs/extending.md` — full plugin author guide for
+  verticals, integrations, and decision sinks.
+- `tests/contract/` — reference mock vertical, mock integration, and
+  mock decision sinks that exercise the contracts end to end (34 new
+  tests; 571 passing in total).
+
+### Changed
+
+- `cfa.core.__init__.__getattr__` now lazy-loads `Vertical`,
+  `VerticalRegistry`, `Integration`, `IntegrationRegistry`,
+  `DecisionSink`, `DecisionSinkRegistry`, and `IntegrationInputError`
+  alongside the existing names.
+- `register_condition` now emits a `DeprecationWarning` when the same
+  name is silently re-registered. New code should call
+  `ConditionRegistry.register(..., overwrite=True)` to make the
+  intent explicit.
+
 ## [1.1.0] — 2026-06-08
 
 The 1.1.0 cycle is editorial. There are no new features. The goal was

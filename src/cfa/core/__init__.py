@@ -17,4 +17,12 @@ __getattr__ = LazyLoader({
     "build_condition": ("cfa.core.conditions", "build_condition"),
     "list_conditions": ("cfa.core.conditions", "list_conditions"),
     "register_condition": ("cfa.core.conditions", "register_condition"),
+    # Plugin contracts (see docs/adr/0007-layered-architecture.md)
+    "Vertical": ("cfa.core.vertical", "Vertical"),
+    "VerticalRegistry": ("cfa.core.vertical", "VerticalRegistry"),
+    "Integration": ("cfa.core.integration", "Integration"),
+    "IntegrationRegistry": ("cfa.core.integration", "IntegrationRegistry"),
+    "DecisionSink": ("cfa.core.integration", "DecisionSink"),
+    "DecisionSinkRegistry": ("cfa.core.integration", "DecisionSinkRegistry"),
+    "IntegrationInputError": ("cfa.core.integration", "IntegrationInputError"),
 })

@@ -33,6 +33,12 @@ having to dig through commits.
 | [0004](./0004-deterministic-by-default-llm-as-extra.md) | Deterministic decisions by default; LLM as opt-in extra | accepted |
 | [0005](./0005-package-consolidation-1.1.0.md) | Consolidate the package layout in 1.1.0 | accepted |
 | [0006](./0006-no-fake-adapters.md) | No per-framework adapter shims | accepted |
+| [0007](./0007-layered-architecture.md) | Layered architecture: kernel / contracts / verticals / integrations | accepted |
+| [0008](./0008-generic-signature.md) | Generic `StateSignature` with vertical + payload + constraints | accepted |
+| [0009](./0009-vertical-protocol.md) | Vertical protocol and registry via entry points | accepted |
+| [0010](./0010-integration-protocol.md) | Integration protocol and DecisionSink | accepted |
+| [0011](./0011-condition-registry.md) | `ConditionRegistry` as the canonical way to attach policy rules | accepted |
+| [0012](./0012-per-vertical-backends.md) | Backends scoped per-vertical | accepted |
 
 ## Adding a new ADR
 

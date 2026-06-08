@@ -236,6 +236,8 @@ The [Compare](./compare) page has the side-by-side breakdowns.
   — LangGraph, CrewAI, AutoGen, DSPy, OpenAI Agents SDK.
 - **[Compare](./compare)** — CFA vs OPA, LangSmith, Great Expectations,
   Unity Catalog.
+- **[Extending CFA](./extending)** — build your own vertical,
+  integration, or DecisionSink as a separate pip package.
 - **[Architecture Notes](./architecture-notes)** — design decisions and
   trade-offs.
 - **[FAQ](./faq)**.
