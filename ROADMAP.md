@@ -62,13 +62,13 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 2.1 Hardening
 
-- [ ] 2.1.1 Add authentication (API key / token) to MCP server
-- [ ] 2.1.2 Add rate limiting per tool
+- [x] 2.1.1 Add authentication (API key / token) — `CFA_MCP_API_KEY` env var
+- [x] 2.1.2 Add rate limiting per tool — token bucket, `CFA_MCP_RATE_LIMIT` env var
 - [ ] 2.1.3 Add request/response logging to audit trail
-- [ ] 2.1.4 Add health check endpoint
-- [ ] 2.1.5 Add tool: `cfa_verify_chain` — verify audit hash chain
-- [ ] 2.1.6 Add tool: `cfa_lifecycle_status` — expose IFo/IFs/IFg/IDI
-- [ ] 2.1.7 Add tool: `cfa_compliance_check` — check against bundle
+- [x] 2.1.4 Add health check endpoint — `ping` already supported
+- [x] 2.1.5 Add tool: `cfa_verify_chain` — already covered by `cfa_audit_check`
+- [x] 2.1.6 Add tool: `cfa_lifecycle_status` — expose IFo/IFs/IFg/IDI
+- [x] 2.1.7 Add tool: `cfa_compliance_check` — evaluate intent against bundle
 - [ ] 2.1.8 Define SLOs: tool call latency p99 < 500ms, uptime > 99%
 - [ ] 2.1.9 Load test: 100 req/s sustained for 10 minutes
 - [ ] 2.1.10 Fuzz test MCP tool inputs (property-based testing with Hypothesis)
