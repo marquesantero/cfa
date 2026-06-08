@@ -161,23 +161,13 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 5.1 EU AI Act mapping
 
-- [ ] 5.1.1 Read EU AI Act articles relevant to data/AI governance
-- [ ] 5.1.2 Map Article 9 (risk management) → CFA policy rules
-- [ ] 5.1.3 Map Article 10 (data governance) → CFA catalog constraints
-- [ ] 5.1.4 Map Article 12 (record-keeping) → CFA audit trail
-- [ ] 5.1.5 Map Article 13 (transparency) → CFA reporting
-- [ ] 5.1.6 Map Article 15 (accuracy, robustness) → CFA validation
-- [ ] 5.1.7 Map Article 17 (quality management) → CFA lifecycle (IFo/IFs/IFg/IDI)
-- [ ] 5.1.8 Create `policies/eu-ai-act-v1.yaml` policy bundle
+- [x] 5.1.1-5.1.7 Map Articles 9, 10, 12, 13, 15, 17 -> CFA policy rules
+- [x] 5.1.8 Create `policies/eu-ai-act-v1.yaml` policy bundle (8 rules)
 
 ### 5.2 LGPD mapping
 
-- [ ] 5.2.1 Map Art. 6 (consent/legitimate interest) → CFA domain constraints
-- [ ] 5.2.2 Map Art. 11-13 (anonymization, pseudonymization) → CFA PII rules
-- [ ] 5.2.3 Map Art. 16 (security) → CFA audit + hash chain
-- [ ] 5.2.4 Map Art. 18 (portability) → CFA data contracts
-- [ ] 5.2.5 Map Art. 37-38 (DPO, impact assessment) → CFA reports
-- [ ] 5.2.6 Create `policies/lgpd-v1.yaml` policy bundle
+- [x] 5.2.1-5.2.5 Map Art. 6, 11-13, 16, 18, 37-38, 46 -> CFA policy rules
+- [x] 5.2.6 Create `policies/lgpd-v1.yaml` policy bundle (8 rules)
 
 ### 5.3 Compliance reporting
 
