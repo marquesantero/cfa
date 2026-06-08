@@ -13,6 +13,8 @@
 
 Instead of asking _"which agent or skill should act?"_, CFA asks _"which state transition is being requested, under which constraints, and can it be executed safely?"_ and produces a cryptographically verifiable decision.
 
+> **Status:** alpha (`0.1.x`). APIs may shift between minor versions. Not yet recommended for unsupervised production use.
+
 ## Quick Start
 
 ```bash
@@ -65,20 +67,20 @@ CLI / MCP / Adapter / API
             Decision JSON / Audit Trail / OTel / Prometheus
 ```
 
-## Key Differentiators
+## Capabilities
 
-| Feature | CFA | Others |
-|---------|-----|--------|
-| SHA-256 audit trail (tamper-evident) | ✅ | ❌ |
-| State projection between executions | ✅ | ❌ |
-| Lifecycle indices (IFo/IFs/IFg/IDI) | ✅ | ❌ |
-| REPLAN with auto-interventions | ✅ | ❌ |
-| Backend-agnostic (PySpark, SQL, dbt) | ✅ | ❌ |
-| Artifact hashing (catalog + policy + signature) | ✅ | ❌ |
-| MCP protocol for AI agents | ✅ | ❌ |
-| SQLite storage with retention management | ✅ | ❌ |
-| Config file with auto-discovery | ✅ | ❌ |
-| Zero runtime dependencies (core) | ✅ | ❌ |
+| Capability | What it gives you |
+|------------|-------------------|
+| SHA-256 audit trail | Tamper-evident chain of decisions, verifiable offline (`cfa audit verify`) |
+| State projection | Each execution carries the typed state of the prior one — no implicit globals |
+| Lifecycle indices (IFo/IFs/IFg/IDI) | Quantifies how often an intent recurs, stabilizes, and qualifies for promotion to a reusable skill |
+| REPLAN cycle | Failed policy checks emit a structured remediation, not a hard stop |
+| Backend-agnostic codegen | Same signature compiles to PySpark, ANSI SQL, or dbt — pluggable via `BackendRegistry` |
+| Artifact hashing | Catalog, policy bundle, and signature are content-hashed and bound to every decision |
+| MCP protocol | Any MCP-compatible agent can call CFA as a governance tool |
+| SQLite + JSONL storage | First-class persistence with stats, retention cleanup, and vacuum |
+| Config auto-discovery | `cfa.yaml` walked up the tree; all CLI commands respect it |
+| Zero core dependencies | Optional extras for `yaml`, `otel`, `mcp`, `llm` — none required for the kernel |
 
 ## CLI
 
@@ -250,10 +252,14 @@ Expose CFA governance to any AI agent via Model Context Protocol:
 src/cfa/
 ├── core/              Kernel, Planner, CodeGen, Conditions, Phases
 ├── policy/            PolicyEngine, PolicyBundle, Catalog validation
+├── governance/        Standalone governance API (no LLM, no execution required)
 ├── validation/        Static, Runtime, Signature validation
+├── resolution/        Intent → StateSignature resolver (LLM or rule-based backend)
+├── normalizer/        Rule-based normalizer, LLM normalizer
+├── behavior/          BehaviorSpec + Systematizer (human intent → policy rules)
 ├── audit/             AuditTrail, Context, Hashing
 ├── observability/     Metrics, OTel, Notify, Indices, Promotion
-├── normalizer/        Rule-based normalizer, LLM normalizer
+├── lifecycle/         IFo/IFs/IFg/IDI indices + Promotion/Demotion engine
 ├── execution/         Partial execution, State projection
 ├── adapters/          LangGraph, OpenAI, CrewAI, AutoGen, DSPy
 ├── backends/          PySpark, SQL, dbt (pluggable)
@@ -292,6 +298,10 @@ Two complete notebooks, tested on Databricks with CFA v0.1.9, 0 errors:
 | `demos/cfa_llm_demo_complete` | `.dbc` / `.py` | LLM-powered — semantic normalizer, systematizer, strict mode, compare |
 
 Import the `.dbc` into Databricks or run the `.py` files anywhere.
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, test conventions, and the PR checklist. By participating, you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](./SECURITY.md).
 
 ## License
 
