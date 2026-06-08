@@ -16,7 +16,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Integrations',
-      items: ['integrations/airflow', 'integrations/langgraph', 'integrations/openai-agents'],
+      items: ['integrations/langgraph', 'integrations/openai-agents'],
     },
     'faq',
     'architecture-notes',

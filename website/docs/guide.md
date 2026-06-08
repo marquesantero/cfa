@@ -296,4 +296,4 @@ cfa report audit --intent-id abc12345 --output audit.html
 - **[Policy Bundles](./policy-bundles)** — Declarative YAML policy rules
 - **[MCP Server](./mcp-server)** — Expose CFA to AI agents
 - **[Reporting](./reporting)** — Rich HTML reports
-- **[Integrations](./integrations/airflow)** — Framework and orchestrator adapters
+- **[Integrations](./integrations/langgraph)** — Framework and orchestrator adapters
