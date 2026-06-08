@@ -71,9 +71,4 @@ cfa_test_results_*/
 test_battery.py
 uv.lock
 
-CFA_LLM_Demo.dbc
-CFA_LLM_Demo.html
-CFA_LLM_Demo.py
-CFA_LLM_Demo.ipynb.py
-
 CFA_LLM_Demo_fixed*
