@@ -1,51 +1,82 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # CFA — Contextual Flux Architecture
-# MAGIC ## Complete Demo: Governed Execution for AI Agents and Data Systems
+# MAGIC ## Core Demo: Governed Execution for AI Agents and Data Systems
 # MAGIC
 # MAGIC [![PyPI](https://img.shields.io/pypi/v/cfa-kernel)](https://pypi.org/project/cfa-kernel/)
 # MAGIC [![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions)
 # MAGIC [![codecov](https://codecov.io/gh/marquesantero/cfa/branch/main/graph/badge.svg)](https://codecov.io/gh/marquesantero/cfa)
 # MAGIC [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+# MAGIC [![python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org)
+# MAGIC [![docs](https://img.shields.io/badge/docs-docusaurus-blue)](https://marquesantero.github.io/cfa/)
 # MAGIC
-# MAGIC > **CFA** inserts a formal governance layer between user intent and execution.  
-# MAGIC > Instead of asking *"which agent or skill should act?"*, CFA asks  
+# MAGIC > **CFA** inserts a formal governance layer between user intent and execution.
+# MAGIC > Instead of asking *"which agent or skill should act?"*, CFA asks
 # MAGIC > *"which state transition is being requested, under what constraints, and can it execute safely?"*
+# MAGIC
+# MAGIC This notebook covers the **deterministic core**: policy, audit, code generation, lifecycle, reporting.
+# MAGIC For the LLM-powered features (semantic normalizer, systematizer, NL→rules), see `CFA_LLM_Demo`.
 # MAGIC
 # MAGIC ---
 # MAGIC
 # MAGIC ### What this notebook demonstrates
 # MAGIC
-# MAGIC | Section | Feature |
-# MAGIC |---|---|
-# MAGIC | 1 | Install + catalog validation |
-# MAGIC | 2 | `APPROVE` — safe pipeline |
-# MAGIC | 3 | **`REPLAN` — auto-correction** (unique to CFA) |
-# MAGIC | 4 | `BLOCK` — terminal denial with full fault detail |
-# MAGIC | 5 | Audit trail — SHA-256 hash chain + `verify_chain()` |
-# MAGIC | 6 | Code generation — PySpark, SQL, dbt (all 3 backends) |
-# MAGIC | 7 | Lifecycle indices — IFo, IFs, IFg, IDI + Promotion Engine |
-# MAGIC | 8 | Storage — SQLite backend + stats |
-# MAGIC | 9 | Behavior Spec + Systematizer |
-# MAGIC | 10 | Runtime Gate — `@gate.guard` decorator |
-# MAGIC | 11 | LangGraph adapter — `@cfa_guard` decorator |
-# MAGIC | 12 | Reporting — HTML compliance + lifecycle reports |
-# MAGIC | 13 | Full kernel pipeline — end-to-end via `KernelOrchestrator` |
+# MAGIC | Section | Feature | Surface |
+# MAGIC |---|---|---|
+# MAGIC | S0 | Install + version pin | setup |
+# MAGIC | S1 | Catalog & policy bundle | governance |
+# MAGIC | S2 | `APPROVE` — safe pipeline | engine |
+# MAGIC | S3 | **`REPLAN` — auto-correction** (unique to CFA) | engine |
+# MAGIC | S4 | `BLOCK` — terminal denial | engine |
+# MAGIC | S5 | Audit trail — SHA-256 hash chain | compliance |
+# MAGIC | S6 | Code generation — PySpark, SQL, dbt | codegen |
+# MAGIC | S7 | Lifecycle indices — IFo, IFs, IFg, IDI + Promotion | observability |
+# MAGIC | S8 | SQLite storage — persistence + stats | infra |
+# MAGIC | S9 | Behavior Spec — YAML → Systematizer → rules | declarative |
+# MAGIC | S10 | Runtime Gate — `@gate.guard` decorator | adapter |
+# MAGIC | S11 | LangGraph adapter — `@cfa_guard` decorator | agents |
+# MAGIC | S12 | HTML reporting — compliance + lifecycle + audit | observability |
+# MAGIC | S13 | Full kernel — end-to-end `KernelOrchestrator` | core |
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ---
 # MAGIC ## Section 0 — Install
+# MAGIC
+# MAGIC Pinned to a known-good version. Use `pip install cfa-kernel` (without pin) to follow latest.
 
 # COMMAND ----------
 
-# Install CFA with all optional extras
-%pip install -q cfa-kernel[all]
+# MAGIC %pip install -q cfa-kernel==0.1.9
 
-# Verify installation
+# COMMAND ----------
+
+# MAGIC %restart_python
+
+# COMMAND ----------
+
 import cfa
-print(f"CFA version: {cfa.__version__}")
+print(f"CFA version : {cfa.__version__}")
+print(f"Notebook    : Core Demo (no LLM)")
+print(f"Surfaces    : PolicyEngine, AuditTrail, BackendRegistry, Lifecycle, RuntimeGate, Reporting")
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ---
+# MAGIC ## Helper — section header
+# MAGIC
+# MAGIC Tiny utility to keep section banners consistent across the notebook.
+
+# COMMAND ----------
+
+def section(title: str, width: int = 60) -> None:
+    """Print a uniform section banner."""
+    print("─" * width)
+    print(title)
+    print("─" * width)
+
 
 # COMMAND ----------
 
@@ -94,14 +125,15 @@ CATALOG = {
     }
 }
 
-# Validate catalog structure
+section("Catalog validation")
 r = validate_catalog(CATALOG, require_datasets=True)
-print(f"Catalog valid: {r.valid}")
+print(f"  valid    : {r.valid}")
 if r.issues:
     for issue in r.issues:
-        print(f"  Issue: {issue}")
+        print(f"  issue    : {issue}")
 else:
-    print(f"  {len(CATALOG['datasets'])} datasets registered — nfe, clientes, vendas, fornecedores")
+    n = len(CATALOG["datasets"])
+    print(f"  datasets : {n} registered ({', '.join(CATALOG['datasets'].keys())})")
 
 # COMMAND ----------
 
@@ -114,6 +146,7 @@ else:
 
 # COMMAND ----------
 
+import time
 from cfa.policy.engine import PolicyEngine
 from cfa.types import (
     DatasetClassification, DatasetRef, ExecutionContext,
@@ -126,23 +159,15 @@ sig_safe = StateSignature(
     intent="reconciliation",
     target_layer=TargetLayer.SILVER,
     datasets=(
-        DatasetRef(
-            "nfe",
-            DatasetClassification.HIGH_VOLUME,
-            size_gb=4000,
-            merge_keys=("nfe_id",),
-        ),
-        DatasetRef(
-            "clientes",
-            DatasetClassification.SENSITIVE,
-            size_gb=0.5,
-            pii_columns=("cpf", "email"),
-            merge_keys=("cliente_id",),
-        ),
+        DatasetRef("nfe", DatasetClassification.HIGH_VOLUME,
+                   size_gb=4000, merge_keys=("nfe_id",)),
+        DatasetRef("clientes", DatasetClassification.SENSITIVE,
+                   size_gb=0.5, pii_columns=("cpf", "email"),
+                   merge_keys=("cliente_id",)),
     ),
     constraints=SignatureConstraints(
-        no_pii_raw=True,           # PII will be anonymized
-        merge_key_required=True,   # Merge semantics enforced
+        no_pii_raw=True,
+        merge_key_required=True,
         enforce_types=True,
         partition_by=("processing_date",),
         max_cost_dbu=50.0,
@@ -151,18 +176,20 @@ sig_safe = StateSignature(
 )
 
 engine = PolicyEngine()
-result_safe = engine.evaluate(sig_safe)
 
-print("=" * 55)
-print("SAFE PIPELINE — NFe + Clientes → Silver")
-print("=" * 55)
-print(f"  Decision    : {result_safe.action.value.upper()}")
-print(f"  Faults      : {len(result_safe.faults)}")
-print(f"  Reasoning   : {result_safe.reasoning}")
-print(f"  Sig hash    : {sig_safe.signature_hash[:24]}...")
+t0 = time.perf_counter()
+result_safe = engine.evaluate(sig_safe)
+elapsed_ms = (time.perf_counter() - t0) * 1000
+
+section("APPROVE — NFe + Clientes → Silver")
+print(f"  decision   : {result_safe.action.value.upper()}")
+print(f"  faults     : {len(result_safe.faults)}")
+print(f"  reasoning  : {result_safe.reasoning}")
+print(f"  sig_hash   : {sig_safe.signature_hash[:24]}...")
+print(f"  latency_ms : {elapsed_ms:.2f}")
 
 assert result_safe.action == PolicyAction.APPROVE
-print("\n✓ assert APPROVE passed")
+print("\n  ✓ assert APPROVE passed")
 
 # COMMAND ----------
 
@@ -170,12 +197,12 @@ print("\n✓ assert APPROVE passed")
 # MAGIC ---
 # MAGIC ## Section 3 — REPLAN: Auto-Correction (unique to CFA)
 # MAGIC
-# MAGIC **REPLAN is CFA's most distinctive feature** — no competing tool has it.  
-# MAGIC When a policy rule fires with `action: replan`, the engine automatically applies  
-# MAGIC corrective interventions to the signature (e.g., adding partition filters) and  
+# MAGIC **REPLAN is CFA's most distinctive feature** — no competing tool has it.
+# MAGIC When a policy rule fires with `action: replan`, the engine automatically applies
+# MAGIC corrective interventions to the signature (e.g., adding partition filters) and
 # MAGIC re-evaluates — up to 3 times before terminal BLOCK.
 # MAGIC
-# MAGIC Here we demonstrate a high-volume dataset missing `partition_by` — a FinOps  
+# MAGIC Here we demonstrate a high-volume dataset missing `partition_by` — a FinOps
 # MAGIC violation that CFA auto-corrects without blocking the pipeline.
 
 # COMMAND ----------
@@ -186,12 +213,8 @@ sig_replan = StateSignature(
     intent="aggregation",
     target_layer=TargetLayer.SILVER,
     datasets=(
-        DatasetRef(
-            "vendas",
-            DatasetClassification.HIGH_VOLUME,
-            size_gb=2000,
-            merge_keys=("venda_id",),
-        ),
+        DatasetRef("vendas", DatasetClassification.HIGH_VOLUME,
+                   size_gb=2000, merge_keys=("venda_id",)),
     ),
     constraints=SignatureConstraints(
         no_pii_raw=True,
@@ -203,33 +226,33 @@ sig_replan = StateSignature(
     execution_context=ExecutionContext("fiscal-prod-v1.0", "catalog-v1", "ctx-002"),
 )
 
+t0 = time.perf_counter()
 result_replan = engine.evaluate(sig_replan)
+elapsed_ms = (time.perf_counter() - t0) * 1000
 
-print("=" * 55)
-print("REPLAN DEMO — Vendas (2TB) missing partition_by")
-print("=" * 55)
-print(f"  Decision    : {result_replan.action.value.upper()}")
-print(f"  Faults      : {len(result_replan.faults)}")
+section("REPLAN — Vendas (2TB) missing partition_by")
+print(f"  decision   : {result_replan.action.value.upper()}")
+print(f"  faults     : {len(result_replan.faults)}")
+print(f"  latency_ms : {elapsed_ms:.2f}")
 
 for fault in result_replan.faults:
     print(f"\n  [{fault.severity.value.upper()}] {fault.code}")
-    print(f"    Message    : {fault.message}")
+    print(f"    message     : {fault.message}")
     if fault.remediation:
-        print(f"    Remediation:")
+        print(f"    remediation :")
         for step in fault.remediation:
             print(f"      → {step}")
 
 # Show auto-interventions if available
-if hasattr(result_replan, 'interventions') and result_replan.interventions:
-    print(f"\n  Auto-interventions applied:")
+if hasattr(result_replan, "interventions") and result_replan.interventions:
+    print(f"\n  auto-interventions applied:")
     for iv in result_replan.interventions:
         print(f"    ✓ {iv}")
 
-print(f"\n  Reasoning   : {result_replan.reasoning}")
+print(f"\n  reasoning  : {result_replan.reasoning}")
 
-# REPLAN is neither APPROVE nor BLOCK — it's a third state
 assert result_replan.action == PolicyAction.REPLAN
-print("\n✓ assert REPLAN passed — auto-correction applied, pipeline can proceed")
+print("\n  ✓ assert REPLAN passed — auto-correction applied, pipeline can proceed")
 
 # COMMAND ----------
 
@@ -237,7 +260,7 @@ print("\n✓ assert REPLAN passed — auto-correction applied, pipeline can proc
 # MAGIC ---
 # MAGIC ## Section 4 — BLOCK: Terminal Denial
 # MAGIC
-# MAGIC When violations are too severe to auto-correct — raw PII in a protected layer  
+# MAGIC When violations are too severe to auto-correct — raw PII in a protected layer
 # MAGIC with no merge key — CFA **BLOCK**s the pipeline with full fault detail and remediation steps.
 
 # COMMAND ----------
@@ -248,13 +271,8 @@ sig_block = StateSignature(
     intent="export",
     target_layer=TargetLayer.GOLD,
     datasets=(
-        DatasetRef(
-            "clientes",
-            DatasetClassification.SENSITIVE,
-            size_gb=0.5,
-            pii_columns=("cpf", "email"),
-            merge_keys=(),  # no merge key
-        ),
+        DatasetRef("clientes", DatasetClassification.SENSITIVE,
+                   size_gb=0.5, pii_columns=("cpf", "email"), merge_keys=()),
     ),
     constraints=SignatureConstraints(
         no_pii_raw=False,           # <-- RAW PII in Gold!
@@ -266,25 +284,26 @@ sig_block = StateSignature(
     execution_context=ExecutionContext("fiscal-prod-v1.0", "catalog-v1", "ctx-003"),
 )
 
+t0 = time.perf_counter()
 result_block = engine.evaluate(sig_block)
+elapsed_ms = (time.perf_counter() - t0) * 1000
 
-print("=" * 55)
-print("BLOCK DEMO — Raw PII in Gold, no merge key")
-print("=" * 55)
-print(f"  Decision    : {result_block.action.value.upper()}")
-print(f"  Faults      : {len(result_block.faults)}")
+section("BLOCK — Raw PII in Gold, no merge key")
+print(f"  decision   : {result_block.action.value.upper()}")
+print(f"  faults     : {len(result_block.faults)}")
+print(f"  latency_ms : {elapsed_ms:.2f}")
 
 for fault in result_block.faults:
     print(f"\n  [{fault.severity.value.upper()}] {fault.code}")
-    print(f"    Message    : {fault.message}")
+    print(f"    message : {fault.message}")
     if fault.remediation:
         for step in fault.remediation:
             print(f"    → {step}")
 
-print(f"\n  Reasoning   : {result_block.reasoning}")
+print(f"\n  reasoning  : {result_block.reasoning}")
 
 assert result_block.action == PolicyAction.BLOCK
-print("\n✓ assert BLOCK passed — execution prevented")
+print("\n  ✓ assert BLOCK passed — execution prevented")
 
 # COMMAND ----------
 
@@ -292,7 +311,7 @@ print("\n✓ assert BLOCK passed — execution prevented")
 # MAGIC ---
 # MAGIC ## Section 5 — Audit Trail: SHA-256 Hash Chain
 # MAGIC
-# MAGIC Every governance event is recorded in a tamper-evident append-only chain.  
+# MAGIC Every governance event is recorded in a tamper-evident append-only chain.
 # MAGIC Each event links to the previous event's hash — `verify_chain()` checks integrity at any time.
 
 # COMMAND ----------
@@ -314,29 +333,25 @@ trail.record("ctx-003", "policy", "evaluate", "blocked",
              signature_hash=sig_block.signature_hash,
              policy_bundle_version="fiscal-prod-v1.0")
 
-print("=" * 55)
-print("AUDIT TRAIL — SHA-256 Hash Chain")
-print("=" * 55)
-print(f"  Events recorded : {trail.event_count}")
+section("AUDIT TRAIL — SHA-256 hash chain")
+print(f"  events recorded : {trail.event_count}")
 print()
 
-# Show each event with its hash link
 events = trail.get_all_events()
 for i, event in enumerate(events):
-    print(f"  Event [{i+1}]")
+    print(f"  event [{i+1}]")
     print(f"    intent_id  : {event.intent_id}")
     print(f"    outcome    : {event.outcome}")
     print(f"    event_hash : {event.event_hash[:32]}...")
-    if hasattr(event, 'previous_hash') and event.previous_hash:
+    if hasattr(event, "previous_hash") and event.previous_hash:
         print(f"    prev_hash  : {event.previous_hash[:32]}...")
     print()
 
-# Verify chain integrity
 chain_ok = trail.verify_chain()
-print(f"  Chain integrity : {'✓ INTACT' if chain_ok else '✗ TAMPERED'}")
+print(f"  chain integrity : {'✓ INTACT' if chain_ok else '✗ TAMPERED'}")
 
 assert chain_ok, "Chain must be intact!"
-print("\n✓ assert verify_chain() passed")
+print("\n  ✓ assert verify_chain() passed")
 
 # COMMAND ----------
 
@@ -344,7 +359,7 @@ print("\n✓ assert verify_chain() passed")
 # MAGIC ---
 # MAGIC ## Section 6 — Code Generation: PySpark, SQL, dbt
 # MAGIC
-# MAGIC From an approved `StateSignature`, CFA generates **deterministic governed code**  
+# MAGIC From an approved `StateSignature`, CFA generates **deterministic governed code**
 # MAGIC for all 3 backends. No LLM calls in this path — pure deterministic generation.
 
 # COMMAND ----------
@@ -352,31 +367,30 @@ print("\n✓ assert verify_chain() passed")
 from cfa.core.planner import ExecutionPlanner
 from cfa.backends import BackendRegistry
 
-# Plan from the approved safe signature
 plan = ExecutionPlanner().plan(sig_safe)
 
-print("=" * 55)
-print("CODE GENERATION — 3 Backends")
-print("=" * 55)
+section("CODE GENERATION — 3 backends")
 
 registry = BackendRegistry.singleton()
 
 for backend_name in ("pyspark", "sql", "dbt"):
     backend = registry.get(backend_name)()
+    t0 = time.perf_counter()
     result = backend.generate(plan)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
     lines = result.code.splitlines()
-    print(f"\n--- {backend_name.upper()} ({len(lines)} lines) ---")
-    # Show first meaningful lines (skip blanks)
+
+    print(f"\n  {backend_name.upper()} — {len(lines)} lines  ({elapsed_ms:.1f}ms)")
     shown = 0
     for line in lines:
-        if shown >= 12:
+        if shown >= 10:
             break
-        print(f"  {line}")
+        print(f"    {line}")
         shown += 1
-    if len(lines) > 12:
-        print(f"  ... ({len(lines) - 12} more lines)")
+    if len(lines) > 10:
+        print(f"    ... ({len(lines) - 10} more lines)")
 
-print("\n✓ All 3 backends generated deterministically")
+print("\n  ✓ All 3 backends generated deterministically")
 
 # COMMAND ----------
 
@@ -390,7 +404,7 @@ print("\n✓ All 3 backends generated deterministically")
 # MAGIC - **IFg** (Governança): compliance — binary 1.0/0.0
 # MAGIC - **IDI** (Intent Drift): ratio of clean passes over time
 # MAGIC
-# MAGIC The **Promotion Engine** uses these to drive state: `CANDIDATE → ACTIVE → WATCHLIST → DEMOTED → RETIRED`
+# MAGIC The **Promotion Engine** drives state: `CANDIDATE → ACTIVE → WATCHLIST → DEMOTED → RETIRED`
 
 # COMMAND ----------
 
@@ -398,7 +412,6 @@ from cfa.observability.indices import IndexCalculator, ExecutionRecord
 from cfa.observability.promotion import PromotionEngine, PromotionPolicy
 from cfa.types import _utcnow
 
-# Build execution records for two pipelines
 def make_records(success_rate, replan_rate, avg_cost, avg_duration, count=5):
     records = []
     for i in range(count):
@@ -419,34 +432,31 @@ def make_records(success_rate, replan_rate, avg_cost, avg_duration, count=5):
 healthy = make_records(success_rate=0.9, replan_rate=0.1, avg_cost=12.0, avg_duration=120)
 drifting = make_records(success_rate=0.5, replan_rate=0.6, avg_cost=35.0, avg_duration=280)
 
-print("=" * 55)
-print("LIFECYCLE INDICES + PROMOTION ENGINE")
-print("=" * 55)
+section("LIFECYCLE INDICES + PROMOTION ENGINE")
 
 calc = IndexCalculator(window_days=30)
-engine = PromotionEngine(policy=PromotionPolicy(min_executions=3))
+prom = PromotionEngine(policy=PromotionPolicy(min_executions=3))
 
 for label, records in [
-    ("nfe_reconciliation (healthy)", healthy),
-    ("clientes_export (drifting)",   drifting),
+    ("nfe_reconciliation (healthy) ", healthy),
+    ("clientes_export   (drifting) ", drifting),
 ]:
     for r in records:
-        engine.record_execution(r)
-    skill, scores = engine.evaluate("demo-pipeline")
+        prom.record_execution(r)
+    skill, scores = prom.evaluate("demo-pipeline")
 
-    print(f"\nPipeline: {label}")
-    print(f"  IFo (Operational) : {scores.ifo:.3f}  (target >= 0.75)")
-    print(f"  IFs (Semantic)    : {scores.ifs:.3f}  (target >= 0.90)")
-    print(f"  IFg (Governance)  : {scores.ifg:.1f}    (binary 1.0 = compliant)")
-    print(f"  IDI (Drift)       : {scores.idi:.3f}  (target >= 0.75)")
-    print(f"  State             : {skill.state.value.upper()}")
+    print(f"\n  pipeline: {label}")
+    print(f"    IFo (Operational) : {scores.ifo:.3f}  (target ≥ 0.75)")
+    print(f"    IFs (Semantic)    : {scores.ifs:.3f}  (target ≥ 0.90)")
+    print(f"    IFg (Governance)  : {scores.ifg:.1f}    (binary 1.0 = compliant)")
+    print(f"    IDI (Drift)       : {scores.idi:.3f}  (target ≥ 0.75)")
+    print(f"    state             : {skill.state.value.upper()}")
     if scores.drift_detected:
-        print(f"  WARNING: drift detected!")
+        print(f"    ⚠ drift detected")
     if scores.promotion_eligible:
-        print(f"  Promotion eligible!")
+        print(f"    ✓ promotion eligible")
 
-print("\nLifecycle indices computed and promotion evaluated")
-
+print("\n  ✓ Lifecycle indices computed and promotion evaluated")
 
 # COMMAND ----------
 
@@ -467,7 +477,6 @@ if os.path.exists(DB_PATH):
 store = SqliteStorage(DB_PATH)
 store.ensure_schema()
 
-# Persist audit events
 decisions = [
     ("ctx-001", "approved"),
     ("ctx-002", "replanned"),
@@ -476,6 +485,7 @@ decisions = [
     ("ctx-005", "approved"),
 ]
 
+t0 = time.perf_counter()
 for intent_id, outcome in decisions:
     store.audit_append(AuditEvent(
         intent_id=intent_id,
@@ -483,23 +493,23 @@ for intent_id, outcome in decisions:
         event_type="evaluate",
         outcome=outcome,
     ))
+elapsed_ms = (time.perf_counter() - t0) * 1000
 
-# Storage stats
+section("SQLITE STORAGE")
 try:
     from cfa.storage import _sqlite_storage_stats
     stats = _sqlite_storage_stats(store)
-    print("=" * 55)
-    print("SQLITE STORAGE STATS")
-    print("=" * 55)
-    print(f"  Audit events : {stats.audit_events_count}")
-    print(f"  File size    : {stats.file_size_bytes:,} bytes")
-    print(f"  DB path      : {DB_PATH}")
+    print(f"  audit events : {stats.audit_events_count}")
+    print(f"  file size    : {stats.file_size_bytes:,} bytes")
+    print(f"  insert ms    : {elapsed_ms:.2f} ({elapsed_ms/len(decisions):.2f}/event)")
+    print(f"  db path      : {DB_PATH}")
 except Exception:
-    print("  Stats unavailable (storage module)")
+    print(f"  events       : {len(decisions)} persisted")
+    print(f"  insert ms    : {elapsed_ms:.2f}")
+    print(f"  db path      : {DB_PATH}")
 
 store.close()
-print("\nStorage demo complete")
-
+print("\n  ✓ Storage demo complete")
 
 # COMMAND ----------
 
@@ -507,13 +517,13 @@ print("\nStorage demo complete")
 # MAGIC ---
 # MAGIC ## Section 9 — Behavior Spec + Systematizer
 # MAGIC
-# MAGIC **Behavior Specs** bridge human-written governance policies (YAML) to executable CFA rules.  
-# MAGIC Platform/security teams define policies in YAML; data teams reference them by version.  
-# MAGIC Inspired by ASSERT's systematization approach, but applied to data governance.
+# MAGIC **Behavior Specs** bridge human-written governance policies (YAML) to executable CFA rules.
+# MAGIC Platform/security teams define policies in YAML; data teams reference them by version.
+# MAGIC Inspired by ASSERT's systematization approach, applied to data governance.
 
 # COMMAND ----------
 
-import tempfile, os, pathlib
+import tempfile, pathlib
 from cfa.behavior import BehaviorSpec, Systematizer
 
 SPEC_YAML = """
@@ -550,7 +560,6 @@ behavior:
         - Add partition_by=("processing_date",) to constraints
 """
 
-# Write spec to temp file (UTF-8)
 spec_path = pathlib.Path(tempfile.mktemp(suffix=".yaml"))
 spec_path.write_text(SPEC_YAML, encoding="utf-8")
 
@@ -558,29 +567,25 @@ try:
     spec = BehaviorSpec.from_yaml(str(spec_path))
     taxonomy, rules = Systematizer().systematize(spec)
 
-    print("=" * 55)
-    print("BEHAVIOR SPEC + SYSTEMATIZER")
-    print("=" * 55)
-    print(f"  Spec name   : {spec.name}")
-    print(f"  Rules gen.  : {len(rules)}")
-    print(f"  Categories  : {taxonomy.category_count}")
+    section("BEHAVIOR SPEC + SYSTEMATIZER")
+    print(f"  spec name  : {spec.name}")
+    print(f"  rules gen. : {len(rules)}")
+    print(f"  categories : {taxonomy.category_count}")
     print()
 
     for rule in rules:
-        print(f"  Rule : {rule.name}")
+        print(f"  rule : {rule.name}")
         print(f"    code     : {rule.fault_code}")
         print(f"    action   : {rule.action.value}")
         print(f"    severity : {rule.severity.value}")
         print()
 
-    print("BehaviorSpec -> Systematizer -> PolicyRules complete")
+    print("  ✓ BehaviorSpec → Systematizer → PolicyRules complete")
 finally:
-    # Cleanup
     try:
         spec_path.unlink()
     except OSError:
         pass
-
 
 # COMMAND ----------
 
@@ -588,35 +593,30 @@ finally:
 # MAGIC ---
 # MAGIC ## Section 10 — Runtime Gate: `@gate.guard` Decorator
 # MAGIC
-# MAGIC The `RuntimeGate` wraps any function with a governance check.  
+# MAGIC The `RuntimeGate` wraps any function with a governance check.
 # MAGIC Use this pattern to protect existing pipelines without rewriting them.
 
 # COMMAND ----------
 
 from cfa.runtime import RuntimeGate, GateConfig
-from cfa.types import DatasetClassification, DatasetRef, ExecutionContext, SignatureConstraints, StateSignature, TargetLayer
 
-print("=" * 55)
-print("RUNTIME GATE")
-print("=" * 55)
+section("RUNTIME GATE")
 
-gate = RuntimeGate(
-    config=GateConfig(policy_bundle="fiscal-prod-v1.0"),
-)
+gate = RuntimeGate(config=GateConfig(policy_bundle="fiscal-prod-v1.0"))
 
 # Pre-execution validation
 result = gate.validate("Join NFe with Clientes and persist to Silver")
-print(f"  validate() -> state={result.state.value}  passed={result.passed}")
-print(f"  gate_id={result.gate_id}  execution_id={result.execution_id[:8]}...")
+print(f"  validate()       : state={result.state.value}  passed={result.passed}")
+print(f"  gate_id          : {result.gate_id}")
+print(f"  execution_id     : {result.execution_id[:8]}...")
 
 # Decorator guard
 @gate.guard("aggregate sales data")
 def my_pipeline():
     return "pipeline executed"
 
-print(f"  @gate.guard decorated function -> {my_pipeline()}")
-print("\nRuntime Gate demo complete")
-
+print(f"  @gate.guard call : {my_pipeline()}")
+print("\n  ✓ Runtime Gate demo complete")
 
 # COMMAND ----------
 
@@ -624,39 +624,36 @@ print("\nRuntime Gate demo complete")
 # MAGIC ---
 # MAGIC ## Section 11 — LangGraph Adapter: `@cfa_guard` Decorator
 # MAGIC
-# MAGIC CFA integrates with LangGraph agent nodes via a single decorator.  
+# MAGIC CFA integrates with LangGraph agent nodes via a single decorator.
 # MAGIC The node's docstring (or explicit intent string) is used as the governance contract.
 
 # COMMAND ----------
 
 from cfa.adapters.langgraph import cfa_guard
 
-print("=" * 55)
-print("LANGGRAPH ADAPTER")
-print("=" * 55)
+section("LANGGRAPH ADAPTER")
 
 @cfa_guard("aggregate sales data with PII protected", mode="warn")
 def my_agent_node(state):
     return {"status": "completed", "data": "processed"}
 
 result = my_agent_node({"input": "test"})
-print(f"  @cfa_guard node executed: {result}")
-print("\nLangGraph adapter demo complete")
-
+print(f"  @cfa_guard call  : {result}")
+print("\n  ✓ LangGraph adapter demo complete")
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ---
-# MAGIC ## Section 12 — Reporting: HTML Compliance + Lifecycle Reports
+# MAGIC ## Section 12 — Reporting: HTML Compliance + Lifecycle + Audit
 # MAGIC
-# MAGIC CFA generates self-contained HTML reports with Chart.js —  
+# MAGIC CFA generates self-contained HTML reports with Chart.js —
 # MAGIC single `.html` files, zero Python dependencies, ready to open in any browser.
 
 # COMMAND ----------
 
 from cfa.reporting import generate_report
-import os
+import datetime
 
 REPORT_DIR = "/tmp/cfa_reports"
 os.makedirs(REPORT_DIR, exist_ok=True)
@@ -672,9 +669,9 @@ generate_report(
     replanned=12,
     blocked=6,
     rules=[
-        {"name": "forbid_raw_pii",       "fired": 6,  "severity": "critical"},
-        {"name": "require_partition",    "fired": 12, "severity": "high"},
-        {"name": "require_merge_key",    "fired": 3,  "severity": "critical"},
+        {"name": "forbid_raw_pii",    "fired": 6,  "severity": "critical"},
+        {"name": "require_partition", "fired": 12, "severity": "high"},
+        {"name": "require_merge_key", "fired": 3,  "severity": "critical"},
     ],
     pii_incidents_prevented=6,
     audit_events_total=200,
@@ -682,7 +679,6 @@ generate_report(
 )
 
 # --- Lifecycle dashboard ---
-import datetime
 now = datetime.date.today()
 dates = [(now - datetime.timedelta(days=d)).isoformat() for d in range(29, -1, -1)]
 
@@ -722,17 +718,15 @@ generate_report(
     chain_intact=True,
 )
 
-print("=" * 55)
-print("HTML REPORTS GENERATED")
-print("=" * 55)
+section("HTML REPORTS GENERATED")
 for path in [compliance_path, lifecycle_path, audit_path]:
     size = os.path.getsize(path)
     name = os.path.basename(path)
     print(f"  {name:20s} — {size:,} bytes")
 
-print("\n✓ Self-contained HTML reports ready (open in any browser)")
+print("\n  ✓ Self-contained HTML reports ready (open in any browser)")
 
-# In Colab: display inline
+# In Colab/Databricks: display inline
 try:
     from IPython.display import HTML, display
     with open(compliance_path) as f:
@@ -746,8 +740,8 @@ except Exception:
 # MAGIC ---
 # MAGIC ## Section 13 — Full Kernel: End-to-End via `KernelOrchestrator`
 # MAGIC
-# MAGIC The `KernelOrchestrator` runs the complete 5-phase pipeline:  
-# MAGIC `Formalize → Govern → Generate → Execute → Validate/Audit`  
+# MAGIC The `KernelOrchestrator` runs the complete 5-phase pipeline:
+# MAGIC `Formalize → Govern → Generate → Execute → Validate/Audit`
 # MAGIC from a single natural-language intent.
 
 # COMMAND ----------
@@ -763,34 +757,35 @@ kernel = KernelOrchestrator(
     ),
 )
 
-print("=" * 55)
-print("FULL KERNEL -- End-to-End Governed Execution")
-print("=" * 55)
+section("FULL KERNEL — end-to-end governed execution")
 
 intents = [
     "Join NFe with Clientes anonymize CPF and persist to Silver",
     "Aggregate vendas by region persist to Gold",
-    "Export raw clientes PII to Gold",  # should block
+    "Export raw clientes PII to Gold",  # kernel will auto-intervene
 ]
 
 for intent in intents:
-    print(f'\nIntent: "{intent}"')
+    print(f'\n  intent: "{intent}"')
+    t0 = time.perf_counter()
     try:
         result = kernel.process(intent)
-        print(f"  -> Decision  : {result.state.value.upper()}")
-        print(f"  -> Sig hash  : {result.signature.signature_hash[:24]}...")
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        print(f"    → decision   : {result.state.value.upper()}")
+        print(f"    → sig_hash   : {result.signature.signature_hash[:24]}...")
+        print(f"    → latency_ms : {elapsed_ms:.2f}")
         if result.replan_history:
-            print(f"  -> Replans   : {len(result.replan_history)}")
+            print(f"    → replans    : {len(result.replan_history)}")
         if result.generated_code and result.generated_code.code:
             lines = result.generated_code.code.splitlines()
-            print(f"  -> Code gen  : {len(lines)} lines {result.generated_code.language}")
-        print(f"  -> Audit evt : hash chain updated")
+            print(f"    → code_gen   : {len(lines)} lines ({result.generated_code.language})")
+        print(f"    → audit_evt  : hash chain updated")
     except (PermissionError, RuntimeError, ValueError) as e:
-        print(f"  -> BLOCKED   : {type(e).__name__}")
-        print(f"    {str(e)[:100]}")
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        print(f"    → BLOCKED    : {type(e).__name__}  ({elapsed_ms:.2f}ms)")
+        print(f"      {str(e)[:100]}")
 
-print("\nFull kernel pipeline complete")
-
+print("\n  ✓ Full kernel pipeline complete")
 
 # COMMAND ----------
 
@@ -816,8 +811,13 @@ print("\nFull kernel pipeline complete")
 # MAGIC
 # MAGIC ---
 # MAGIC
+# MAGIC **Next steps**
+# MAGIC - LLM-powered features (semantic normalizer, NL→rules) → see `CFA_LLM_Demo`
+# MAGIC - Custom policy bundles → see [Policy Bundles docs](https://marquesantero.github.io/cfa/docs/policy-bundles)
+# MAGIC - MCP integration → see [MCP Server docs](https://marquesantero.github.io/cfa/docs/mcp-server)
+# MAGIC
 # MAGIC **Links**
-# MAGIC - 📖 [Documentation](https://marquesantero.github.io/cfa/docs/intro)
-# MAGIC - 📦 [PyPI](https://pypi.org/project/cfa-kernel/)
-# MAGIC - 🐙 [GitHub](https://github.com/marquesantero/cfa)
-# MAGIC - 💬 [Discussions](https://github.com/marquesantero/cfa/discussions)
+# MAGIC - [Documentation](https://marquesantero.github.io/cfa/docs/intro)
+# MAGIC - [PyPI](https://pypi.org/project/cfa-kernel/)
+# MAGIC - [GitHub](https://github.com/marquesantero/cfa)
+# MAGIC - [Discussions](https://github.com/marquesantero/cfa/discussions)
