@@ -2,7 +2,7 @@
 
 from conftest import make_signature
 
-from cfa.validation.signature import validate_signature_data
+from cfa.validate.signature import validate_signature_data
 
 
 def test_accepts_valid_signature():

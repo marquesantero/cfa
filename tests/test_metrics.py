@@ -1,6 +1,6 @@
 """Tests for cfa.metrics — Prometheus metrics."""
 
-from cfa.observability.metrics import (
+from cfa.obs.metrics import (
     get_metrics_text,
     inc_counter,
     record_audit_event,

@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from cfa.normalizer.base import NormalizerBackend, NormalizerInput, NormalizerOutput
+from cfa.resolve.base import NormalizerBackend, NormalizerInput, NormalizerOutput
 
 _SYSTEM_PROMPT = """\
 You are a data governance resolution engine. Your task is to analyze a natural \
@@ -257,8 +257,8 @@ class LLMNormalizerBackend(NormalizerBackend):
     are recorded in ``_audit_records`` for traceability.
 
     Usage:
-        from cfa.normalizer import IntentNormalizer
-        from cfa.normalizer_llm import OpenAILMProvider, LLMNormalizerBackend
+        from cfa.resolve import IntentNormalizer
+        from cfa.resolve.llm import OpenAILMProvider, LLMNormalizerBackend
 
         provider = OpenAILMProvider(model="gpt-4o-mini")
         backend = LLMNormalizerBackend(provider=provider)
@@ -323,7 +323,7 @@ class LLMNormalizerBackend(NormalizerBackend):
         except (ValueError, ImportError, ConnectionError, TimeoutError, json.JSONDecodeError, OSError):
             if self.strict:
                 raise
-            from cfa.normalizer.base import RuleBasedNormalizerBackend
+            from cfa.resolve.base import RuleBasedNormalizerBackend
             return RuleBasedNormalizerBackend().resolve(inp)
 
     # ── Output builder ────────────────────────────────────────────────────

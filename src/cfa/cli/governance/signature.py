@@ -7,7 +7,7 @@ from .._helpers import load_structured_file
 
 def cmd_signature_validate(args) -> int:
     from cfa.cli.formatters import format_json
-    from cfa.validation.signature import validate_signature_data
+    from cfa.validate.signature import validate_signature_data
 
     data = load_structured_file(
         args.path,

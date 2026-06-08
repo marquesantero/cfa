@@ -44,7 +44,7 @@ def cmd_policy_check(args) -> int:
     from cfa.cli.formatters import format_json
     from cfa.policy.engine import PolicyEngine
     from cfa.types import PolicyAction, StateSignature
-    from cfa.validation.signature import unwrap_signature_data, validate_signature_data
+    from cfa.validate.signature import unwrap_signature_data, validate_signature_data
 
     data = load_structured_file(args.signature, "Error: PyYAML required for YAML signatures.")
     validation = validate_signature_data(data, require_datasets=args.require_datasets)

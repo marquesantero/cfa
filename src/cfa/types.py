@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from cfa.core.planner import ExecutionPlan
     from cfa.execution.partial import PartialExecutionState
     from cfa.sandbox import SandboxResult
-    from cfa.validation.runtime import RuntimeValidationResult
-    from cfa.validation.static import StaticValidationResult
+    from cfa.validate.runtime import RuntimeValidationResult
+    from cfa.validate.static import StaticValidationResult
 
 
 def _utcnow() -> datetime:

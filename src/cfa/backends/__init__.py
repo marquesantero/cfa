@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from cfa.core.codegen import CodeGenBackend
-from cfa.validation.static import ForbiddenToken
+from cfa.validate.static import ForbiddenToken
 
 
 @dataclass

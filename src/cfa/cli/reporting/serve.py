@@ -33,7 +33,7 @@ def cmd_serve(args) -> int:
     import threading
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    from cfa.observability.metrics import get_metrics_text
+    from cfa.obs.metrics import get_metrics_text
 
     port = args.port or 8765
 

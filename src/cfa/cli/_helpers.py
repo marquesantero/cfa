@@ -76,7 +76,7 @@ def resolve_normalizer(args) -> object:
     has_deepseek = os.environ.get("DEEPSEEK_API_KEY")
 
     if args.normalizer in ("openai", "llm") or (args.normalizer == "auto" and has_openai and not has_deepseek):
-        from cfa.normalizer.llm import LLMNormalizerBackend, OpenAILMProvider
+        from cfa.resolve.llm import LLMNormalizerBackend, OpenAILMProvider
         provider = OpenAILMProvider(
             model=args.llm_model or "gpt-4o-mini",
             api_key=args.llm_api_key or None,
@@ -85,7 +85,7 @@ def resolve_normalizer(args) -> object:
         return LLMNormalizerBackend(provider=provider, strict=args.llm_strict)
 
     if args.normalizer == "deepseek" or (args.normalizer == "auto" and has_deepseek):
-        from cfa.normalizer.llm import LLMNormalizerBackend, OpenAILMProvider
+        from cfa.resolve.llm import LLMNormalizerBackend, OpenAILMProvider
         provider = OpenAILMProvider(
             model=args.llm_model or "deepseek-chat",
             base_url=args.llm_base_url or "https://api.deepseek.com",

@@ -47,7 +47,7 @@ releases major.
 | `TargetLayer` | Enum: BRONZE, SILVER, GOLD |
 | `DatasetClassification` | Enum: PUBLIC, INTERNAL, SENSITIVE, HIGH_VOLUME |
 
-## `cfa.validation.static`
+## `cfa.validate.static`
 
 | Nome | Descrição |
 |------|-----------|
@@ -55,14 +55,14 @@ releases major.
 | `StaticValidator.validate(code, sig, backend)` → `StaticValidationResult` | Executar validação estática |
 | `ForbiddenToken` | Padrão que não deve aparecer no código |
 
-## `cfa.validation.signature`
+## `cfa.validate.signature`
 
 | Nome | Descrição |
 |------|-----------|
 | `validate_signature_data(data)` → `SignatureValidationResult` | Validação estrutural de StateSignature |
 | `unwrap_signature_data(data)` → `dict` | Aceita wrappers `{"signature": ...}` |
 
-## `cfa.normalizer.base`
+## `cfa.resolve.base`
 
 | Nome | Descrição |
 |------|-----------|
@@ -71,7 +71,7 @@ releases major.
 | `MockNormalizerBackend` | Backend determinístico apenas para testes |
 | `ConfirmationOrchestrator` | Escalonamento de confirmação baseado em risco |
 
-## `cfa.normalizer.llm`
+## `cfa.resolve.llm`
 
 | Nome | Descrição |
 |------|-----------|
@@ -104,7 +104,7 @@ releases major.
 | `SqliteStorage.execution_append(dict)` | Registrar execução para ciclo de vida |
 | `SqliteStorage.skill_upsert(hash, data)` | Persistir estado de skill |
 
-## `cfa.observability.promotion`
+## `cfa.obs.promotion`
 
 | Nome | Descrição |
 |------|-----------|
@@ -113,7 +113,7 @@ releases major.
 | `PromotionEngine.evaluate(hash)` → `(SkillRecord, IndexScores)` | Avaliar um skill |
 | `PromotionPolicy` | Limiares: min_executions, ifo_threshold, ifs_threshold |
 
-## `cfa.observability.indices`
+## `cfa.obs.indices`
 
 | Nome | Descrição |
 |------|-----------|

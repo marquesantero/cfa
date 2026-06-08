@@ -37,7 +37,7 @@ from cfa.types import (
     PolicyAction,
     StateSignature,
 )
-from cfa.validation.runtime import RuntimeValidationResult, RuntimeValidator
+from cfa.validate.runtime import RuntimeValidationResult, RuntimeValidator
 
 # ── Enums ───────────────────────────────────────────────────────────────────
 

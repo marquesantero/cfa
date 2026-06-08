@@ -46,7 +46,7 @@ of the API contract under semver — breaking changes only in major releases.
 | `TargetLayer` | Enum: BRONZE, SILVER, GOLD |
 | `DatasetClassification` | Enum: PUBLIC, INTERNAL, SENSITIVE, HIGH_VOLUME |
 
-## `cfa.validation.static`
+## `cfa.validate.static`
 
 | Name | Description |
 |------|-----------|
@@ -54,21 +54,21 @@ of the API contract under semver — breaking changes only in major releases.
 | `StaticValidator.validate(code, sig, backend)` → `StaticValidationResult` | Run static validation |
 | `ForbiddenToken` | Pattern that must not appear in generated code |
 
-## `cfa.validation.signature`
+## `cfa.validate.signature`
 
 | Name | Description |
 |------|-----------|
 | `validate_signature_data(data)` → `SignatureValidationResult` | Structural validation of StateSignature |
 | `unwrap_signature_data(data)` → `dict` | Accept `{"signature": ...}` wrappers |
 
-## `cfa.validation.runtime`
+## `cfa.validate.runtime`
 
 | Name | Description |
 |------|-----------|
 | `RuntimeValidator` | Validates execution metrics at runtime |
 | `RuntimeThresholds` | Configurable thresholds: max_cost, max_shuffle_mb, max_null_ratio |
 
-## `cfa.normalizer.base`
+## `cfa.resolve.base`
 
 | Name | Description |
 |------|-----------|
@@ -77,7 +77,7 @@ of the API contract under semver — breaking changes only in major releases.
 | `MockNormalizerBackend` | Test-only deterministic backend |
 | `ConfirmationOrchestrator` | Risk-based confirmation escalation |
 
-## `cfa.normalizer.llm`
+## `cfa.resolve.llm`
 
 | Name | Description |
 |------|-----------|
@@ -110,7 +110,7 @@ of the API contract under semver — breaking changes only in major releases.
 | `SqliteStorage.execution_append(dict)` | Record execution for lifecycle |
 | `SqliteStorage.skill_upsert(hash, data)` | Persist skill state |
 
-## `cfa.observability.promotion`
+## `cfa.obs.promotion`
 
 | Name | Description |
 |------|-----------|
@@ -119,7 +119,7 @@ of the API contract under semver — breaking changes only in major releases.
 | `PromotionEngine.evaluate(hash)` → `(SkillRecord, IndexScores)` | Evaluate a skill |
 | `PromotionPolicy` | Thresholds: min_executions, ifo_threshold, ifs_threshold |
 
-## `cfa.observability.indices`
+## `cfa.obs.indices`
 
 | Name | Description |
 |------|-----------|

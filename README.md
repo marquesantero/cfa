@@ -268,17 +268,15 @@ Expose CFA governance to any AI agent via Model Context Protocol:
 ```text
 src/cfa/
 ├── core/              Kernel, Planner, CodeGen, Conditions, Phases
-├── policy/            PolicyEngine, PolicyBundle, Catalog validation
-├── governance/        Standalone governance API (no LLM, no execution required)
-├── validation/        Static, Runtime, Signature validation
-├── resolution/        Intent → StateSignature resolver (LLM or rule-based backend)
-├── normalizer/        Rule-based normalizer, LLM normalizer
+├── policy/            PolicyEngine, PolicyBundle, catalog validation, standalone-governance surface
+├── resolve/           Intent → StateSignature (rule-based + LLM backends, confirmation orchestrator)
+├── validate/          Static, runtime, and signature validation
+├── obs/               Metrics, OTel, Notify, Indices, Promotion
 ├── behavior/          BehaviorSpec + Systematizer (human intent → policy rules)
 ├── audit/             AuditTrail, Context, Hashing
-├── observability/     Metrics, OTel, Notify, Indices, Promotion
 ├── lifecycle/         IFo/IFs/IFg/IDI indices + Promotion/Demotion engine
 ├── execution/         Partial execution, State projection
-├── adapters/          LangGraph, OpenAI, CrewAI, AutoGen, DSPy
+├── adapters/          Universal cfa_guard decorator for any framework
 ├── backends/          PySpark, SQL, dbt (pluggable)
 ├── sandbox/           Pluggable sandbox backend + registry + executor
 ├── cli/               CLI commands by family (core/, governance/, reporting/, project/, infrastructure/)
@@ -291,6 +289,8 @@ src/cfa/
 ├── types.py           StateSignature, Fault, KernelResult
 └── _lazy.py           Reusable lazy loader for package __init__
 ```
+
+> The 1.1.0 cycle consolidated five packages from the 1.0.0 layout: `governance` → `policy`, `validation` → `validate`, `observability` → `obs`, `normalizer` + `resolution` → `resolve`. `adapters/` lost the per-framework shim files (langgraph/crewai/autogen/dspy/openai_agents) in favor of a single universal decorator.
 
 ## Docs
 

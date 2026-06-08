@@ -6,7 +6,7 @@ from cfa.backends.pyspark import PySparkBackend
 from cfa.backends.sql import SqlBackend
 from cfa.core.codegen import GeneratedCode
 from cfa.types import TargetLayer
-from cfa.validation.static import StaticValidator
+from cfa.validate.static import StaticValidator
 
 
 def _make_code(code: str, sig_hash: str = "test", language: str = "pyspark") -> GeneratedCode:

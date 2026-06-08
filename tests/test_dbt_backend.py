@@ -105,7 +105,7 @@ class TestDbtBackend:
         assert "processing_date" in code
 
     def test_forbidden_tokens_block_drop_table(self):
-        from cfa.validation.static import StaticValidator
+        from cfa.validate.static import StaticValidator
 
         backend = BackendRegistry.singleton().get("dbt")()
         validator = StaticValidator()
@@ -124,7 +124,7 @@ class TestDbtBackend:
 
     def test_forbidden_tokens_block_dangerous_sql(self):
         from cfa.core.codegen import GeneratedCode
-        from cfa.validation.static import StaticValidator
+        from cfa.validate.static import StaticValidator
 
         backend = BackendRegistry.singleton().get("dbt")()
         validator = StaticValidator()

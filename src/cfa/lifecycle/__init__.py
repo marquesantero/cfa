@@ -28,8 +28,8 @@ Uso:
     print(f"IFo={scores.ifo:.2f} IFs={scores.ifs:.2f} IFg={scores.ifg} IDI={scores.idi:.2f}")
 """
 
-from cfa.observability.indices import ExecutionRecord, IndexCalculator, IndexScores
-from cfa.observability.promotion import (
+from cfa.obs.indices import ExecutionRecord, IndexCalculator, IndexScores
+from cfa.obs.promotion import (
     PromotionEngine,
     PromotionPolicy,
     SkillGenerationMetadata,

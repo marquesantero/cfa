@@ -1,6 +1,6 @@
 """Tests for cfa.notify — webhook notifications."""
 
-from cfa.observability.notify import SlackNotifier, TeamsNotifier
+from cfa.obs.notify import SlackNotifier, TeamsNotifier
 
 
 class TestNotifiers:

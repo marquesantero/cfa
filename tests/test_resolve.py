@@ -2,7 +2,7 @@
 
 from conftest import CATALOG, make_signature
 
-from cfa.normalizer.base import (
+from cfa.resolve.base import (
     AutoApproveHandler,
     AutoRejectHandler,
     ConfirmationOrchestrator,

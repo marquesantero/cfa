@@ -2,8 +2,8 @@
 
 from datetime import timedelta
 
-from cfa.observability.indices import ExecutionRecord
-from cfa.observability.promotion import (
+from cfa.obs.indices import ExecutionRecord
+from cfa.obs.promotion import (
     PromotionEngine,
     PromotionPolicy,
     SkillState,

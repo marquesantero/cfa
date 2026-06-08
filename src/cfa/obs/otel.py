@@ -8,7 +8,7 @@ Each pipeline phase becomes a span with attributes:
 - cfa.phase, cfa.decision, cfa.signature_hash, cfa.faults, cfa.replan_count
 
 Usage:
-    from cfa.observability.otel import enable_otel
+    from cfa.obs.otel import enable_otel
     enable_otel(service_name="cfa-governance", exporter="console")
     # All subsequent KernelOrchestrator.process() calls are traced
 

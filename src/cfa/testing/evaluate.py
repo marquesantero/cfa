@@ -24,7 +24,7 @@ from cfa.audit.context import ContextRegistry
 from cfa.audit.trail import AuditTrail
 from cfa.core.codegen import CodeGenBackend
 from cfa.core.kernel import KernelConfig, KernelOrchestrator
-from cfa.normalizer.base import NormalizerBackend
+from cfa.resolve.base import NormalizerBackend
 from cfa.policy.engine import PolicyRule
 from cfa.sandbox import SandboxBackend
 from cfa.types import DecisionState, KernelResult

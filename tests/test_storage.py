@@ -93,8 +93,8 @@ def test_sqlite_adapter_for_context():
 
 
 def test_promotion_engine_with_sqlite_storage():
-    from cfa.observability.indices import ExecutionRecord
-    from cfa.observability.promotion import PromotionEngine, PromotionPolicy
+    from cfa.obs.indices import ExecutionRecord
+    from cfa.obs.promotion import PromotionEngine, PromotionPolicy
     from cfa.types import _utcnow
 
     store, tmp = _temp_store()

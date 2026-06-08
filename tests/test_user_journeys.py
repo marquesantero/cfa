@@ -480,7 +480,7 @@ class TestJourney5_PlatformTeam:
 
     def test_02_prometheus_metrics(self):
         """Metrics are emitted in Prometheus text format."""
-        from cfa.observability.metrics import (
+        from cfa.obs.metrics import (
             get_metrics_text,
             record_audit_event,
             record_lifecycle_index,
@@ -503,7 +503,7 @@ class TestJourney5_PlatformTeam:
 
     def test_03_otel_span_works(self):
         """OpenTelemetry span no-ops gracefully without SDK installed."""
-        from cfa.observability.otel import cfa_span
+        from cfa.obs.otel import cfa_span
 
         with cfa_span("govern", phase="govern", decision="approve", signature_hash="abc123"):
             pass
@@ -511,7 +511,7 @@ class TestJourney5_PlatformTeam:
 
     def test_04_slack_notification(self):
         """Notification fires without crashing (webhook unreachable)."""
-        from cfa.observability.notify import SlackNotifier, TeamsNotifier
+        from cfa.obs.notify import SlackNotifier, TeamsNotifier
 
         slack = SlackNotifier("https://hooks.slack.com/services/TEST/TEST/TEST")
         slack.notify("block", "PII violation in Gold write", "Raw PII detected", ["GOVERNANCE_RAW_PII"], policy_bundle="prod-v1", intent_id="abc", hash="hash123")

@@ -300,12 +300,12 @@ class TestIntegration:
         assert len(tools) >= 5
 
     def test_otel_noop(self):
-        from cfa.observability.otel import cfa_span
+        from cfa.obs.otel import cfa_span
         with cfa_span("test", phase="govern"):
             pass
 
     def test_notify_no_crash(self):
-        from cfa.observability.notify import SlackNotifier
+        from cfa.obs.notify import SlackNotifier
         n = SlackNotifier("https://localhost:9999/nonexistent")
         n.notify("block", "test", "reason", ["F1"])
 

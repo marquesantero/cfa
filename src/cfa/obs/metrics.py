@@ -11,7 +11,7 @@ Exposes counters and gauges for:
 - Lifecycle indices (per pipeline)
 
 Usage:
-    from cfa.observability.metrics import get_metrics_text
+    from cfa.obs.metrics import get_metrics_text
     print(get_metrics_text())  # Prometheus text format
 
     # Or: cfa serve --metrics-port 9090

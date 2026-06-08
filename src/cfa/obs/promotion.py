@@ -30,7 +30,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from cfa.observability.indices import ExecutionRecord, IndexCalculator, IndexScores
+from cfa.obs.indices import ExecutionRecord, IndexCalculator, IndexScores
 from cfa.types import _utcnow
 
 

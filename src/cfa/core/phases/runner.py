@@ -18,12 +18,12 @@ from cfa.execution.partial import (
     PublishState,
 )
 from cfa.execution.state_projection import StateProjectionProtocol
-from cfa.normalizer.base import (
+from cfa.resolve.base import (
     ConfirmationOrchestrator,
     IntentNormalizer,
 )
-from cfa.observability.indices import ExecutionRecord
-from cfa.observability.promotion import PromotionEngine, SkillState
+from cfa.obs.indices import ExecutionRecord
+from cfa.obs.promotion import PromotionEngine, SkillState
 from cfa.policy.catalog import validate_catalog
 from cfa.policy.engine import PolicyEngine
 from cfa.sandbox.executor import SandboxExecutor
@@ -39,8 +39,8 @@ from cfa.types import (
     StateSignature,
     _utcnow,
 )
-from cfa.validation.runtime import RuntimeValidator
-from cfa.validation.static import StaticValidator
+from cfa.validate.runtime import RuntimeValidator
+from cfa.validate.static import StaticValidator
 
 
 class KernelPhases:
@@ -88,7 +88,7 @@ class KernelPhases:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def process(self, raw_intent: str) -> KernelResult:
-        from cfa.observability.otel import _get_tracer as _get_otel_tracer
+        from cfa.obs.otel import _get_tracer as _get_otel_tracer
         tracer = _get_otel_tracer()
         intent_id = str(uuid.uuid4())
         result = KernelResult(intent_id=intent_id, state=DecisionState.BLOCKED)
@@ -223,7 +223,7 @@ class KernelPhases:
             policy_result = self.policy.evaluate(signature, replan_count=replan_count)
             result.policy_result = policy_result
             try:
-                from cfa.observability.metrics import record_policy_evaluation, record_replan
+                from cfa.obs.metrics import record_policy_evaluation, record_replan
                 record_policy_evaluation(policy_result.action.value)
                 if policy_result.action == PolicyAction.REPLAN:
                     record_replan()

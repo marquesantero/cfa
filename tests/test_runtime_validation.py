@@ -3,7 +3,7 @@
 from conftest import make_signature
 
 from cfa.sandbox import ExecutionMetrics, SandboxOutcome, SandboxResult, StepOutcome, StepResult
-from cfa.validation.runtime import RuntimeThresholds, RuntimeValidator
+from cfa.validate.runtime import RuntimeThresholds, RuntimeValidator
 
 
 def _make_sandbox_result(

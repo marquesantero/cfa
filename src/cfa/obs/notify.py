@@ -8,7 +8,7 @@ Sends formatted messages to Slack, Teams, or generic webhooks
 when a policy evaluation results in BLOCK or REPLAN.
 
 Usage:
-    from cfa.observability.notify import SlackNotifier
+    from cfa.obs.notify import SlackNotifier
 
     notifier = SlackNotifier(webhook_url="https://hooks.slack.com/...")
     notifier.notify_blocked(intent="...", reason="PII violation", faults=[...])

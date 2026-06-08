@@ -7,7 +7,9 @@
 
 ## 0. Sumário executivo
 
-CFA chegou a **1.0.0** numa "API freeze" prematura. Tem código de qualidade acima da média (534 testes, 83% cobertura, tipos imutáveis, hash chain real, zero deps no core), mas está em rota de colisão com OPA, LangSmith e Unity Catalog porque o pitch tenta cobrir os três simultaneamente sem vencer nenhum. A próxima release (`1.1.0`) é o início do trabalho corretivo, respeitando semver: shims de deprecação para tudo que precisa sair, remoção real só em `2.0.0`.
+CFA chegou a **1.0.0** numa "API freeze" prematura, mas com **zero adoção real** (nenhum download externo, nenhuma issue de usuário, nenhum import em código de terceiros). Tem código de qualidade acima da média (534 testes, 83% cobertura, tipos imutáveis, hash chain real, zero deps no core), mas está em rota de colisão com OPA, LangSmith e Unity Catalog porque o pitch tenta cobrir os três simultaneamente sem vencer nenhum.
+
+Dado o vácuo de adoção, tratamos a 1.0.0 como **prática**: a próxima release (`1.1.0`) faz consolidação direta de pacotes e remove o que não deveria existir, **sem shims de deprecação**. Quando houver adoção real (Movimento I → Movimento II), passamos a respeitar semver estrito. Até lá, prevalecer pragmatismo.
 
 Este plano organiza a evolução em **três movimentos** (cunha → expansão → plataforma) ao longo de aproximadamente 18 meses, preservando o DNA distintivo e cortando ruído que dilui esse DNA. Cada movimento tem releases concretas, deliveráveis técnicos por release, critérios de saída mensuráveis e riscos identificados.
 
@@ -103,7 +105,7 @@ Pelo menos **uma das seguintes** acontece publicamente:
 
 #### 3.3.2. Trilha B — Consolidação de pacotes
 
-Reduzir de **20 subpacotes para ~13** sem quebrar API pública (manter re-exports nos antigos com `DeprecationWarning`).
+Reduzir de **20 subpacotes para ~13**. Sem shims — 1.0.0 não tem usuários reais, então renames são diretos e o histórico do git serve como registro do que mudou.
 
 ```text
 ANTES (atual)                  →  DEPOIS (1.1.0)
@@ -130,14 +132,7 @@ testing/                       →  testing/              (sem mudança)
 behavior/                      →  behavior/             (sem mudança, candidato a fundir com resolve em 1.3)
 ```
 
-Implementação: para cada pacote movido, deixar shim:
-
-```python
-# src/cfa/governance/__init__.py (mantido por 2 minor releases)
-import warnings
-warnings.warn("cfa.governance is deprecated; use cfa.policy", DeprecationWarning, stacklevel=2)
-from cfa.policy import *  # noqa
-```
+Implementação: remover o pacote antigo, atualizar imports internos, registrar no CHANGELOG. Sem shim — não há usuário externo para proteger e shim acumula débito.
 
 #### 3.3.3. Trilha C — Reescrita de narrativa
 
@@ -547,25 +542,25 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 - [ ] Criar `website/docs/compare.md` (vs OPA, vs LangSmith, vs GE, vs UC).
 - [ ] Padronizar versão "1.1.0" em todos os arquivos textuais.
 
-### Sprint 2 — Consolidação de pacotes (3-4 dias)
+### Sprint 2 — Consolidação de pacotes (2-3 dias)
 
-**Dia 4-5:**
-- [ ] Renomear `cfa.validation` → `cfa.validate`. Deixar shim com deprecation.
-- [ ] Renomear `cfa.observability` → `cfa.obs`. Shim.
-- [ ] Renomear `cfa.normalizer` → `cfa.resolve`. Shim.
-- [ ] Absorver `cfa.governance` em `cfa.policy`. Shim.
-- [ ] Absorver `cfa.resolution` em `cfa.resolve`. Shim.
-- [ ] Atualizar imports internos (script).
-- [ ] Atualizar `cfa.__init__.__getattr__`.
+Sem shims: 1.0.0 não tem usuário externo, então renames diretos.
+
+**Dia 4:**
+- [ ] Renomear `cfa.normalizer` → `cfa.resolve` (move + atualiza imports).
+- [ ] Absorver `cfa.resolution` em `cfa.resolve`.
+- [ ] Absorver `cfa.governance` em `cfa.policy`.
+
+**Dia 5:**
+- [ ] Renomear `cfa.validation` → `cfa.validate`.
+- [ ] Renomear `cfa.observability` → `cfa.obs`.
+- [ ] Atualizar `cfa.__init__.__getattr__` e demais `__init__.py` afetados.
 
 **Dia 6:**
-- [ ] Atualizar todos os `__init__.py` afetados.
 - [ ] Rodar full test suite. Consertar imports.
 - [ ] Atualizar README "Repository" tree.
-- [ ] Atualizar `website/docs/api.md`.
-
-**Dia 7:**
-- [ ] Testar instalação a partir do PyPI wheel local: `pip install dist/*.whl` em venv limpo, verificar que todos shims funcionam.
+- [ ] Atualizar `website/docs/api.md` e i18n pt-BR equivalente.
+- [ ] Testar instalação a partir do wheel local: `pip install dist/*.whl` em venv limpo.
 
 ### Sprint 3 — Refator técnico (2 dias)
 
@@ -604,7 +599,7 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 | Adopters externos não aparecem mesmo após 1.2.0 | Média | Alto | Revisitar tese antes de Movimento II. Talvez nicho seja menor do que se imagina. |
 | OPA/UC lança feature que sobrepõe CFA | Média | Médio | DNA distintivo (REPLAN + signature hash + audit offline) protege. Diferencial vai além de feature list. |
 | LangChain/Databricks copia ideia em produto deles | Baixa | Alto | Já estamos em open source MIT. Mover rápido para CFA Protocol em 1.0 ajuda. |
-| Refator de consolidação quebra usuários existentes | Baixa | Médio | Shims com deprecation warnings por 2 minor releases. CHANGELOG explícito. Versão 1.x permite. |
+| Refator de consolidação quebra usuários existentes | Muito baixa hoje | Médio | 1.0.0 não tem adopters externos — janela atual permite renames diretos. Política passa a ser estrita assim que houver sinal de uso. CHANGELOG sempre explícito. |
 | Performance regression no path crítico | Baixa | Alto | Benchmarks em CI a partir do 1.2.0. PRs com regressão >10% bloqueadas. |
 | Churn de API entre 1.x perde first adopters | Média | Médio | Deprecation policy clara. Migration scripts quando viável. |
 

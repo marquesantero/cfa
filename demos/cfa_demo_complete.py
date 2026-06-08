@@ -408,8 +408,8 @@ print("\n  ✓ All 3 backends generated deterministically")
 
 # COMMAND ----------
 
-from cfa.observability.indices import IndexCalculator, ExecutionRecord
-from cfa.observability.promotion import PromotionEngine, PromotionPolicy
+from cfa.obs.indices import IndexCalculator, ExecutionRecord
+from cfa.obs.promotion import PromotionEngine, PromotionPolicy
 from cfa.types import _utcnow
 
 def make_records(success_rate, replan_rate, avg_cost, avg_duration, count=5):

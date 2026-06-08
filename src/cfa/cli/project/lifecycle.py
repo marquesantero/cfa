@@ -5,7 +5,7 @@ from __future__ import annotations
 
 def cmd_lifecycle_evaluate(args) -> int:
     from cfa.cli.formatters import format_json
-    from cfa.observability.promotion import PromotionEngine, PromotionPolicy
+    from cfa.obs.promotion import PromotionEngine, PromotionPolicy
     from cfa.storage import SqliteStorage
 
     store = None
@@ -58,7 +58,7 @@ def cmd_lifecycle_evaluate(args) -> int:
 
 def cmd_lifecycle_list(args) -> int:
     from cfa.cli.formatters import format_json
-    from cfa.observability.promotion import PromotionEngine
+    from cfa.obs.promotion import PromotionEngine
     from cfa.storage import SqliteStorage
 
     store = None

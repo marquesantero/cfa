@@ -5,7 +5,7 @@ from conftest import CATALOG
 from cfa.audit.context import ContextRegistry
 from cfa.audit.trail import AuditTrail
 from cfa.core.kernel import KernelConfig, KernelOrchestrator
-from cfa.normalizer.base import AutoRejectHandler
+from cfa.resolve.base import AutoRejectHandler
 from cfa.types import DecisionState
 
 

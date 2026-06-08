@@ -13,7 +13,7 @@ from cfa.behavior import (
     ConditionType,
     Systematizer,
 )
-from cfa.normalizer.base import MockNormalizerBackend
+from cfa.resolve.base import MockNormalizerBackend
 from cfa.policy.engine import PolicyRule, build_default_ruleset
 from cfa.testing import assert_passed, evaluate
 

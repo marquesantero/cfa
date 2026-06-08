@@ -10,12 +10,13 @@ the function executes. The check returns one of three outcomes:
   recorded.
 - ``block`` — same handling as ``replan`` per ``mode``.
 
-This module is framework-agnostic. Prior releases shipped per-framework shims
-(``cfa.adapters.langgraph``, ``crewai``, ``autogen``, ``dspy``,
+This module is framework-agnostic. The 1.0.0 release shipped per-framework
+modules (``cfa.adapters.langgraph``, ``crewai``, ``autogen``, ``dspy``,
 ``openai_agents``) that were all aliases of this same ``cfa_guard``. They
-were removed in 0.2.0 to stop implying framework-specific behavior that did
-not exist. See ``docs/integrations/use-cfa-guard-with-frameworks.md`` for
-the recommended usage pattern with each agent framework.
+were removed in 1.1.0 — 1.0.0 had no real adopters, so we are renaming the
+public surface freely while it still costs nothing. See
+``docs/integrations/use-cfa-guard-with-frameworks.md`` for the recommended
+usage pattern with each agent framework.
 """
 
 from __future__ import annotations

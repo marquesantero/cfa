@@ -12,7 +12,7 @@ from __future__ import annotations
 from cfa.core.codegen import GeneratedCode
 from cfa.core.planner import ExecutionPlan, ExecutionStep, StepType, WriteMode
 from cfa.types import FaultSeverity
-from cfa.validation.static import ForbiddenToken
+from cfa.validate.static import ForbiddenToken
 
 from . import BackendAdapter, BackendCapabilities
 

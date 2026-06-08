@@ -1,7 +1,7 @@
 """Tests for cfa.adapters — universal governance guard.
 
-Note: 0.2.0 removed the per-framework adapter shims (langgraph/crewai/autogen/
-dspy/openai_agents). They were aliases of the same ``cfa_guard``. Use
+The per-framework adapter modules (langgraph/crewai/autogen/dspy/openai_agents)
+were removed in 1.1.0. They were aliases of the same ``cfa_guard``. Use
 ``cfa.adapters.cfa_guard`` directly with any framework.
 """
 
@@ -88,51 +88,30 @@ class TestCFAGuard:
         assert guard._kernel is not None
 
 
-class TestDeprecatedFrameworkShims:
-    """1.1.0: per-framework adapter modules still importable but emit
-    DeprecationWarning. They will be removed in 2.0.0."""
+class TestRemovedFrameworkShims:
+    """1.1.0: per-framework adapter modules were removed without shims.
 
-    def test_langgraph_shim_warns_and_works(self):
-        import importlib
-        import sys
+    1.0.0 had zero real adoption, so we treat the published API as practice
+    and rename freely. ``cfa_guard`` from ``cfa.adapters`` works in every
+    framework.
+    """
 
-        sys.modules.pop("cfa.adapters.langgraph", None)
-        with pytest.warns(DeprecationWarning, match="cfa.adapters.langgraph"):
-            mod = importlib.import_module("cfa.adapters.langgraph")
-        assert callable(mod.cfa_guard)
+    def test_langgraph_module_no_longer_importable(self):
+        with pytest.raises(ImportError):
+            import cfa.adapters.langgraph  # noqa: F401
 
-    def test_openai_agents_shim_warns_and_works(self):
-        import importlib
-        import sys
+    def test_openai_agents_module_no_longer_importable(self):
+        with pytest.raises(ImportError):
+            import cfa.adapters.openai_agents  # noqa: F401
 
-        sys.modules.pop("cfa.adapters.openai_agents", None)
-        with pytest.warns(DeprecationWarning, match="cfa.adapters.openai_agents"):
-            mod = importlib.import_module("cfa.adapters.openai_agents")
-        assert callable(mod.cfa_tool_guard)
+    def test_crewai_module_no_longer_importable(self):
+        with pytest.raises(ImportError):
+            import cfa.adapters.crewai  # noqa: F401
 
-    def test_crewai_shim_warns_and_works(self):
-        import importlib
-        import sys
+    def test_autogen_module_no_longer_importable(self):
+        with pytest.raises(ImportError):
+            import cfa.adapters.autogen  # noqa: F401
 
-        sys.modules.pop("cfa.adapters.crewai", None)
-        with pytest.warns(DeprecationWarning, match="cfa.adapters.crewai"):
-            mod = importlib.import_module("cfa.adapters.crewai")
-        assert callable(mod.cfa_crew_guard)
-
-    def test_autogen_shim_warns_and_works(self):
-        import importlib
-        import sys
-
-        sys.modules.pop("cfa.adapters.autogen", None)
-        with pytest.warns(DeprecationWarning, match="cfa.adapters.autogen"):
-            mod = importlib.import_module("cfa.adapters.autogen")
-        assert callable(mod.cfa_agent_guard)
-
-    def test_dspy_shim_warns_and_works(self):
-        import importlib
-        import sys
-
-        sys.modules.pop("cfa.adapters.dspy", None)
-        with pytest.warns(DeprecationWarning, match="cfa.adapters.dspy"):
-            mod = importlib.import_module("cfa.adapters.dspy")
-        assert callable(mod.cfa_module_guard)
+    def test_dspy_module_no_longer_importable(self):
+        with pytest.raises(ImportError):
+            import cfa.adapters.dspy  # noqa: F401

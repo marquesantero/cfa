@@ -84,8 +84,8 @@ except ImportError as e:
     print(f"ERROR: openai not importable: {e}")
     print("Run: %pip install openai")
 
-from cfa.normalizer.llm import OpenAILMProvider, LLMNormalizerBackend
-from cfa.normalizer.base import IntentNormalizer, RuleBasedNormalizerBackend
+from cfa.resolve.llm import OpenAILMProvider, LLMNormalizerBackend
+from cfa.resolve.base import IntentNormalizer, RuleBasedNormalizerBackend
 from cfa.runtime import RuntimeGate
 from cfa.policy.engine import PolicyEngine
 from cfa.types import StateSignature

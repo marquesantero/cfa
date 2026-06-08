@@ -1,4 +1,4 @@
-"""Tests for cfa.normalizer_llm — LLM-powered intent normalization."""
+"""Tests for cfa.resolve.llm — LLM-powered intent normalization."""
 
 from __future__ import annotations
 
@@ -6,12 +6,12 @@ import json
 
 import pytest
 
-from cfa.normalizer.base import (
+from cfa.resolve.base import (
     IntentNormalizer,
     NormalizerInput,
     NormalizerOutput,
 )
-from cfa.normalizer.llm import (
+from cfa.resolve.llm import (
     LLMNormalizerBackend,
     LLMProvider,
     OpenAILMProvider,

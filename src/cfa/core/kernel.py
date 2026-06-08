@@ -22,7 +22,7 @@ from cfa.execution.partial import (
     RetryPolicy,
 )
 from cfa.execution.state_projection import StateProjectionProtocol
-from cfa.normalizer.base import (
+from cfa.resolve.base import (
     AutoApproveHandler,
     ConfirmationHandler,
     ConfirmationOrchestrator,
@@ -31,14 +31,14 @@ from cfa.normalizer.base import (
     NormalizerBackend,
     RuleBasedNormalizerBackend,
 )
-from cfa.observability.promotion import PromotionEngine
+from cfa.obs.promotion import PromotionEngine
 from cfa.policy.engine import PolicyEngine, PolicyRule
 from cfa.sandbox import SandboxBackend
 from cfa.sandbox.executor import SandboxExecutor
 from cfa.sandbox.mock import MockSandboxBackend
 from cfa.types import KernelResult
-from cfa.validation.runtime import RuntimeValidator
-from cfa.validation.static import StaticValidator
+from cfa.validate.runtime import RuntimeValidator
+from cfa.validate.static import StaticValidator
 
 # ── Pipeline Phase ────────────────────────────────────────────────────────────
 

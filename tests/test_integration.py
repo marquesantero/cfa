@@ -233,7 +233,7 @@ class TestEndToEndFlow:
             PolicyAction,
             StateSignature,
         )
-        from cfa.validation.signature import validate_signature_data
+        from cfa.validate.signature import validate_signature_data
 
         catalog = {
             "datasets": {

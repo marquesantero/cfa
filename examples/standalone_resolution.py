@@ -13,7 +13,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cfa.resolution import (
+from cfa.resolve import (
     IntentNormalizer,
     MockNormalizerBackend,
     NormalizerBackend,
