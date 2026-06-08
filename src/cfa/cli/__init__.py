@@ -147,6 +147,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_init = sub.add_parser("init", help="Initialize CFA in current directory")
     p_init.add_argument("--dir", "-d", default=".cfa", help="Target directory")
+    p_init.add_argument("--template", "-t", default="", help="Template: fastapi, langgraph, dbt, mcp, streaming-placeholder")
+    p_init.add_argument("--list", action="store_true", help="List available templates")
 
     p_status = sub.add_parser("status", help="Show CFA project health and storage stats")
     p_status.add_argument("--config", help="Path to cfa.yaml config file")
