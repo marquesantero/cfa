@@ -1,0 +1,135 @@
+# LGPD Compliance Bundle (Lei Geral de Proteção de Dados — Brasil)
+# Mapeia artigos da LGPD (Lei 13.709/2018) para regras de política CFA.
+# Utilize: cfa evaluate "intent" --policy-bundle policies/lgpd-v1.yaml
+#
+# Artigos referenciados:
+#  Art. 6  — Princípios (finalidade, adequação, necessidade, segurança)
+#  Art. 11 — Dados pessoais sensíveis (anonimização/pseudonimização)
+#  Art. 12 — Anonimização
+#  Art. 13 — Pseudonimização
+#  Art. 16 — Eliminação de dados
+#  Art. 18 — Direitos do titular (portabilidade)
+#  Art. 37 — Relatório de impacto (RIPD / DPIA)
+#  Art. 38 — Encarregado (DPO)
+#  Art. 46 — Segurança e sigilo dos dados
+
+policy_bundle:
+  version: "lgpd-v1.0"
+  description: >
+    LGPD (Lei 13.709/2018) — requisitos de governança de dados pessoais.
+    Cobre Artigos 6, 11, 12, 13, 16, 18, 37, 38, 46.
+    Cada regra mapeia para uma obrigação legal específica.
+  rules:
+    # ── Art. 6: Princípios ───────────────────────────────────────────────────
+    - name: principio_finalidade_pii
+      condition: pii_in_protected_layer
+      action: block
+      fault_code: LGPD_ART6_FINALIDADE_PII
+      severity: critical
+      family: semantic
+      message: >
+        Art. 6, I e VII: Finalidade e segurança. Dados pessoais devem ter
+        propósito específico e proteção adequada. PII sem anonimização em
+        camada protegida Viola os princípios de finalidade e segurança.
+      remediation:
+        - Anonimizar dados PII (sha256) antes da escrita em Silver/Gold
+        - Registrar finalidade no campo domain da StateSignature
+
+    - name: principio_necessidade
+      condition: sensitive_without_partition
+      action: replan
+      fault_code: LGPD_ART6_NECESSIDADE
+      severity: high
+      family: semantic
+      message: >
+        Art. 6, III: Necessidade — limitar ao mínimo necessário. Dataset
+        sensível sem partição permite varredura completa desnecessária.
+      remediation:
+        - Adicionar partition_by para limitar escopo de processamento
+        - Documentar justificativa de necessidade
+
+    # ── Art. 11, 12, 13: Dados sensíveis e anonimização ─────────────────────
+    - name: dados_sensiveis_protecao
+      condition: pii_without_policy
+      action: block
+      fault_code: LGPD_ART11_DADOS_SENSIVEIS
+      severity: critical
+      family: semantic
+      message: >
+        Art. 11 e 12: Dados pessoais sensíveis exigem proteção reforçada.
+        PII presente sem política de proteção declarada (no_pii_raw).
+      remediation:
+        - Declarar no_pii_raw=True nas constraints
+        - Aplicar anonimização ou pseudonimização (sha256)
+        - Registrar tratamento no RIPD (Art. 37)
+
+    - name: anonimizacao_irreversivel
+      condition: enforce_types_disabled
+      action: replan
+      fault_code: LGPD_ART12_ANONIMIZACAO
+      severity: high
+      family: semantic
+      message: >
+        Art. 12: Dados anonimizados devem ser irreversíveis. Verificação
+        de tipos desabilitada — impossível garantir integridade do dado anonimizado.
+      remediation:
+        - Habilitar enforce_types=True
+        - Validar schema de saída após anonimização
+
+    # ── Art. 16: Eliminação ──────────────────────────────────────────────────
+    - name: eliminacao_dados_desnecessarios
+      condition: missing_partition
+      action: replan
+      fault_code: LGPD_ART16_ELIMINACAO
+      severity: high
+      family: semantic
+      message: >
+        Art. 16: Dados desnecessários devem ser eliminados. Sem partição,
+        retenção e eliminação seletiva ficam impossíveis.
+      remediation:
+        - Adicionar partition_by (ex: processing_date) para permitir
+          eliminação por período
+        - Configurar retention_days no cfa.yaml
+
+    # ── Art. 18: Portabilidade ──────────────────────────────────────────────
+    - name: portabilidade_merge_key
+      condition: missing_merge_key
+      action: block
+      fault_code: LGPD_ART18_PORTABILIDADE
+      severity: critical
+      family: semantic
+      message: >
+        Art. 18, V: Portabilidade dos dados. Escrita sem merge_key impede
+        rastreabilidade e exportação seletiva de dados do titular.
+      remediation:
+        - Definir merge_key_required=True (ex: cpf_hash como chave)
+        - Garantir que dados do titular possam ser isolados e exportados
+
+    # ── Art. 37: Relatório de Impacto (RIPD) ────────────────────────────────
+    - name: ripd_documentacao
+      condition: schema_mismatch
+      action: block
+      fault_code: LGPD_ART37_RIPD
+      severity: critical
+      family: semantic
+      message: >
+        Art. 37: Relatório de Impacto à Proteção de Dados (RIPD) requer
+        mapeamento preciso dos fluxos. Schema mismatch indica fluxo não documentado.
+      remediation:
+        - Corrigir schema para corresponder ao catalog
+        - Atualizar RIPD com o novo fluxo de dados
+
+    # ── Art. 38 e 46: DPO e segurança ───────────────────────────────────────
+    - name: dpo_auditoria
+      condition: cost_budget_exceeded
+      action: replan
+      fault_code: LGPD_ART38_DPO_SEGURANCA
+      severity: high
+      family: semantic
+      message: >
+        Art. 38 e 46: Encarregado (DPO) deve supervisionar segurança.
+        Custo excede orçamento declarado — possível descontrole operacional
+        que compromete medidas de segurança.
+      remediation:
+        - Revisar max_cost_dbu ou otimizar pipeline
+        - Reportar ao DPO a alteração de custo

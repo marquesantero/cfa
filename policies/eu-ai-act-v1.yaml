@@ -1,0 +1,127 @@
+# EU AI Act Compliance Bundle
+# Mapeia artigos do EU AI Act 2024 para regras de política CFA.
+# Utilize: cfa evaluate "intent" --policy-bundle policies/eu-ai-act-v1.yaml
+#
+# Artigos referenciados:
+#  Art. 9  — Risk management system
+#  Art. 10 — Data and data governance
+#  Art. 12 — Record-keeping
+#  Art. 13 — Transparency and provision of information to deployers
+#  Art. 15 — Accuracy, robustness and cybersecurity
+#  Art. 17 — Quality management system
+
+policy_bundle:
+  version: "eu-ai-act-v1.0"
+  description: >
+    EU AI Act 2024 — high-risk AI system governance requirements.
+    Covers Articles 9, 10, 12, 13, 15, 17.
+    Every rule maps to a specific article obligation.
+  rules:
+    # ── Art. 9: Risk management ──────────────────────────────────────────────
+    - name: risk_management_pii_block
+      condition: pii_in_protected_layer
+      action: block
+      fault_code: EU_AI_ACT_ART9_RISK_MGMT_PII
+      severity: critical
+      family: semantic
+      message: >
+        Art. 9(2)(a): Known risks (PII exposure) must be eliminated or reduced.
+        PII detected in protected layer without anonymization.
+      remediation:
+        - Apply sha256() on PII columns before writing to Silver/Gold
+        - Document in risk assessment report
+
+    - name: risk_management_partition
+      condition: missing_partition
+      action: replan
+      fault_code: EU_AI_ACT_ART9_RISK_MGMT_PARTITION
+      severity: high
+      family: semantic
+      message: >
+        Art. 9(2)(b): Residual risk must be mitigated.
+        High-volume dataset without partition: full scan risk.
+      remediation:
+        - Add partition_by with temporal column
+        - Limit processing scope
+
+    # ── Art. 10: Data and data governance ────────────────────────────────────
+    - name: data_governance_pii_policy
+      condition: pii_without_policy
+      action: block
+      fault_code: EU_AI_ACT_ART10_DATA_GOV_PII
+      severity: critical
+      family: semantic
+      message: >
+        Art. 10(2)(d): Data governance must address biases from data collection.
+        PII present without declared protection policy.
+      remediation:
+        - Declare no_pii_raw=True in constraints
+        - Add PII treatment justification
+
+    - name: data_governance_schema
+      condition: enforce_types_disabled
+      action: replan
+      fault_code: EU_AI_ACT_ART10_DATA_GOV_SCHEMA
+      severity: high
+      family: semantic
+      message: >
+        Art. 10(2)(f): Relevant data governance must cover data collection
+        processes and data preparation operations. Schema enforcement disabled.
+      remediation:
+        - Enable enforce_types=True in constraints
+
+    # ── Art. 12: Record-keeping ──────────────────────────────────────────────
+    - name: record_keeping_audit
+      condition: missing_merge_key
+      action: block
+      fault_code: EU_AI_ACT_ART12_RECORD_KEEPING
+      severity: critical
+      family: semantic
+      message: >
+        Art. 12(1): High-risk AI systems must keep logs for traceability.
+        Silver/Gold write without merge_key: non-replayable, non-auditable.
+      remediation:
+        - Set merge_key_required=True
+        - Enable audit logging in cfa.yaml
+
+    # ── Art. 13: Transparency ────────────────────────────────────────────────
+    - name: transparency_documentation
+      condition: sensitive_without_partition
+      action: replan
+      fault_code: EU_AI_ACT_ART13_TRANSPARENCY
+      severity: high
+      family: semantic
+      message: >
+        Art. 13(3)(b): Deployers must be informed about system capabilities.
+        Sensitive dataset without partitioning: opaque processing scope.
+      remediation:
+        - Declare partition_by to limit processing scope
+        - Document processing boundaries in system documentation
+
+    # ── Art. 15: Accuracy, robustness ────────────────────────────────────────
+    - name: accuracy_schema_validation
+      condition: schema_mismatch
+      action: block
+      fault_code: EU_AI_ACT_ART15_ACCURACY
+      severity: critical
+      family: semantic
+      message: >
+        Art. 15(1): High-risk AI systems must achieve appropriate accuracy.
+        Schema mismatch detected: data contract violation.
+      remediation:
+        - Verify input data schema matches catalog declaration
+        - Enforce enforce_types=True
+
+    # ── Art. 17: Quality management ──────────────────────────────────────────
+    - name: quality_management_cost
+      condition: cost_budget_exceeded
+      action: replan
+      fault_code: EU_AI_ACT_ART17_QUALITY_COST
+      severity: high
+      family: semantic
+      message: >
+        Art. 17(1)(d): Quality management must include resource management.
+        Cost estimate exceeds declared budget.
+      remediation:
+        - Increase max_cost_dbu or optimize pipeline
+        - Add partition filters to reduce scan scope
