@@ -17,7 +17,7 @@ function HomepageHeader() {
           fontFamily: 'monospace', fontSize: '0.75rem', letterSpacing: '0.25em',
           color: '#3dffa0', textTransform: 'uppercase', marginBottom: '1rem',
         }}>
-          Technical Whitepaper &middot; v0.1.6
+          Technical Whitepaper &middot; v0.1.7
         </p>
         <h1 className="hero__title" style={{
           fontFamily: "'Syne', sans-serif", fontSize: '3.5rem', fontWeight: 800,

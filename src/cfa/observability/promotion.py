@@ -83,7 +83,7 @@ class SkillGenerationMetadata:
     """Provenance metadata for promoted skills (traceability)."""
 
     promoted_at: datetime = field(default_factory=_utcnow)
-    promoted_by_system_version: str = "cfa_v0.1.6"
+    promoted_by_system_version: str = "cfa_v0.1.7"
     policy_bundle_at_promotion: str = ""
     catalog_snapshot_at_promotion: str = ""
     promotion_scores: dict[str, float] = field(default_factory=dict)
@@ -135,7 +135,7 @@ class PromotionEngine:
     def __init__(
         self,
         policy: PromotionPolicy | None = None,
-        system_version: str = "cfa_v0.1.6",
+        system_version: str = "cfa_v0.1.7",
         storage: object | None = None,
     ) -> None:
         self.policy = policy or PromotionPolicy()

@@ -133,7 +133,7 @@ class KernelOrchestrator:
         self._sandbox_executor = SandboxExecutor(backend=sandbox_backend or MockSandboxBackend())
         self._runtime_validator = runtime_validator or RuntimeValidator()
         self._retry_policy = retry_policy or RetryPolicy()
-        self._promotion_engine = promotion_engine or PromotionEngine(system_version="cfa_v0.1.6")
+        self._promotion_engine = promotion_engine or PromotionEngine(system_version="cfa_v0.1.7")
 
     # Backward-compatible public aliases for internal components
     @property

@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# CFA v0.1.6
+# CFA v0.1.7
 
 Execução governada para agentes de IA e sistemas de dados.
 
