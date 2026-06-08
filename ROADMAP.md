@@ -207,16 +207,16 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 7.1 DataHub connector
 
-- [ ] 7.1.1 Implement `CatalogLoader` abstract base class
-- [ ] 7.1.2 Implement `DataHubCatalogLoader` (read-only via DataHub REST API)
-- [ ] 7.1.3 Map DataHub dataset entities → CFA catalog dict
+- [x] 7.1.1 Implement `CatalogLoader` abstract base class
+- [x] 7.1.2 Implement `DataHubCatalogLoader` (read-only via DataHub REST API)
+- [x] 7.1.3 Map DataHub dataset entities -> CFA catalog dict
 - [ ] 7.1.4 Support: `cfa evaluate --catalog datahub://instance:8080`
 - [ ] 7.1.5 Document DataHub integration
 
 ### 7.2 OpenMetadata connector
 
-- [ ] 7.2.1 Implement `OpenMetadataCatalogLoader` (read-only via REST API)
-- [ ] 7.2.2 Map OpenMetadata entities → CFA catalog dict
+- [x] 7.2.1 Implement `OpenMetadataCatalogLoader` (read-only via REST API)
+- [x] 7.2.2 Map OpenMetadata entities -> CFA catalog dict
 - [ ] 7.2.3 Support: `cfa evaluate --catalog openmetadata://instance:8585`
 - [ ] 7.2.4 Document OpenMetadata integration
 
