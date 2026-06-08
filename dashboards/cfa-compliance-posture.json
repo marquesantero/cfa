@@ -1,0 +1,58 @@
+{
+  "title": "CFA Compliance Posture",
+  "description": "Rules fired, remediations applied, chain integrity per compliance bundle.",
+  "panels": [
+    {
+      "title": "Compliance Bundle Coverage",
+      "type": "bargauge",
+      "targets": [
+        {"expr": "cfa_compliance_rules_active{bundle=~\"$bundle\"}", "legendFormat": "Active"},
+        {"expr": "cfa_compliance_rules_fired{bundle=~\"$bundle\"}", "legendFormat": "Fired"}
+      ]
+    },
+    {
+      "title": "Faults by Severity",
+      "type": "piechart",
+      "targets": [
+        {"expr": "cfa_compliance_faults_total{severity=\"critical\"}", "legendFormat": "Critical"},
+        {"expr": "cfa_compliance_faults_total{severity=\"high\"}", "legendFormat": "High"},
+        {"expr": "cfa_compliance_faults_total{severity=\"warning\"}", "legendFormat": "Warning"}
+      ]
+    },
+    {
+      "title": "Chain Integrity",
+      "type": "stat",
+      "targets": [
+        {"expr": "cfa_audit_chain_intact", "legendFormat": "Intact"}
+      ],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 0, "color": "red"}, {"value": 1, "color": "green"}]}}}
+    },
+    {
+      "title": "Audit Events Total",
+      "type": "stat",
+      "targets": [
+        {"expr": "cfa_audit_events_total", "legendFormat": "Events"}
+      ]
+    },
+    {
+      "title": "Compliance Decisions Timeline",
+      "type": "graph",
+      "targets": [
+        {"expr": "rate(cfa_policy_evaluations_total[10m])", "legendFormat": "{{decision}}"}
+      ]
+    },
+    {
+      "title": "PII Incidents Prevented",
+      "type": "stat",
+      "targets": [
+        {"expr": "cfa_compliance_pii_prevented{bundle=~\"$bundle\"}", "legendFormat": "Prevented"}
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {"name": "bundle", "type": "query", "query": "label_values(cfa_compliance_rules_active, bundle)"}
+    ]
+  },
+  "refresh": "60s"
+}

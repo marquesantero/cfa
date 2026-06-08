@@ -1,0 +1,55 @@
+{
+  "title": "CFA Lifecycle Indices",
+  "description": "IFo/IFs/IFg/IDI per pipeline with drift alerts.",
+  "panels": [
+    {
+      "title": "IFg — Governance Index",
+      "type": "gauge",
+      "targets": [
+        {"expr": "cfa_lifecycle_ifg{pipeline=~\"$pipeline\"}", "legendFormat": "IFg"}
+      ],
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"value": 0, "color": "red"}, {"value": 0.5, "color": "yellow"}, {"value": 1.0, "color": "green"}]}}}
+    },
+    {
+      "title": "IFo — Operational Index",
+      "type": "graph",
+      "targets": [
+        {"expr": "cfa_lifecycle_ifo{pipeline=~\"$pipeline\"}", "legendFormat": "IFo"}
+      ]
+    },
+    {
+      "title": "IFs — Semantic Index",
+      "type": "graph",
+      "targets": [
+        {"expr": "cfa_lifecycle_ifs{pipeline=~\"$pipeline\"}", "legendFormat": "IFs"}
+      ]
+    },
+    {
+      "title": "IDI — Drift Index",
+      "type": "graph",
+      "targets": [
+        {"expr": "cfa_lifecycle_idi{pipeline=~\"$pipeline\"}", "legendFormat": "IDI"}
+      ]
+    },
+    {
+      "title": "Pipeline State",
+      "type": "stat",
+      "targets": [
+        {"expr": "cfa_lifecycle_state{pipeline=~\"$pipeline\"}", "legendFormat": "State"}
+      ]
+    },
+    {
+      "title": "Cost DBU Timeline",
+      "type": "graph",
+      "targets": [
+        {"expr": "cfa_lifecycle_cost_dbu{pipeline=~\"$pipeline\"}", "legendFormat": "Cost DBU"}
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {"name": "pipeline", "type": "query", "query": "label_values(cfa_lifecycle_ifg, pipeline)"}
+    ]
+  },
+  "refresh": "60s"
+}

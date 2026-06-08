@@ -37,7 +37,7 @@ def cmd_serve(args) -> int:
             elif self.path == "/metrics":
                 self.send_response(200); self.send_header("Content-Type", "text/plain"); self.end_headers(); self.wfile.write(get_metrics_text().encode())
             else:
-                self.send_response(200); self.send_header("Content-Type", "text/plain"); self.end_headers(); self.wfile.write(b"CFA v0.1.6 -- See /health and /metrics\n")
+                self.send_response(200); self.send_header("Content-Type", "text/plain"); self.end_headers(); self.wfile.write(b"CFA v1.0.0 -- See /health and /metrics\n")
 
     HTTPServer(("", port), PingHandler).serve_forever()
     return 0

@@ -1,0 +1,44 @@
+{
+  "title": "CFA Governance Overview",
+  "description": "Policy decisions, faults, and latency for CFA-governed pipelines.",
+  "panels": [
+    {
+      "title": "Policy Decisions",
+      "type": "piechart",
+      "targets": [
+        {"expr": "cfa_policy_evaluations_total", "legendFormat": "{{decision}}"}
+      ]
+    },
+    {
+      "title": "Evaluations Rate (1m)",
+      "type": "stat",
+      "targets": [
+        {"expr": "rate(cfa_policy_evaluations_total[1m])", "legendFormat": "total"}
+      ]
+    },
+    {
+      "title": "Replan Attempts Rate (1m)",
+      "type": "stat",
+      "targets": [
+        {"expr": "rate(cfa_replan_attempts_total[1m])", "legendFormat": "replans"}
+      ]
+    },
+    {
+      "title": "Evaluations Timeline",
+      "type": "graph",
+      "targets": [
+        {"expr": "rate(cfa_policy_evaluations_total[5m])", "legendFormat": "{{decision}}"}
+      ]
+    },
+    {
+      "title": "Latency Heatmap (p50/p95/p99)",
+      "type": "heatmap",
+      "targets": [
+        {"expr": "histogram_quantile(0.50, rate(cfa_phase_duration_bucket[5m]))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, rate(cfa_phase_duration_bucket[5m]))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, rate(cfa_phase_duration_bucket[5m]))", "legendFormat": "p99"}
+      ]
+    }
+  ],
+  "refresh": "30s"
+}

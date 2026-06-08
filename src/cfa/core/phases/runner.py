@@ -88,11 +88,20 @@ class KernelPhases:
     # ── Public API ────────────────────────────────────────────────────────────
 
     def process(self, raw_intent: str) -> KernelResult:
+        from cfa.observability.otel import _get_tracer as _get_otel_tracer
+        tracer = _get_otel_tracer()
         intent_id = str(uuid.uuid4())
         result = KernelResult(intent_id=intent_id, state=DecisionState.BLOCKED)
 
+        def _span(name, attrs=None):
+            if tracer is None:
+                from contextlib import nullcontext
+                return nullcontext()
+            return tracer.start_as_current_span(name, attributes=attrs or {})
+
         if self.config.phase_formalize:
-            signature, early = self._phase_formalize(intent_id, raw_intent, result)
+            with _span("cfa.formalize", {"cfa.intent": raw_intent[:80]}):
+                signature, early = self._phase_formalize(intent_id, raw_intent, result)
             if early:
                 return result
             result.signature = signature
@@ -100,18 +109,21 @@ class KernelPhases:
             return result
 
         if self.config.phase_govern:
-            signature, policy_ok, replan_count = self._phase_govern(intent_id, result)
+            with _span("cfa.govern"):
+                signature, policy_ok, replan_count = self._phase_govern(intent_id, result)
             if not policy_ok:
                 return result
         else:
             replan_count = 0
 
         if self.config.phase_generate and self.config.enable_planning:
-            early = self._phase_generate(intent_id, signature, result)
+            with _span("cfa.generate", {"cfa.backend": self.config.backend}):
+                early = self._phase_generate(intent_id, signature, result)
             if early:
                 return result
             if self.config.phase_execute and self.config.enable_sandbox:
-                early = self._phase_execute(intent_id, signature, result, replan_count)
+                with _span("cfa.execute"):
+                    early = self._phase_execute(intent_id, signature, result, replan_count)
                 if early:
                     return result
 
@@ -210,6 +222,13 @@ class KernelPhases:
         while True:
             policy_result = self.policy.evaluate(signature, replan_count=replan_count)
             result.policy_result = policy_result
+            try:
+                from cfa.observability.metrics import record_policy_evaluation, record_replan
+                record_policy_evaluation(policy_result.action.value)
+                if policy_result.action == PolicyAction.REPLAN:
+                    record_replan()
+            except Exception:
+                pass
             self._audit(intent_id, PipelinePhase.GOVERN, "policy_evaluation",
                         policy_result.action.value, replan_count=replan_count,
                         faults=[f.code for f in policy_result.faults])
