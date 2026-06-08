@@ -4,7 +4,8 @@ sidebar_position: 16
 
 # API Reference
 
-Public classes and functions exported by CFA v1.0.0.
+Public classes and functions exported by CFA 1.0.0. Listed entries are part
+of the API contract under semver — breaking changes only in major releases.
 
 ## `cfa.core.kernel`
 

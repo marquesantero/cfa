@@ -6,7 +6,7 @@ Governed execution for AI agents and data systems.
 
 from cfa._lazy import LazyLoader
 
-__version__ = "1.0.0"
+__version__ = "1.1.0.dev0"
 
 __getattr__ = LazyLoader({
     "KernelOrchestrator": ("cfa.core.kernel", "KernelOrchestrator"),

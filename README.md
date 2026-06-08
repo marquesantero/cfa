@@ -1,19 +1,36 @@
-# CFA v1.0.0
+# CFA — Contextual Flux Architecture
 
 [![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/marquesantero/cfa/graph/badge.svg?token=P5NFQBZGYT)](https://codecov.io/github/marquesantero/cfa)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Tests](https://img.shields.io/badge/tests-534%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-535%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/cfa-kernel)](https://pypi.org/project/cfa-kernel/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Docs](https://img.shields.io/badge/docs-docusaurus-blue.svg)](https://marquesantero.github.io/cfa/)
 
-**Governed execution for AI agents and data systems.**
+**A typed, pre-execution governance gate for AI agents and data pipelines.**
 
-Instead of asking _"which agent or skill should act?"_, CFA asks _"which state transition is being requested, under which constraints, and can it be executed safely?"_ and produces a cryptographically verifiable decision.
+You declare what you intend to do as a `StateSignature`. CFA answers `approve`, `replan(remediations)`, or `block(reason)` — deterministically — and writes the decision into a SHA-256 hash chain you can verify offline.
 
-> **Status:** alpha (`0.1.x`). APIs may shift between minor versions. Not yet recommended for unsupervised production use.
+> **Status:** the `1.0.0` API freeze shipped early. We are entering a focused `1.1.0` cycle: editorial cuts, package consolidation, deprecation shims for everything that will leave in `2.0.0`. See the [roadmap](drafts/ROADMAP.md).
+
+## What CFA is
+
+A small, deterministic library that sits between *whoever asked for a governed write* (a human, an LLM agent, an orchestrator) and *whatever runs the write* (PySpark, SQL, dbt, anything). Three outcomes per request:
+
+- **`approve`** — the intent passes every rule. Return the decision; let the caller proceed.
+- **`replan(remediations)`** — the intent fails a fixable rule. Return a structured list of corrections the caller can apply and resubmit.
+- **`block(reason)`** — the intent fails an unrecoverable rule. Return a typed fault with code, severity, and remediation hints.
+
+Every decision is content-hashed and appended to a tamper-evident chain.
+
+## What CFA is **not**
+
+- **Not an LLM observability tool.** It runs before execution, not after. Use [LangSmith](https://www.langchain.com/langsmith), [Phoenix](https://phoenix.arize.com/), or [Patronus](https://www.patronus.ai/) for traces and eval.
+- **Not a generic policy engine.** Use [OPA](https://www.openpolicyagent.org/) when you need generic policy-as-code with Rego across infra, APIs, and CI/CD. CFA wins only when the policies are dataset-aware (PII, partition, classification, merge key).
+- **Not a data catalog.** Use [Unity Catalog](https://www.databricks.com/product/unity-catalog), [Atlan](https://atlan.com/), or [DataHub](https://datahubproject.io/) for discovery, lineage, and access control. CFA reads catalogs; it does not replace them.
+- **Not a data-quality-at-rest tool.** Use [Great Expectations](https://greatexpectations.io/) or [Soda](https://www.soda.io/) when you need expectations on data already written. CFA decides *before* the write.
 
 ## Quick Start
 
@@ -290,7 +307,7 @@ All documentation at **[marquesantero.github.io/cfa](https://marquesantero.githu
 
 ## Demos
 
-Two complete notebooks, tested on Databricks with CFA v1.0.0, 0 errors:
+Two complete notebooks, tested on Databricks with CFA 1.0.0, 0 errors:
 
 | File | Format | Description |
 |------|--------|-------------|
@@ -298,6 +315,18 @@ Two complete notebooks, tested on Databricks with CFA v1.0.0, 0 errors:
 | `demos/cfa_llm_demo_complete` | `.dbc` / `.py` | LLM-powered — semantic normalizer, systematizer, strict mode, compare |
 
 Import the `.dbc` into Databricks or run the `.py` files anywhere.
+
+## Roadmap
+
+The active plan is in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The short version:
+
+- **1.1.0 (next)** — editorial focus. Package consolidation. Deprecation shims for per-framework adapters (`cfa.adapters.langgraph` and friends). Site rewrite. No new features.
+- **1.2.0** — first real integration. `cfa dbt check` reads `target/manifest.json`, derives a signature for each model, runs the policy bundle.
+- **1.3.0** — Airflow `CFAGateOperator` (provider package).
+- **1.4.0** — Lifecycle indices (IFo/IFs/IFg/IDI) documented and produtized.
+- **1.5.0** — MCP server as a governance authority for LLM agents.
+- **1.6.0** — Extra backends (Snowflake, BigQuery, Iceberg).
+- **2.0.0** — re-stabilized API, removal of 1.x deprecation shims, third-party security audit.
 
 ## Contributing
 

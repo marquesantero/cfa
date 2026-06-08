@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cfa-kernel"
-version = "1.0.0"
+version = "1.1.0.dev0"
 description = "CFA — Governed execution for AI agents and data systems"
 readme = "README.md"
 requires-python = ">=3.11"

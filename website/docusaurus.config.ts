@@ -111,7 +111,8 @@ const config: Config = {
   } satisfies Preset.ThemeConfig,
 
   customFields: {
-    version: '1.0.0',
+    version: '1.1.0.dev0',
+    latestStable: '1.0.0',
   },
 };
 

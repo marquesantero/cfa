@@ -7,11 +7,11 @@
 
 ## 0. Sumário executivo
 
-CFA hoje está em **0.1.9**, alpha, mantenedor solo. Tem código de qualidade acima da média (534 testes, 83% cobertura, tipos imutáveis, hash chain real, zero deps no core), mas está em rota de colisão com OPA, LangSmith e Unity Catalog porque o pitch tenta cobrir os três simultaneamente sem vencer nenhum.
+CFA chegou a **1.0.0** numa "API freeze" prematura. Tem código de qualidade acima da média (534 testes, 83% cobertura, tipos imutáveis, hash chain real, zero deps no core), mas está em rota de colisão com OPA, LangSmith e Unity Catalog porque o pitch tenta cobrir os três simultaneamente sem vencer nenhum. A próxima release (`1.1.0`) é o início do trabalho corretivo, respeitando semver: shims de deprecação para tudo que precisa sair, remoção real só em `2.0.0`.
 
 Este plano organiza a evolução em **três movimentos** (cunha → expansão → plataforma) ao longo de aproximadamente 18 meses, preservando o DNA distintivo e cortando ruído que dilui esse DNA. Cada movimento tem releases concretas, deliveráveis técnicos por release, critérios de saída mensuráveis e riscos identificados.
 
-A próxima release (**0.2.0 — Foco**) faz a limpeza necessária para o DNA ser visível. A release seguinte (**0.3.0 — Primeira integração**) cria o primeiro caso de uso público inegável. A partir daí o projeto ganha direito de expandir.
+A próxima release (**1.1.0 — Foco**) faz a limpeza necessária para o DNA ser visível. A release seguinte (**1.2.0 — Primeira integração**) cria o primeiro caso de uso público inegável. A partir daí o projeto ganha direito de expandir.
 
 ---
 
@@ -56,9 +56,9 @@ Qualquer release que dilua estas (ex.: tornar LLM obrigatório no path crítico,
 
 | Movimento | Releases | Duração | Objetivo |
 |-----------|----------|---------|----------|
-| **I — Cunha** | 0.2.0 → 0.3.x | ~6-9 meses | Ser referência inegável em "pre-execution governance gate" |
-| **II — Expansão lateral** | 0.4.0 → 0.7.x | ~9-12 meses | DNA se expressa nas adjacências (lifecycle, MCP, backends, state projection) |
-| **III — Plataforma** | 1.0 → 1.x | 12+ meses | "CFA Protocol" — categoria nomeada, ecossistema, hosted version opcional |
+| **I — Cunha** | 1.1.0 → 1.2.x | ~6-9 meses | Ser referência inegável em "pre-execution governance gate" |
+| **II — Expansão lateral** | 1.3.0 → 1.6.x | ~9-12 meses | DNA se expressa nas adjacências (lifecycle, MCP, backends, state projection) |
+| **III — Plataforma** | 2.0.0 → 2.x | 12+ meses | "CFA Protocol" — categoria nomeada, ecossistema, hosted version opcional |
 
 Cada movimento tem **critério de saída mensurável**. Não se passa para o próximo só porque o calendário virou. Se Movimento I não atingiu o critério em 9 meses, revisitamos a tese antes de seguir.
 
@@ -81,7 +81,7 @@ Pelo menos **uma das seguintes** acontece publicamente:
 
 ---
 
-### 3.3. Release 0.2.0 — Foco
+### 3.3. Release 1.1.0 — Foco
 
 **Objetivo:** remover tudo que dilui o DNA. Reescrever pitch. Consolidar pacotes. Sem features novas.
 
@@ -96,7 +96,7 @@ Pelo menos **uma das seguintes** acontece publicamente:
 | Letras gregas no marketing | Remover `(Φ, Γ, Π, Ω, Σ)` do whitepaper público (renomear para "Architecture Notes"). Mantém versão interna em `docs/internal/`. | `website/docs/whitepaper.md` |
 | Versão "v1.0.0" no site | Padronizar tudo com `__version__` lido do package. Adicionar build hook no Docusaurus. | `website/src/`, `website/docs/api.md` |
 | Tabela "✅/❌ Others" | Já removida no README, remover também em `website/docs/intro.md`. | `website/docs/intro.md:85-97` |
-| Blog template Docusaurus | Apagar `website/blog/` inteiro. Substituir por 1 release notes da 0.2.0. | `website/blog/` |
+| Blog template Docusaurus | Apagar `website/blog/` inteiro. Substituir por 1 release notes da 1.1.0. | `website/blog/` |
 | Docs de planejamento na raiz | Mover `CFA_IMPLEMENTATION_PLAN.md`, `CFA_MARKET_RESEARCH_2026.md`, `MANUAL_TESTING_GUIDE.md` para `drafts/`. Adicionar `.gitignore` para `cfa_test_results_*/`. | raiz do repo |
 | Keywords PT-BR/fiscal hardcoded | Tirar `_DOMAIN_KEYWORDS` específicos do `RuleBasedNormalizerBackend`. Criar `examples/fiscal_pt_br_normalizer.py` mostrando como estender. | `src/cfa/normalizer/base.py:82-93` |
 | Status alpha no site | Banner persistente "Alpha — APIs may change" em todas as páginas. | `website/src/theme/` |
@@ -106,7 +106,7 @@ Pelo menos **uma das seguintes** acontece publicamente:
 Reduzir de **20 subpacotes para ~13** sem quebrar API pública (manter re-exports nos antigos com `DeprecationWarning`).
 
 ```text
-ANTES (atual)                  →  DEPOIS (0.2.0)
+ANTES (atual)                  →  DEPOIS (1.1.0)
 ─────────────────────────────────────────────────────────
 core/                          →  core/                 (kernel + phases + types)
 governance/                    →  REMOVIDO              (absorvido por policy/)
@@ -127,7 +127,7 @@ mcp/                           →  mcp/                  (sem mudança)
 reporting/                     →  reporting/            (sem mudança)
 runtime/                       →  runtime/              (sem mudança)
 testing/                       →  testing/              (sem mudança)
-behavior/                      →  behavior/             (sem mudança, candidato a fundir com resolve em 0.4)
+behavior/                      →  behavior/             (sem mudança, candidato a fundir com resolve em 1.3)
 ```
 
 Implementação: para cada pacote movido, deixar shim:
@@ -190,12 +190,12 @@ Criar `docs/adr/` com formato MADR:
 - `0002-sha256-hash-chain-offline-verifiable.md`
 - `0003-replan-as-first-class.md`
 - `0004-deterministic-by-default-llm-as-extra.md`
-- `0005-package-consolidation-0.2.0.md`
+- `0005-package-consolidation-1.1.0.md`
 - `0006-no-fake-adapters.md`
 
 Cada ADR ≤2 páginas: contexto, decisão, consequências, alternativas consideradas.
 
-#### 3.3.6. Critério de release 0.2.0
+#### 3.3.6. Critério de release 1.1.0
 
 - [ ] Pacotes consolidados, todos os testes passando (mantém 534+).
 - [ ] Adapters falsos removidos, doc honesto no lugar.
@@ -203,12 +203,12 @@ Cada ADR ≤2 páginas: contexto, decisão, consequências, alternativas conside
 - [ ] Site limpo: blog template removido, versão consistente, banner alpha.
 - [ ] 6 ADRs publicados.
 - [ ] CHANGELOG.md com migration notes (breaking + deprecations).
-- [ ] Tag `v0.2.0` no GitHub, release no PyPI.
+- [ ] Tag `v1.1.0` no GitHub, release no PyPI.
 - [ ] Release notes em blog do site.
 
 ---
 
-### 3.4. Release 0.3.0 — Primeira integração real
+### 3.4. Release 1.2.0 — Primeira integração real
 
 **Objetivo:** o primeiro caso de uso público inegável. Escolher **uma** integração e fazê-la com qualidade de referência.
 
@@ -281,7 +281,7 @@ cat = Catalog.from_json(".cfa/catalog.json")
 cat = Catalog.merge(cat_a, cat_b)
 ```
 
-Implementação só do `from_dbt_manifest` e `from_json` em 0.3.0. UC fica para 0.4+.
+Implementação só do `from_dbt_manifest` e `from_json` em 1.2.0. UC fica para 0.4+.
 
 #### 3.4.4. Documentação
 
@@ -290,7 +290,7 @@ Implementação só do `from_dbt_manifest` e `from_json` em 0.3.0. UC fica para 
 - Atualizar README com seção "Use CFA in your dbt project".
 - Screencast de 3min mostrando block → replan → approve.
 
-#### 3.4.5. Critério de release 0.3.0
+#### 3.4.5. Critério de release 1.2.0
 
 - [ ] `cfa dbt check` funcional em projeto dbt real (criar um para demo).
 - [ ] ≥30 testes específicos do módulo dbt, ≥85% cobertura.
@@ -301,22 +301,22 @@ Implementação só do `from_dbt_manifest` e `from_json` em 0.3.0. UC fica para 
 
 ---
 
-### 3.5. Releases 0.3.x — Hardening
+### 3.5. Releases 1.2.x — Hardening
 
 Pequenas releases de polish. Não introduzem categoria nova.
 
 | Release | Conteúdo principal |
 |---------|-------------------|
-| 0.3.1 | Bug fixes pós-0.3.0; cobertura ≥85% global |
-| 0.3.2 | Performance: bench p99 ≤5ms para gate path; profile e otimizar hot paths |
-| 0.3.3 | Standalone audit verifier: binário Python `cfa-verify` que verifica chain sem dependência do resto. Útil para auditoria offline. |
-| 0.3.4 | Catalog federation MVP: `Catalog.merge()` + suporte a UC (`from_unity_catalog`) |
-| 0.3.5 | Estabilidade: 60 dias sem bug crítico aberto |
+| 1.2.1 | Bug fixes pós-1.2.0; cobertura ≥85% global |
+| 1.2.2 | Performance: bench p99 ≤5ms para gate path; profile e otimizar hot paths |
+| 1.2.3 | Standalone audit verifier: binário Python `cfa-verify` que verifica chain sem dependência do resto. Útil para auditoria offline. |
+| 1.2.4 | Catalog federation MVP: `Catalog.merge()` + suporte a UC (`from_unity_catalog`) |
+| 1.2.5 | Estabilidade: 60 dias sem bug crítico aberto |
 
 #### 3.5.1. Critério para fechar Movimento I
 
 - Movimento I termina quando o **critério de saída de 3.2** é atingido.
-- Antes disso, todas as releases ficam em 0.3.x. Não há 0.4.0 sem cunha plantada.
+- Antes disso, todas as releases ficam em 1.2.x. Não há 1.3.0 sem cunha plantada.
 
 ---
 
@@ -337,7 +337,7 @@ Pelo menos **três das seguintes**:
 
 ---
 
-### 4.3. Release 0.4.0 — Airflow operator
+### 4.3. Release 1.3.0 — Airflow operator
 
 **Objetivo:** segunda integração nativa. Trazer de volta o que foi removido, agora bem feito.
 
@@ -379,7 +379,7 @@ class CFAAuditEmitterOperator(BaseOperator):
 
 **Compatibilidade:** Airflow 2.7+, 3.0+.
 
-### 4.4. Release 0.5.0 — Lifecycle como diferencial
+### 4.4. Release 1.4.0 — Lifecycle como diferencial
 
 **Objetivo:** lifecycle indices (IFo/IFs/IFg/IDI) deixam de ser feature obscura e viram diferencial documentado.
 
@@ -403,7 +403,7 @@ class CFAAuditEmitterOperator(BaseOperator):
 
 **Critério:** alguém na comunidade entender o que IFo significa e como usar em produção sem precisar perguntar.
 
-### 4.5. Release 0.6.0 — MCP como autoridade governante
+### 4.5. Release 1.5.0 — MCP como autoridade governante
 
 **Objetivo:** o MCP server vira o **caso de uso definitivo para LLM agents**. Não como "CFA é uma tool que o agente usa", mas como "CFA é a autoridade que o agente consulta antes de agir".
 
@@ -421,7 +421,7 @@ class CFAAuditEmitterOperator(BaseOperator):
 
 4. **Server hosting docs.** Como rodar o MCP server em produção (uvicorn, gunicorn, Docker).
 
-### 4.6. Release 0.7.0 — Backends estendidos
+### 4.6. Release 1.6.0 — Backends estendidos
 
 **Objetivo:** mostrar que arquitetura pluggable é séria.
 
@@ -448,15 +448,15 @@ class CFAAuditEmitterOperator(BaseOperator):
 
 CFA vira **categoria nomeada**. Quando alguém escreve um post sobre AI governance em 2027, CFA aparece junto com OPA, LangSmith, Unity Catalog — não como alternativa, como peça complementar reconhecida.
 
-### 5.2. Releases 1.0+ — esboço
+### 5.2. Releases 2.0+ — esboço
 
 | Marco | Conteúdo |
 |-------|----------|
-| **1.0.0** | API estabilizada. Semver estrito. Migration guide 0.x → 1.0. Audit do código por terceiro. |
-| **1.1+** | **CFA Protocol** — spec versionada (JSON Schema + OpenAPI) que outras ferramentas podem implementar. Repo separado `cfa-protocol`. |
-| **1.2+** | SDKs em outras linguagens. Go primeiro (alinha com OPA), TypeScript depois (alinha com agent frameworks). |
-| **1.3+** | Hosted version opcional (`cfa.cloud` — nome a definir). Multi-tenant, RBAC, dashboard, alerting. Self-hostable também. |
-| **1.4+** | CFA Catalog Hub — registry público de policy bundles compartilháveis (analogia com dbt packages, Helm charts). |
+| **2.0.0** | Re-API freeze (agora real). Remoção dos shims de deprecação herdados de 1.x. Migration guide 1.x → 2.0. Audit do código por terceiro. |
+| **2.1+** | **CFA Protocol** — spec versionada (JSON Schema + OpenAPI) que outras ferramentas podem implementar. Repo separado `cfa-protocol`. |
+| **2.2+** | SDKs em outras linguagens. Go primeiro (alinha com OPA), TypeScript depois (alinha com agent frameworks). |
+| **2.3+** | Hosted version opcional (`cfa.cloud` — nome a definir). Multi-tenant, RBAC, dashboard, alerting. Self-hostable também. |
+| **2.4+** | CFA Catalog Hub — registry público de policy bundles compartilháveis (analogia com dbt packages, Helm charts). |
 
 ### 5.3. Como decidir se vai para Movimento III
 
@@ -476,16 +476,16 @@ Critério: Movimento II atingiu seu critério de saída + projeto tem **time** o
 
 ### 6.2. Documentation
 
-- **ADR a cada decisão de arquitetura** — sem exceção a partir de 0.2.0.
+- **ADR a cada decisão de arquitetura** — sem exceção a partir de 1.1.0.
 - **Tutorial-driven docs** (Diátaxis): tutoriais → how-to → reference → explanation. Hoje só tem reference.
-- **Versão por release.** Docusaurus versionado a partir de 0.3.0.
+- **Versão por release.** Docusaurus versionado a partir de 1.2.0.
 - **Reading paths**: "Sou DE", "Sou Platform", "Sou ML Engineer querendo governar agente" — três trilhas distintas no site.
-- **Bilíngue real**: pt-BR completo a partir de 0.4.0.
+- **Bilíngue real**: pt-BR completo a partir de 1.3.0.
 
 ### 6.3. Site
 
-- **Hero operacional**, não acadêmico (já no 0.2.0).
-- **Demo interativa** (terminal embedado rodando WASM?) a partir de 0.4.0.
+- **Hero operacional**, não acadêmico (já no 1.1.0).
+- **Demo interativa** (terminal embedado rodando WASM?) a partir de 1.3.0.
 - **Página comparativa** mantida atualizada: vs OPA, vs LangSmith, vs GE, vs UC.
 - **Releases publicadas como posts** em vez de tag-only.
 - **Métricas públicas**: GitHub Stars, downloads PyPI, latest version — todas no homepage.
@@ -494,37 +494,35 @@ Critério: Movimento II atingiu seu critério de saída + projeto tem **time** o
 
 | Fase | Investimento |
 |------|--------------|
-| 0.2.0-0.3.x | CHANGELOG público, CONTRIBUTING.md sério, issue templates, PR template, code of conduct ativo. |
-| 0.4.0+ | GitHub Discussions ativo, label triage, "good first issue" curado. |
-| 0.5.0+ | Discord/Matrix se houver tração. Não antes. |
+| 1.1.0-1.2.x | CHANGELOG público, CONTRIBUTING.md sério, issue templates, PR template, code of conduct ativo. |
+| 1.3.0+ | GitHub Discussions ativo, label triage, "good first issue" curado. |
+| 1.4.0+ | Discord/Matrix se houver tração. Não antes. |
 | 1.0+ | Office hours, RFC process formal, governance da própria CFA (steering committee). |
 
 ### 6.5. CI/CD
 
 - **Hoje:** 4 workflows. Bom baseline.
-- **0.2.0:** adicionar workflow de mutation testing (semanal), benchmark drift (toda PR), site link checker.
-- **0.3.0:** matrix test (Python 3.11, 3.12, 3.13; com/sem extras yaml/mcp/llm).
-- **0.4.0:** integration tests com dbt real e Airflow real (containers).
-- **1.0:** auditoria externa de segurança antes de tag.
+- **1.1.0:** adicionar workflow de mutation testing (semanal), benchmark drift (toda PR), site link checker.
+- **1.2.0:** matrix test (Python 3.11, 3.12, 3.13; com/sem extras yaml/mcp/llm).
+- **1.3.0:** integration tests com dbt real e Airflow real (containers).
+- **2.0:** auditoria externa de segurança antes de tag.
 
 ### 6.6. Releases e versionamento
 
-- **0.x:** breaking changes permitidos em minor (0.2 → 0.3 pode quebrar). Documentar no CHANGELOG.
-- **0.x:** deprecation warnings ≥2 minor releases antes de remoção.
-- **1.0+:** semver estrito. Breaking só em major.
+- **1.x:** semver estrito. Breaking changes só em major (2.0). Deprecation warnings ≥2 minor releases antes de remoção em major.
 - **Cadence:** minor a cada 6-10 semanas, patches conforme necessário.
 - **Calendário público.** Issue pinned com próximas releases planejadas.
 
 ### 6.7. Infraestrutura do repo
 
 - **Branch model:** `main` sempre release-ready, feature branches via PR, `release/x.y` para hardening.
-- **RFC process** (a partir de 0.3.0): mudanças que afetam API pública passam por RFC em `docs/rfcs/` com período de comentário.
+- **RFC process** (a partir de 1.2.0): mudanças que afetam API pública passam por RFC em `docs/rfcs/` com período de comentário.
 - **Issue triage** semanal: 1h fixa por semana, labels consistentes.
-- **Security:** `SECURITY.md` ativo, GPG signing de release tags a partir de 1.0.
+- **Security:** `SECURITY.md` ativo, GPG signing de release tags a partir de 2.0.
 
 ---
 
-## 7. Sprint detalhado da 0.2.0
+## 7. Sprint detalhado da 1.1.0
 
 Plano executável por categoria. Estimativas em dias de trabalho focado.
 
@@ -547,7 +545,7 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 - [ ] Remover letras gregas do whitepaper público. Mover whitepaper original para `docs/internal/`.
 - [ ] Banner alpha no site (componente persistente).
 - [ ] Criar `website/docs/compare.md` (vs OPA, vs LangSmith, vs GE, vs UC).
-- [ ] Padronizar versão "0.2.0" em todos os arquivos textuais.
+- [ ] Padronizar versão "1.1.0" em todos os arquivos textuais.
 
 ### Sprint 2 — Consolidação de pacotes (3-4 dias)
 
@@ -589,9 +587,9 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 - [ ] Escrever release notes em `website/blog/`.
 
 **Dia 11:**
-- [ ] Bump versão para `0.2.0` em `pyproject.toml`, `cfa/__init__.py`, site.
+- [ ] Bump versão para `1.1.0` em `pyproject.toml`, `cfa/__init__.py`, site.
 - [ ] PR final. Self-review.
-- [ ] Tag `v0.2.0`, publicar no PyPI, criar GitHub release.
+- [ ] Tag `v1.1.0`, publicar no PyPI, criar GitHub release.
 - [ ] Post no LinkedIn/X anunciando.
 
 **Total estimado:** ~11 dias de trabalho focado, executável em 3-4 semanas calendário considerando outras obrigações.
@@ -602,13 +600,13 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
-| Mantenedor solo perde tração antes do critério de saída do Movimento I | Alta | Alto | Calendário público de releases força disciplina. Cortes do 0.2.0 reduzem superfície sustentável. |
-| Adopters externos não aparecem mesmo após 0.3.0 | Média | Alto | Revisitar tese antes de Movimento II. Talvez nicho seja menor do que se imagina. |
+| Mantenedor solo perde tração antes do critério de saída do Movimento I | Alta | Alto | Calendário público de releases força disciplina. Cortes do 1.1.0 reduzem superfície sustentável. |
+| Adopters externos não aparecem mesmo após 1.2.0 | Média | Alto | Revisitar tese antes de Movimento II. Talvez nicho seja menor do que se imagina. |
 | OPA/UC lança feature que sobrepõe CFA | Média | Médio | DNA distintivo (REPLAN + signature hash + audit offline) protege. Diferencial vai além de feature list. |
 | LangChain/Databricks copia ideia em produto deles | Baixa | Alto | Já estamos em open source MIT. Mover rápido para CFA Protocol em 1.0 ajuda. |
-| Refator de consolidação quebra usuários existentes | Baixa | Médio | Shims com deprecation warnings por 2 minor releases. CHANGELOG explícito. Versão 0.x permite. |
-| Performance regression no path crítico | Baixa | Alto | Benchmarks em CI a partir do 0.3.0. PRs com regressão >10% bloqueadas. |
-| Churn de API entre 0.x perde first adopters | Média | Médio | Deprecation policy clara. Migration scripts quando viável. |
+| Refator de consolidação quebra usuários existentes | Baixa | Médio | Shims com deprecation warnings por 2 minor releases. CHANGELOG explícito. Versão 1.x permite. |
+| Performance regression no path crítico | Baixa | Alto | Benchmarks em CI a partir do 1.2.0. PRs com regressão >10% bloqueadas. |
+| Churn de API entre 1.x perde first adopters | Média | Médio | Deprecation policy clara. Migration scripts quando viável. |
 
 ---
 
@@ -618,10 +616,10 @@ Plano executável por categoria. Estimativas em dias de trabalho focado.
 
 - `main` é release-ready. Sempre verde.
 - Feature work em `feature/<short-name>`.
-- Releases em `release/0.x` quando entrar em hardening.
+- Releases em `release/1.x` quando entrar em hardening.
 - PRs exigem: CI verde, 1 self-review documentado em comment, CHANGELOG entry (a partir de 0.3).
 
-### 9.2. RFC process (a partir de 0.3.0)
+### 9.2. RFC process (a partir de 1.2.0)
 
 Mudanças que afetam:
 - API pública de `cfa.__init__.__getattr__`
@@ -637,10 +635,10 @@ Passam por RFC:
 
 ### 9.3. Cadência de release
 
-- 0.2.0: junho 2026 (target).
-- 0.3.0: setembro 2026.
-- 0.3.x: nov 2026, jan 2027.
-- 0.4.0: março 2027.
+- 1.1.0: junho 2026 (target).
+- 1.2.0: setembro 2026.
+- 1.2.x: nov 2026, jan 2027.
+- 1.3.0: março 2027.
 
 Se calendário escorrega, escorrega — mas comunicar publicamente cada slip.
 
@@ -678,8 +676,8 @@ Se entrar pressão para qualquer um destes, registrar em `docs/non-goals.md` com
 Depois deste plano aprovado:
 
 1. Você comenta/edita este documento.
-2. Convertemos os itens da 0.2.0 em issues do GitHub com labels `release-0.2.0`.
-3. Criamos milestone `0.2.0` no GitHub com data target.
+2. Convertemos os itens da 1.1.0 em issues do GitHub com labels `release-1.1.0`.
+3. Criamos milestone `1.1.0` no GitHub com data target.
 4. Começamos Sprint 1.
 
 ---
