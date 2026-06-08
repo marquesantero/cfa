@@ -11,7 +11,7 @@ Add CFA governance to OpenAI Agents SDK tool functions with a single decorator.
 ## Installation
 
 ```bash
-pip install cfa openai-agents
+pip install cfa-kernel
 ```
 
 ---

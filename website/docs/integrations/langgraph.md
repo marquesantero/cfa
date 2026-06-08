@@ -11,7 +11,7 @@ Add CFA governance to LangGraph agent nodes with a single decorator.
 ## Installation
 
 ```bash
-pip install cfa
+pip install cfa-kernel
 ```
 
 ---

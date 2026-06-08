@@ -63,7 +63,7 @@ policy_bundle:
 ## Custom Conditions
 
 ```python
-from cfa.conditions import register_condition, build_condition
+from cfa.core.conditions import register_condition, build_condition
 
 def my_custom_check(meta):
     def check(sig):
@@ -76,7 +76,7 @@ register_condition("finance_large_join", my_custom_check)
 ## Loading from Code
 
 ```python
-from cfa.policy_bundle import PolicyBundle, list_available_bundles
+from cfa.policy.bundle import PolicyBundle, list_available_bundles
 from cfa.policy import PolicyEngine
 
 # List available

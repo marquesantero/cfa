@@ -69,7 +69,7 @@ if result.is_blocked:
 Add intent resolution when you need semantic interpretation of natural-language requests.
 
 ```python
-from cfa.normalizer.base import IntentNormalizer
+from cfa.normalizer.base import IntentNormalizer, MockNormalizerBackend
 
 catalog = {
     "datasets": {
@@ -103,8 +103,8 @@ print(resolution.confirmation_mode.value)
 Use validation, code generation, and sandbox without full orchestration.
 
 ```python
-from cfa.policy.engine import StaticValidator
-from cfa.codegen import GeneratedCode
+from cfa.validation.static import StaticValidator
+from cfa.core.codegen import GeneratedCode
 
 validator = StaticValidator()
 generated = GeneratedCode(
@@ -240,7 +240,7 @@ cfa evaluate "intent" --backend sql
 ## Custom Conditions
 
 ```python
-from cfa.conditions import register_condition, build_condition
+from cfa.core.conditions import register_condition, build_condition
 
 def my_custom_check(meta):
     def check(sig):

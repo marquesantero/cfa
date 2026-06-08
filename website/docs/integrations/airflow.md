@@ -27,7 +27,7 @@ Build StateSignature → PolicyEngine → APPROVE/REPLAN/BLOCK → Execute or fa
 ## Installation
 
 ```bash
-pip install cfa
+pip install cfa-kernel
 ```
 
 ---

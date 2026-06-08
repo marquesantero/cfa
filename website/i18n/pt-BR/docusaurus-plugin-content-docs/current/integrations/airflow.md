@@ -23,20 +23,38 @@ Task → CFA Policy Gate → Executar (se aprovado)
 ## Uso
 
 ```python
-from governance_gate import GovernanceRequest, assert_allowed
+from cfa.policy.engine import (
+    PolicyEngine,
+    StateSignature,
+    TargetLayer,
+    DatasetRef,
+    DatasetClassification,
+    SignatureConstraints,
+    ExecutionContext,
+)
 
-request = GovernanceRequest(
+engine = PolicyEngine(policy_bundle_version="prod-v1.0")
+
+signature = StateSignature(
     domain="fiscal",
     intent="reconciliation",
-    target_layer="silver",
+    target_layer=TargetLayer.SILVER,
     datasets=(
-        {"name": "nfe", "classification": "high_volume", "size_gb": 4000,
-         "pii_columns": [], "partition_column": "processing_date"},
-        {"name": "clientes", "classification": "sensitive", "size_gb": 0.5,
-         "pii_columns": ["cpf", "email"], "partition_column": "processing_date"},
+        DatasetRef(name="nfe", classification=DatasetClassification.HIGH_VOLUME, size_gb=4000),
+        DatasetRef(name="clientes", classification=DatasetClassification.SENSITIVE, size_gb=0.5,
+                   pii_columns=("cpf", "email")),
+    ),
+    constraints=SignatureConstraints(
+        no_pii_raw=False, merge_key_required=True, partition_by=("processing_date",),
+    ),
+    execution_context=ExecutionContext(
+        policy_bundle_version="prod-v1.0",
+        catalog_snapshot_version="catalog_default",
+        context_registry_version_id="ctx-default",
     ),
 )
 
-assert_allowed(request)
-# Se bloqueado, levanta RuntimeError com a razão
+result = engine.evaluate(signature)
+if result.action.value == "block":
+    raise RuntimeError(result.reasoning)
 ```
