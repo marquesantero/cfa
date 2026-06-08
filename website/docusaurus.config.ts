@@ -53,10 +53,10 @@ const config: Config = {
     image: 'img/cfa-social-card.png',
     colorMode: { respectPrefersColorScheme: true },
     announcementBar: {
-      id: 'status-1-1-0-dev',
+      id: 'status-1-1-0',
       content:
-        '<strong>Status:</strong> 1.0.0 on PyPI · 1.1.0.dev0 in progress · ' +
-        'breaking changes only in 2.0.0 · ' +
+        '<strong>1.1.0 released</strong> — editorial cycle: consolidated layout, perf baselines, ADRs · ' +
+        '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md">changelog</a> · ' +
         '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md">roadmap</a>',
       backgroundColor: '#0d1525',
       textColor: '#3dffa0',
@@ -121,8 +121,8 @@ const config: Config = {
   } satisfies Preset.ThemeConfig,
 
   customFields: {
-    version: '1.1.0.dev0',
-    latestStable: '1.0.0',
+    version: '1.1.0',
+    latestStable: '1.1.0',
   },
 };
 

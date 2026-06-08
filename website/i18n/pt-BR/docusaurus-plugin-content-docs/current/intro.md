@@ -17,10 +17,13 @@ Você declara o que pretende fazer como uma `StateSignature`. O CFA responde
 `approve`, `replan(remediations)` ou `block(reason)` — deterministicamente —
 e grava a decisão em uma cadeia SHA-256 verificável offline.
 
-A versão atual no PyPI é `1.0.0`. A próxima release (`1.1.0`) é um ciclo
-editorial: cortes, consolidação, shims de deprecação e site reescrito —
-sem features novas. Veja o
-[roadmap](https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md).
+A versão atual é `1.1.0` — um ciclo editorial: consolidação de pacotes
+(20 → 16), seis ADRs novas, suite de baselines de performance e site
+reescrito. As cinco primitivas distintivas (`StateSignature` tipada,
+`REPLAN`, cadeia de hash, catálogo operacional, determinístico por
+default) não mudaram. Veja o
+[changelog](https://github.com/marquesantero/cfa/blob/main/CHANGELOG.md)
+e o [roadmap](https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md).
 
 ## O que o CFA faz
 

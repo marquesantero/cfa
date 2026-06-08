@@ -13,7 +13,7 @@
 
 You declare what you intend to do as a `StateSignature`. CFA answers `approve`, `replan(remediations)`, or `block(reason)` — deterministically — and writes the decision into a SHA-256 hash chain you can verify offline.
 
-> **Status:** the `1.0.0` API freeze shipped early. We are entering a focused `1.1.0` cycle: editorial cuts, package consolidation, deprecation shims for everything that will leave in `2.0.0`. See the [roadmap](drafts/ROADMAP.md).
+> **Status:** `1.1.0` is the current release. It was an editorial cycle — consolidated 20 packages into 16, recorded six [ADRs](docs/adr/) for the distinctive primitives, landed a perf baseline suite. The next release (`1.2.0`) introduces the first real integration: `cfa dbt check`. See the [CHANGELOG](CHANGELOG.md) and the [roadmap](drafts/ROADMAP.md).
 
 ## What CFA is
 
