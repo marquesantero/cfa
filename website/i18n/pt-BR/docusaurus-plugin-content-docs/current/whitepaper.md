@@ -2,20 +2,25 @@
 sidebar_position: 3
 ---
 
-# Whitepaper CFA v1.0.0
+# Notas de arquitetura do CFA (Whitepaper)
 
-Contextual Flux Architecture — Execução governada para agentes de IA e sistemas de dados.
+Contextual Flux Architecture — Gate de governança pré-execução para agentes de IA e sistemas de dados.
+
+> Este documento é descritivo, não prescritivo. Captura como o kernel está
+> estruturado hoje; as páginas voltadas para o usuário usam linguagem
+> operacional. Leia esta seção se quiser entender as decisões internas.
 
 ## 1. Introdução
 
 CFA é um **kernel de governança** que insere uma camada formal de decisão entre a intenção do usuário e a execução operacional. Em vez de ir diretamente do prompt à ação, o CFA exige que cada solicitação de execução seja formalizada, validada contra políticas declarativas, planejada, gerada, executada em sandbox e auditada antes que qualquer efeito colateral ocorra.
 
-**Definição formal**: CFA é uma tupla `(Φ, Γ, Π, Ω, Σ)` onde:
-- **Φ** — Formalizar: resolver intenção em linguagem natural em `StateSignature` tipada
-- **Γ** — Governar: avaliar assinatura contra regras de política via `PolicyEngine`
-- **Π** — Planejar e Gerar: produzir código determinístico de planos aprovados
-- **Ω** — Executar e Validar: rodar em sandbox isolado, validar métricas de runtime
-- **Σ** — Estado e Auditoria: projetar estado no `ContextRegistry`, registrar eventos de auditoria imutáveis, computar índices de ciclo de vida
+O kernel é organizado em cinco fases:
+
+1. **Formalizar** — resolver uma intenção em linguagem natural em uma `StateSignature` tipada.
+2. **Governar** — avaliar a assinatura contra regras de política declarativas via `PolicyEngine`.
+3. **Planejar e Gerar** — produzir código determinístico a partir de planos aprovados.
+4. **Executar e Validar** — rodar em sandbox isolado; validar métricas de runtime.
+5. **Estado e Auditoria** — projetar estado no `ContextRegistry`; registrar eventos de auditoria imutáveis; computar índices de ciclo de vida.
 
 ## 2. Invariantes
 

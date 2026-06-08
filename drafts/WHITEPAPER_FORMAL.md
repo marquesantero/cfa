@@ -17,15 +17,14 @@ Contextual Flux Architecture — Pre-execution governance gate for AI agents and
 
 CFA (Contextual Flux Architecture) is a **governance kernel** that inserts a formal decision layer between user intent and operational execution in AI-native data systems. Rather than moving directly from prompt to action, CFA mandates that every execution request is formalized, validated against declarative policy, planned, generated, sandboxed, and audited before any side effects occur.
 
-The kernel is organized in five phases:
+**Formal definition**: CFA is a tuple `(Φ, Γ, Π, Ω, Σ)` where:
+- **Φ** — Formalize: resolve natural-language intent into a typed `StateSignature`
+- **Γ** — Govern: evaluate the signature against declarative policy rules via `PolicyEngine`
+- **Π** — Plan & Generate: produce deterministic execution code from approved plans
+- **Ω** — Execute & Validate: run in an isolated sandbox, validate runtime metrics
+- **Σ** — State & Audit: project state into the `ContextRegistry`, record tamper-evident audit events, compute lifecycle indices
 
-1. **Formalize** — resolve a natural-language intent into a typed `StateSignature`.
-2. **Govern** — evaluate the signature against declarative policy rules via the `PolicyEngine`.
-3. **Plan & Generate** — produce deterministic execution code from approved plans.
-4. **Execute & Validate** — run in an isolated sandbox; validate runtime metrics.
-5. **State & Audit** — project state into the `ContextRegistry`; record tamper-evident audit events; compute lifecycle indices.
-
-**Core flow**: `CLI / MCP → Resolution → Governance → Execution → State → Evolution → Reports / OpenTelemetry`
+**Core flow**: `CLI/MCP → Resolution → Governance → Execution → State → Evolution → Reports/OTel`
 
 The architecture is designed for **progressive adoption** — you can use only the governance layer as a gate before existing pipelines, or adopt the full kernel for end-to-end governed execution.
 

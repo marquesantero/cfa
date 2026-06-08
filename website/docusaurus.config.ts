@@ -52,6 +52,16 @@ const config: Config = {
   themeConfig: {
     image: 'img/cfa-social-card.png',
     colorMode: { respectPrefersColorScheme: true },
+    announcementBar: {
+      id: 'status-1-1-0-dev',
+      content:
+        '<strong>Status:</strong> 1.0.0 on PyPI · 1.1.0.dev0 in progress · ' +
+        'breaking changes only in 2.0.0 · ' +
+        '<a target="_blank" rel="noopener" href="https://github.com/marquesantero/cfa/blob/main/drafts/ROADMAP.md">roadmap</a>',
+      backgroundColor: '#0d1525',
+      textColor: '#3dffa0',
+      isCloseable: false,
+    },
     navbar: {
       title: 'CFA',
       logo: { alt: 'CFA', src: 'img/logo.svg' },
