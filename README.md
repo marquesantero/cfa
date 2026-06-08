@@ -3,7 +3,7 @@
 [![CI](https://github.com/marquesantero/cfa/actions/workflows/ci.yml/badge.svg)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/github/marquesantero/cfa/graph/badge.svg?token=P5NFQBZGYT)](https://codecov.io/github/marquesantero/cfa)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Tests](https://img.shields.io/badge/tests-536%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-534%20passed-brightgreen)](https://github.com/marquesantero/cfa/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/cfa-kernel)](https://pypi.org/project/cfa-kernel/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)

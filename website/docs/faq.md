@@ -72,4 +72,4 @@ CFA v0.1.9 targets batch and micro-batch execution. Streaming support is planned
 
 ## Is CFA production-ready?
 
-CFA v0.1.9 has 536 passing tests, a full CLI, MCP server, rich reporting, and framework adapters. It is designed for production governance gates. The core has been battle-tested through multiple refactors. As with any governance tool, deploy with monitoring and start with `cfa evaluate` in CI before moving to runtime gates.
+CFA v0.1.9 has 534 passing tests, a full CLI, MCP server, rich reporting, and framework adapters. It is designed for production governance gates. The core has been battle-tested through multiple refactors. As with any governance tool, deploy with monitoring and start with `cfa evaluate` in CI before moving to runtime gates.

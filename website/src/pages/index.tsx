@@ -95,7 +95,7 @@ export default function Home(): JSX.Element {
             pip install cfa-kernel && cfa evaluate "Join NFe with Clientes persist Silver"
           </code>
           <p style={{ color: '#8892a4', marginTop: '1rem', fontSize: '0.85rem' }}>
-            536 tests &middot; MIT License &middot; Python 3.11+
+            534 tests &middot; MIT License &middot; Python 3.11+
           </p>
         </div>
       </main>

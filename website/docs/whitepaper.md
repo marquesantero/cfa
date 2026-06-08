@@ -190,7 +190,7 @@ Traces every kernel phase as OTel spans. Export to any OTel-compatible backend (
 ### Prometheus
 Exposes metrics on `/metrics` via `cfa serve --metrics-port 9090`. Counters for evaluations, replans, blocks; gauges for lifecycle indices.
 
-### Test Suite — 536 tests
+### Test Suite — 534 tests
 Comprehensive test coverage across governance, resolution, lifecycle, kernel, adapters, CLI, MCP, and reporting.
 
 ---
