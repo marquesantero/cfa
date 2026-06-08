@@ -55,6 +55,30 @@ external packages that the kernel discovers via Python entry points.
   `ConditionRegistry.register(..., overwrite=True)` to make the
   intent explicit.
 
+### Added — phase 1a: first-party `data` vertical
+
+- New package `cfa.verticals.data` shipping the reference
+  `DataVertical`. Implements the `Vertical` protocol; delegates to the
+  existing data-shaped infrastructure in `cfa.policy.engine`,
+  `cfa.backends`, and `cfa.core.conditions` (no behavior change).
+- Three JSON Schemas — `PAYLOAD_SCHEMA`, `CONSTRAINTS_SCHEMA`,
+  `CATALOG_SCHEMA` — documenting the data vertical's signature and
+  catalog shapes. Importable as
+  `from cfa.verticals.data import PAYLOAD_SCHEMA`.
+- The vertical auto-registers in `VerticalRegistry.singleton()` when
+  `cfa.verticals.data` is imported. The registry's
+  `_ensure_discovered()` imports built-in verticals on first query, so
+  the vertical is available without an explicit import in user code.
+- `pyproject.toml` declares the same vertical via the canonical
+  `cfa.verticals` entry-point group. Same registration mechanism
+  third-party verticals use — drinking our own champagne.
+- 13 new tests in `tests/contract/test_data_vertical.py` covering
+  protocol conformance, schema shape, registration/discovery
+  idempotency, condition namespacing, default rules, and backend
+  factories. Suite total: 584 passing.
+- `website/docs/extending.md` reorganized to feature `DataVertical` as
+  the live reference example before the generic recipes.
+
 ## [1.1.0] — 2026-06-08
 
 The 1.1.0 cycle is editorial. There are no new features. The goal was

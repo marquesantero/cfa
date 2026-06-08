@@ -22,6 +22,12 @@ classifiers = [
 cfa = "cfa.cli:main"
 cfa-mcp = "cfa.mcp:serve"
 
+# First-party verticals shipped inside the cfa-kernel wheel. Third-party
+# verticals follow the same pattern in their own pyproject.toml. See
+# docs/extending.md and docs/adr/0009-vertical-protocol.md.
+[project.entry-points."cfa.verticals"]
+data = "cfa.verticals.data:DataVertical"
+
 [project.urls]
 Homepage = "https://marquesantero.github.io/cfa/"
 Repository = "https://github.com/marquesantero/cfa"

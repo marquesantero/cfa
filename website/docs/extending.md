@@ -22,6 +22,30 @@ The architectural reasoning lives in the ADRs:
 - [ADR-0011](https://github.com/marquesantero/cfa/blob/main/docs/adr/0011-condition-registry.md) — ConditionRegistry
 - [ADR-0012](https://github.com/marquesantero/cfa/blob/main/docs/adr/0012-per-vertical-backends.md) — Per-vertical backends
 
+## The shipped reference: `cfa.verticals.data`
+
+CFA ships one first-party vertical inside the wheel —
+[`cfa.verticals.data.DataVertical`](https://github.com/marquesantero/cfa/blob/main/src/cfa/verticals/data/vertical.py).
+It is the lakehouse-flavored vertical CFA originally tested against
+(`bronze`/`silver`/`gold` layers, PII columns, partitions, merge keys,
+cost ceilings) and is the reference implementation third-party verticals
+should model themselves on. It is auto-registered when CFA boots:
+
+```python
+from cfa.core.vertical import VerticalRegistry
+
+VerticalRegistry.singleton().get("data")
+# -> <DataVertical name='data'>
+```
+
+Its JSON Schemas (`PAYLOAD_SCHEMA`, `CONSTRAINTS_SCHEMA`,
+`CATALOG_SCHEMA`) are stable, importable, and serve as live
+documentation of the data-vertical signature shape.
+
+```python
+from cfa.verticals.data import PAYLOAD_SCHEMA, CONSTRAINTS_SCHEMA
+```
+
 ## The two extension points
 
 ### Vertical

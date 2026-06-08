@@ -127,6 +127,16 @@ class Vertical(Protocol):
 
 _ENTRY_POINT_GROUP = "cfa.verticals"
 
+# Verticals shipped inside cfa-kernel. They are also declared as entry
+# points in ``pyproject.toml`` so third-party packaging tools see them.
+# Listing them here makes discovery robust when the package is being
+# used directly from a source tree without a fresh ``pip install`` —
+# entry points only exist when the distribution metadata has been
+# regenerated, but the import path always works.
+_BUILT_IN_VERTICAL_MODULES: tuple[str, ...] = (
+    "cfa.verticals.data",
+)
+
 
 class VerticalRegistry:
     """Process-wide singleton of registered verticals.
@@ -237,6 +247,7 @@ class VerticalRegistry:
         if self._discovered:
             return
         self._discovered = True
+        self._import_built_in_verticals()
         try:
             from importlib.metadata import entry_points
         except ImportError:  # pragma: no cover — Python < 3.8 (unsupported)
@@ -247,6 +258,25 @@ class VerticalRegistry:
             eps = entry_points().get(_ENTRY_POINT_GROUP, [])  # type: ignore[attr-defined]
         for ep in eps:
             self._load_entry_point(ep)
+
+    def _import_built_in_verticals(self) -> None:
+        """Import known first-party verticals.
+
+        Each imported module is expected to call
+        :meth:`register` on this singleton from its ``__init__.py``.
+        Importing is best-effort — a missing module is silently
+        skipped so that source-tree layouts that do not ship every
+        vertical still work.
+        """
+        for module_name in _BUILT_IN_VERTICAL_MODULES:
+            try:
+                __import__(module_name)
+            except ImportError as exc:  # pragma: no cover — defensive
+                warnings.warn(
+                    f"built-in vertical {module_name!r} could not be imported: {exc}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
     def _load_entry_point(self, ep: Any) -> None:
         try:
