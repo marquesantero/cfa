@@ -52,6 +52,41 @@ policy_bundle:
 | `missing_merge_key` | Escrita em Silver/Gold sem merge key |
 | `enforce_types_disabled` | Verificação de tipos desabilitada |
 | `cost_budget_exceeded` | Custo estimado excede orçamento |
+| `schema_mismatch` | Schema não corresponde ao contrato |
+| `unauthorized_gold_write` | Escrita não autorizada na camada Gold |
+| `custom` | Condição definida pelo usuário |
+
+## Carregando via Código
+
+```python
+from cfa.policy.bundle import PolicyBundle, list_available_bundles
+from cfa.policy.engine import PolicyEngine
+
+# Listar bundles disponíveis
+for name in list_available_bundles():
+    print(name)
+
+# Carregar bundle de arquivo
+bundle = PolicyBundle.from_yaml("policies/prod-v1.yaml")
+engine = PolicyEngine(rules=bundle.rules, policy_bundle_version=bundle.version)
+
+# Ou usar bundle built-in
+engine = PolicyEngine(policy_bundle_version="prod-v1.0")
+```
+
+## Condições Customizadas
+
+```python
+from cfa.core.conditions import register_condition, build_condition
+
+def verificar_orcamento(meta):
+    limite = meta.get("max_dbu", 100)
+    def check(sig):
+        return sig.constraints.max_cost_dbu is not None and sig.constraints.max_cost_dbu > limite
+    return check
+
+register_condition("custom_budget", verificar_orcamento)
+```
 
 ## Validando Bundles
 

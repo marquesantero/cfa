@@ -32,10 +32,20 @@ pip install cfa-kernel[all]        # Everything
 ## Initialize a project
 
 ```bash
+# Classic init (backward compatible)
 cfa init
+
+# With templates (recommended)
+cfa init --list                          # see available templates
+cfa init --template fastapi -d my_project  # FastAPI + RuntimeGate
+cfa init --template langgraph -d my_agent  # LangGraph + cfa_guard
+cfa init --template dbt -d my_models       # dbt + CFA validation
+cfa init --template mcp -d my_mcp          # MCP server skeleton
 ```
 
-Creates `.cfa/` with:
+Each template generates `cfa.yaml` + `catalog.json` + `policy.yaml` + framework-specific code + test.
+
+Classic `cfa init` creates `.cfa/` with:
 
 ```text
 .cfa/
@@ -169,5 +179,50 @@ from cfa.types import StateSignature
 signature = StateSignature.from_dict(signature_dict)
 engine = PolicyEngine(policy_bundle_version="prod-v1.0")
 result = engine.evaluate(signature)
-# result.action → approve / replan / block
+# result.action -> approve / replan / block
 ```
+
+## LLM-powered intent resolution
+
+```bash
+pip install cfa-kernel[llm] openai
+
+# Set your API key
+export OPENAI_API_KEY="sk-..."
+
+# Evaluate with LLM normalizer (semantic, not keyword matching)
+cfa evaluate "Join NFe with Clientes and persist to Silver" \
+  --catalog .cfa/catalog.json \
+  --normalizer openai \
+  --llm-model gpt-4o-mini
+```
+
+```python
+from cfa.normalizer.llm import OpenAILMProvider, LLMNormalizerBackend
+from cfa.normalizer.base import IntentNormalizer
+
+provider = OpenAILMProvider(model="gpt-4o-mini")
+backend = LLMNormalizerBackend(provider=provider, strict=True)
+normalizer = IntentNormalizer(backend=backend)
+resolution = normalizer.normalize("join NFe with Clientes", {}, catalog)
+```
+
+## MCP server (AI agents)
+
+```bash
+# Start the MCP server on stdio
+python -m cfa.mcp
+```
+
+Add to `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "cfa": {
+      "command": "python", "args": ["-m", "cfa.mcp"]
+    }
+  }
+}
+```
+
+7 tools exposed: `cfa_evaluate_signature`, `cfa_describe_rules`, `cfa_explain_fault`, `cfa_audit_check`, `cfa_list_backends`, `cfa_lifecycle_status`, `cfa_compliance_check`.

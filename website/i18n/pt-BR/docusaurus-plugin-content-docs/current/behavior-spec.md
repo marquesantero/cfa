@@ -43,3 +43,35 @@ cfa taxonomy test-intents --spec spec.yaml --count 5
 ```
 
 Gera intenções de teste para cada categoria de falha — útil para validar que as regras de política estão funcionando corretamente.
+
+## API Python
+
+### Carregar e sistematizar
+
+```python
+from cfa.behavior import BehaviorSpec, Systematizer
+
+spec = BehaviorSpec.from_yaml("spec.yaml")
+taxonomy, rules = Systematizer().systematize(spec)
+
+print(f"Categorias: {taxonomy.category_count}")
+print(f"Regras: {len(rules)}")
+
+for rule in rules:
+    print(f"  {rule.name}: {rule.fault_code} ({rule.severity.value})")
+```
+
+### Sistematizador com LLM
+
+```python
+from cfa.behavior.llm import OpenAISystematizerBackend
+from cfa.behavior import Systematizer
+
+backend = OpenAISystematizerBackend(model="gpt-4o-mini")
+taxonomy, rules = Systematizer().systematize_from_nl(
+    "Pipeline fiscal: anonimizar PII, exigir merge_key, particionar datasets > 100GB",
+    backend=backend,
+    target_layer="silver",
+)
+```
+
