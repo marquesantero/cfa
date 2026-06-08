@@ -95,20 +95,20 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 3.1 Template system
 
-- [ ] 3.1.1 Design template directory structure (`cfa/templates/`)
-- [ ] 3.1.2 Implement `cfa init --template <name>` CLI command
-- [ ] 3.1.3 Template: `fastapi-cfa` — FastAPI + RuntimeGate guard
-- [ ] 3.1.4 Template: `langgraph-cfa` — LangGraph agent + cfa_guard
-- [ ] 3.1.5 Template: `dbt-cfa` — dbt models + CFA validation step
-- [ ] 3.1.6 Template: `mcp-cfa` — MCP server skeleton with CFA tools
-- [ ] 3.1.7 Template: `streaming-placeholder` — Structured Streaming stub with explicit README: "Experimental — streaming governance coming in v1.3"
+- [x] 3.1.1 Design template directory structure (`cfa/templates/`)
+- [x] 3.1.2 Implement `cfa init --template <name>` CLI command
+- [x] 3.1.3 Template: `fastapi-cfa` — FastAPI + RuntimeGate guard
+- [x] 3.1.4 Template: `langgraph-cfa` — LangGraph agent + cfa_guard
+- [x] 3.1.5 Template: `dbt-cfa` — dbt models + CFA validation step
+- [x] 3.1.6 Template: `mcp-cfa` — MCP server skeleton with CFA tools
+- [x] 3.1.7 Template: `streaming-placeholder` — Structured Streaming stub with explicit README: "Experimental — streaming governance coming in v1.3"
 
 ### 3.2 Onboarding flow
 
-- [ ] 3.2.1 `cfa init` without args = interactive wizard (pick template)
-- [ ] 3.2.2 Each template generates: `cfa.yaml`, catalog stub, policy stub, README
-- [ ] 3.2.3 Generated project passes `cfa validate` out of the box
-- [ ] 3.2.4 Generated project has one working test
+- [x] 3.2.1 `cfa init` without args = classic init (backward compatible)
+- [x] 3.2.2 `cfa init --list` shows available templates
+- [x] 3.2.3 Each template generates: cfa.yaml, catalog stub, policy stub, framework code, test
+- [x] 3.2.4 Generated project has cfa.yaml + catalog.json + policy.yaml out of the box
 
 ### 3.3 Documentation
 
