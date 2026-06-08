@@ -144,6 +144,20 @@ class StateSignature:
     """
     Formal contract of the intent.
     Immutable after generation — any replanning generates a new Signature.
+
+    Vertical-aware (since 1.1.x): every signature carries a ``vertical``
+    field declaring which CFA vertical it belongs to (``"data"`` by
+    default, for backward compatibility with 1.0/1.1 producers). The
+    typed fields below (``target_layer``, ``datasets``, ``constraints``)
+    are the data-vertical's native shape and stay the primary storage
+    for backward compatibility. Generic kernel code that wants to be
+    vertical-agnostic reads the :attr:`payload` and
+    :attr:`constraint_values` mapping views, both of which are derived
+    from the typed fields.
+
+    Other verticals (e.g. ``agent``, ``infra`` shipping in 1.3+) will
+    extend this dataclass with their own typed shapes; the generic
+    Mapping views remain the canonical cross-vertical surface.
     """
 
     domain: str
@@ -152,6 +166,7 @@ class StateSignature:
     datasets: tuple[DatasetRef, ...]
     constraints: SignatureConstraints
     execution_context: ExecutionContext
+    vertical: str = "data"
     intent_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=_utcnow)
     source_intent_raw: str = ""
@@ -159,6 +174,7 @@ class StateSignature:
     @property
     def signature_hash(self) -> str:
         payload = {
+            "vertical": self.vertical,
             "domain": self.domain,
             "intent": self.intent,
             "target_layer": self.target_layer.value,
@@ -171,6 +187,50 @@ class StateSignature:
         }
         content = json.dumps(payload, sort_keys=True)
         return hashlib.sha256(content.encode()).hexdigest()
+
+    # ── Generic mapping views — vertical-agnostic kernel-facing API ─────
+
+    @property
+    def payload(self) -> dict[str, Any]:
+        """Generic Mapping view of the vertical-specific domain payload.
+
+        For the data vertical this is ``{"target_layer": ..., "datasets":
+        [...]}``. Other verticals expose their own shape.
+        """
+        return {
+            "target_layer": self.target_layer.value,
+            "datasets": [
+                {
+                    "name": d.name,
+                    "classification": d.classification.value,
+                    "size_gb": d.size_gb,
+                    "pii_columns": list(d.pii_columns),
+                    "partition_column": d.partition_column,
+                    "merge_keys": list(d.merge_keys),
+                }
+                for d in self.datasets
+            ],
+        }
+
+    @property
+    def constraint_values(self) -> dict[str, Any]:
+        """Generic Mapping view of the constraints.
+
+        The kernel uses this to evaluate JSON-Schema-driven rules
+        without depending on any specific :class:`SignatureConstraints`
+        shape. For the data vertical the mapping mirrors the dataclass
+        verbatim.
+        """
+        return {
+            "no_pii_raw": self.constraints.no_pii_raw,
+            "merge_key_required": self.constraints.merge_key_required,
+            "enforce_types": self.constraints.enforce_types,
+            "partition_by": list(self.constraints.partition_by),
+            "max_cost_dbu": self.constraints.max_cost_dbu,
+            "custom": dict(self.constraints.custom),
+        }
+
+    # ── Convenience accessors (data-vertical specific) ──────────────────
 
     @property
     def contains_pii(self) -> bool:
@@ -212,12 +272,14 @@ class StateSignature:
             datasets=self.datasets,
             constraints=new_constraints,
             execution_context=new_ctx,
+            vertical=self.vertical,
             intent_id=self.intent_id,
             source_intent_raw=self.source_intent_raw,
         )
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "vertical": self.vertical,
             "domain": self.domain,
             "intent": self.intent,
             "target_layer": self.target_layer.value,
@@ -292,6 +354,7 @@ class StateSignature:
             datasets=datasets,
             constraints=constraints,
             execution_context=execution_context,
+            vertical=data.get("vertical", "data"),
             intent_id=data.get("intent_id", str(uuid.uuid4())),
             source_intent_raw=data.get("source_intent_raw", ""),
         )

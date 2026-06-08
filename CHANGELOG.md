@@ -55,6 +55,43 @@ external packages that the kernel discovers via Python entry points.
   `ConditionRegistry.register(..., overwrite=True)` to make the
   intent explicit.
 
+### Added — phase 1b: hybrid generic surface on `StateSignature`
+
+Implements the [ADR-0008](docs/adr/0008-generic-signature.md) contract
+for a vertical-aware signature without breaking the typed data-vertical
+shape. Storage stays typed; the generic surface is derived. 1.0/1.1
+JSON shapes still parse and round-trip without change.
+
+- `StateSignature.vertical: str` — new field declaring the vertical the
+  signature belongs to. Defaults to `"data"` for backward compatibility.
+  Producers of new verticals (`"agent"`, `"infra"`, …) set it
+  explicitly.
+- `StateSignature.payload` — derived `dict` view exposing the
+  data-vertical's domain payload as a generic mapping
+  (``{"target_layer": ..., "datasets": [...]}``). JSON serializable.
+- `StateSignature.constraint_values` — derived `dict` view of the
+  constraint dataclass. Mirrors the dataclass field-for-field.
+- `signature_hash` now hashes `vertical` alongside the existing
+  payload. Two signatures with identical content but different
+  verticals have different hashes — the correct semantics. The hash
+  values themselves changed in this commit; downstream callers that
+  store hashes alongside signatures will see fresh values from this
+  release onward.
+- `to_dict()` / `from_dict()` carry the field. JSON shapes from 1.0/1.1
+  that omit `vertical` parse with the default `"data"` value.
+- `with_constraints()` preserves the `vertical` field through the
+  immutable update.
+- 15 new tests in `tests/contract/test_generic_signature.py` covering
+  defaults, explicit setting, payload/constraint mapping shape, hash
+  semantics (same content same hash, different vertical different
+  hash), and backward-compatible serialization.
+
+This is the "hybrid B2" called out in the Phase 1 roadmap: the kernel
+can now reason about signatures generically via the mapping views,
+while every 1.x consumer keeps the typed dataclass surface they
+already use. The 2.0 cycle will flip storage so the typed shape is
+itself derived from the mapping; until then no API breaks.
+
 ### Added — phase 1a: first-party `data` vertical
 
 - New package `cfa.verticals.data` shipping the reference
