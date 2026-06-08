@@ -40,20 +40,21 @@ Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via P
 
 ### 1.2 Deprecate / hide internal-only modules
 
-- [ ] 1.2.1 Audit `core/phases/runner.py` — internal, should not be public
-- [ ] 1.2.2 Audit `core/planner.py`, `core/codegen.py` — internal helpers
-- [ ] 1.2.3 Audit `execution/*.py` — sandbox internals
-- [ ] 1.2.4 Mark all internal modules with `_` prefix or `__all__` restriction
+- [x] 1.2.1 Audit `core/phases/runner.py` — internal, should not be public
+- [x] 1.2.2 Audit `core/planner.py`, `core/codegen.py` — internal helpers
+- [x] 1.2.3 Audit `execution/*.py` — sandbox internals
+- [x] 1.2.4 Mark all internal modules with header comment
 - [ ] 1.2.5 Document public vs internal in `api.md`
 
 ### 1.3 v1.0 release
 
-- [ ] 1.3.1 Bump version to `1.0.0` everywhere
-- [ ] 1.3.2 Update `README.md` — remove alpha warnings, emphasize stability
-- [ ] 1.3.3 Update `website/docs/intro.md` — "production ready" language
-- [ ] 1.3.4 Write changelog (v0.1.0 → v1.0.0 highlights)
-- [ ] 1.3.5 Tag `v1.0.0` + publish to PyPI
-- [ ] 1.3.6 Write announcement blog post (Medium/Dev.to + website blog)
+- [x] 1.3.1 Bump version to `1.0.0` everywhere
+- [x] 1.3.2 Update `README.md` — remove alpha warnings, emphasize stability
+- [x] 1.3.3 Update `website/docs/intro.md` — "production ready" language
+- [x] 1.3.4 Write changelog (v0.1.0 → v1.0.0 highlights)
+- [x] 1.3.5 Tag `v1.0.0` — build `cfa_kernel-1.0.0.tar.gz` + `.whl` in dist/
+- [ ] 1.3.6 Publish to PyPI
+- [ ] 1.3.7 Write announcement blog post (Medium/Dev.to + website blog)
 
 ---
 
