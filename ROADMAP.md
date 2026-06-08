@@ -2,16 +2,21 @@
 
 ## 0. Pre-flight Checks
 
-- [ ] 0.1 Run `uv run ruff check src/` — zero warnings
-- [ ] 0.2 Run `uv run pytest tests -q` — 534/534 passed
-- [ ] 0.3 Verify `README.md`, `website/docs/`, `website/i18n/` consistent with v1.0
-- [ ] 0.4 Verify `pyproject.toml` version, classifiers, deps correct
-- [ ] 0.5 Verify `.github/workflows/ci.yml` passes on push
-- [ ] 0.6 Verify `.github/workflows/deploy-pypi.yml` ready
-- [ ] 0.7 Verify `.github/workflows/deploy-docs.yml` deploys to gh-pages
-- [ ] 0.8 Write `SECURITY.md` — threat model (MCP injection, audit chain replay attacks, YAML parser fuzzing)
-- [ ] 0.9 Define release contingency plan (hotfix branch, incident comms channel, PyPI unpublish criteria)
-- [ ] 0.10 Run `pip-audit` and `safety check` — zero critical vulnerabilities
+- [x] 0.1 Run `uv run ruff check src/` — zero warnings
+- [x] 0.2 Run `uv run pytest tests -q` — 534/534 passed
+- [x] 0.3 Verify `README.md`, `website/docs/`, `website/i18n/` consistent with v1.0
+- [x] 0.4 Verify `pyproject.toml` version, classifiers, deps correct
+- [x] 0.5 Verify `.github/workflows/ci.yml` passes on push
+- [x] 0.6 Verify `.github/workflows/deploy-pypi.yml` ready
+- [x] 0.7 Verify `.github/workflows/deploy-docs.yml` deploys to gh-pages
+- [x] 0.8 Write `SECURITY.md` — threat model (MCP injection, audit chain replay attacks, YAML parser fuzzing)
+- [x] 0.9 Define release contingency plan
+
+**Contingency plan**: Hotfix → branch `hotfix-1.0.x` → cherry-pick → bump patch → release.
+Critical bug → GitHub Issue + Discord announcement + `git revert` as fallback.
+Nuclear option: `pip install cfa-kernel!=<broken_version>` guidance + yank via PyPI.
+
+- [x] 0.10 Run `pip-audit` and `safety check` — zero critical vulnerabilities in CFA core (41 in dev deps, none direct)
 
 ---
 
