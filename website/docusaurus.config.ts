@@ -111,7 +111,7 @@ const config: Config = {
   } satisfies Preset.ThemeConfig,
 
   customFields: {
-    version: '0.1.8',
+    version: '0.1.9',
   },
 };
 

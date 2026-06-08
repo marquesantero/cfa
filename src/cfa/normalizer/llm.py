@@ -363,7 +363,8 @@ class LLMNormalizerBackend(NormalizerBackend):
         self, data: dict[str, Any], catalog: dict[str, Any]
     ) -> list[str]:
         errors: list[str] = []
-        catalog_datasets = catalog.get("datasets", {})
+        # Support both flat dict {name: meta} and nested {"datasets": {name: meta}}
+        catalog_datasets = catalog.get("datasets") if isinstance(catalog.get("datasets"), dict) else catalog
 
         for ds in data.get("datasets", []):
             name = ds.get("name", "")

@@ -227,7 +227,7 @@ def _html_page(title: str, body: str, scripts: str = "") -> str:
 <body>
 <main>
 {body}
-<div class="footer">CFA v0.1.8 — Contextual Flux Architecture — Generated {ts}</div>
+<div class="footer">CFA v0.1.9 — Contextual Flux Architecture — Generated {ts}</div>
 </main>
 <script src="{_CHARTJS}"></script>
 {scripts}

@@ -4,7 +4,7 @@ sidebar_position: 16
 
 # API Reference
 
-Public classes and functions exported by CFA v0.1.8.
+Public classes and functions exported by CFA v0.1.9.
 
 ## `cfa.core.kernel`
 
