@@ -54,7 +54,9 @@ customer_data, financial_data, inventory, sales, general.
 4. **datasets**: List ONLY datasets that appear in the provided catalog. \
 For each, include:
    - name: exact catalog name
-   - classification: from catalog metadata
+   - classification: one of [high_volume, internal, public, sensitive].
+     Use the catalog's classification field if present. If absent, derive:
+     size_gb > 100 -> high_volume, pii_columns not empty -> sensitive, else -> internal
    - pii_columns: from catalog metadata (empty list if none)
    - size_gb: from catalog metadata
    - partition_column: from catalog metadata (null if none)
@@ -101,7 +103,7 @@ Return ONLY valid JSON. No markdown fences, no explanation outside the JSON.
   "datasets": [
     {
       "name": "<exact_catalog_name>",
-      "classification": "<from_catalog>",
+      "classification": "<high_volume|internal|public|sensitive>",
       "pii_columns": ["<col1>", "<col2>"],
       "size_gb": <number>,
       "partition_column": "<col or null>"

@@ -24,18 +24,18 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Section 1 — Setup & Secrets
+# MAGIC ## Section 0 — Install
 # MAGIC
-# MAGIC API key read from Databricks Secret Scope `cfa-secrets/deepseek-key`.
-# MAGIC Falls back to `DEEPSEEK_API_KEY` env var for local testing.
+# MAGIC Run this cell first to install dependencies.
 # MAGIC
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Section 0 — Install
+# MAGIC ## Section 1 — Setup & Secrets
 # MAGIC
-# MAGIC Run this cell first to install dependencies.
+# MAGIC API key read from Databricks Secret Scope `cfa-secrets/openai-key` or `cfa-secrets/deepseek-key`.
+# MAGIC Falls back to `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` env vars for local testing.
 # MAGIC
 
 # COMMAND ----------
@@ -127,6 +127,7 @@ CATALOG = {
     'nfe_bronze': {
         'type': 'delta', 'layer': 'bronze', 'size_gb': 50,
         'partition_by': ['processing_date'], 'pii': False,
+        'pii_columns': [],
         'description': 'Notas Fiscais Eletronicas brutas',
     },
     'clientes_bronze': {
@@ -137,17 +138,20 @@ CATALOG = {
     },
     'vendas_bronze': {
         'type': 'delta', 'layer': 'bronze', 'size_gb': 2000,
-        'pii': False,
+        'partition_by': ['data_venda'], 'pii': False,
+        'pii_columns': [],
         'description': 'Registros de transacoes de venda',
     },
     'fornecedores_bronze': {
         'type': 'delta', 'layer': 'bronze', 'size_gb': 10,
-        'pii': False,
+        'partition_by': ['updated_at'], 'pii': False,
+        'pii_columns': [],
         'description': 'Cadastro de fornecedores',
     },
     'vendas_gold_agregado': {
         'type': 'delta', 'layer': 'gold', 'size_gb': 500,
-        'pii': False,
+        'partition_by': ['data_venda'], 'pii': False,
+        'pii_columns': [],
         'description': 'Agregados de vendas para BI',
     },
 }
@@ -260,8 +264,14 @@ else:
 if not HAS_LLM:
     print("SKIP: no API key available")
 else:
-    # The 'sb' backend from section 4 already recorded calls
-    records = sb.audit_records
+    # 'sb' is the strict backend created in Section 4.
+    # Guard against running this cell out of order.
+    try:
+        records = sb.audit_records
+    except NameError:
+        print("NOTE: 'sb' not found — run Section 4 first, or re-run from Section 1.")
+        records = []
+
     print("=" * 55)
     print("LLM AUDIT TRAIL — Tamper-evident LLM calls")
     print("=" * 55)
@@ -401,7 +411,13 @@ else:
                 print(f"  -> Replans   : {len(result.replan_history)}")
             if result.generated_code and result.generated_code.code:
                 lines = result.generated_code.code.splitlines()
-                print(f"  -> Code gen  : {len(lines)} lines {result.generated_code.language}")
+                print(f"  -> Code gen  : {len(lines)} lines ({result.generated_code.language})")
+                # Show first meaningful lines so the output is visible
+                preview = [l for l in lines if l.strip()][:6]
+                for line in preview:
+                    print(f"     {line}")
+                if len(lines) > 6:
+                    print(f"     ... ({len(lines) - 6} more lines)")
         except Exception as e:
             print(f"  -> BLOCKED   : {type(e).__name__} | {str(e)[:100]}")
 
@@ -430,10 +446,23 @@ print("=" * 55)
 print("RUNTIME GATE")
 print("=" * 55)
 
+# Guard: 'rules' is set by Section 6 (LLM Systematizer).
+# If that section was skipped or failed, fall back to default rules gracefully.
+try:
+    _rules = rules
+except NameError:
+    _rules = None
+
+if _rules is None:
+    print("NOTE: LLM-generated rules not available (Section 6 skipped or no API key).")
+    print("      Using default CFA policy rules instead.")
+else:
+    print(f"  Using {len(_rules)} LLM-generated rules from Section 6")
+
 try:
     gate = RuntimeGate(
         catalog=CATALOG,
-        policy_rules=rules if rules is not None else None,
+        policy_rules=_rules,
     )
 
     result = gate.validate("Join NFe with Clientes and persist to Silver")
@@ -518,13 +547,19 @@ print("=" * 55)
 print("POLICY ENGINE WITH LLM-GENERATED RULES")
 print("=" * 55)
 
-if rules is None:
-    print("SKIP: rules not available (LLM Systematizer requires API key)")
-    print("   Using default policy rules instead.")
+# Guard: 'rules' is set by Section 6 (LLM Systematizer).
+try:
+    _rules_s10 = rules
+except NameError:
+    _rules_s10 = None
+
+if _rules_s10 is None:
+    print("NOTE: LLM-generated rules not available (Section 6 skipped or no API key).")
+    print("      Using default CFA policy rules instead.")
     engine = PolicyEngine()  # default rules
 else:
-    print(f"  Using {len(rules)} LLM-generated rules from Section 6")
-    engine = PolicyEngine(rules=rules)
+    print(f"  Using {len(_rules_s10)} LLM-generated rules from Section 6")
+    engine = PolicyEngine(rules=_rules_s10)
 
 # --- Safe signature ---
 sig_safe = StateSignature(
@@ -588,14 +623,14 @@ print("\nLLM-rules PolicyEngine complete")
 # MAGIC
 # MAGIC | LLM Feature | Status | Notes |
 # MAGIC |---|---|---|
-# MAGIC | LLM Normalizer | \\u2713 | Semantic intent resolution via DeepSeek |
-# MAGIC | Strict Mode | \\u2713 | LLM output validated against catalog |
-# MAGIC | LLM Audit Trail | \\u2713 | Every call SHA-256 traceable |
-# MAGIC | LLM Systematizer | \\u2713 | NL → BehaviorSpec → PolicyRules |
-# MAGIC | Full Kernel + LLM | \\u2713 | End-to-end with LLM normalizer |
-# MAGIC | Runtime Gate | \\u2713 | Guard with LLM-generated policy rules |
-# MAGIC | Normalizer Comparison | \\u2713 | Rule-based vs LLM side-by-side |
-# MAGIC | Secret Management | \\u2713 | Databricks Secret Scope `cfa-secrets` |
+# MAGIC | LLM Normalizer | ✓ | Semantic intent resolution via DeepSeek/OpenAI |
+# MAGIC | Strict Mode | ✓ | LLM output validated against catalog |
+# MAGIC | LLM Audit Trail | ✓ | Every call SHA-256 traceable |
+# MAGIC | LLM Systematizer | ✓ | NL → BehaviorSpec → PolicyRules |
+# MAGIC | Full Kernel + LLM | ✓ | End-to-end with LLM normalizer |
+# MAGIC | Runtime Gate | ✓ | Guard with LLM-generated policy rules |
+# MAGIC | Normalizer Comparison | ✓ | Rule-based vs LLM side-by-side |
+# MAGIC | Secret Management | ✓ | Databricks Secret Scope `cfa-secrets` |
 # MAGIC
 # MAGIC **Key differences from rule-based:**
 # MAGIC
