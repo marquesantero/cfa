@@ -69,10 +69,11 @@ def _sensitive_without_partition(meta: dict[str, Any]) -> ConditionFn:
 
 
 def _cost_budget_exceeded(meta: dict[str, Any]) -> ConditionFn:
-    max_dbu = meta.get("max_dbu", 0.0)
+    max_dbu = meta.get("max_dbu", 0.0) or 0.0
     def check(sig: StateSignature) -> bool:
-        if max_dbu > 0 and sig.constraints.max_cost_dbu is not None:
-            return sig.constraints.max_cost_dbu > max_dbu
+        limit = max_dbu or 0.0
+        if limit > 0 and sig.constraints.max_cost_dbu is not None:
+            return sig.constraints.max_cost_dbu > limit
         return sig.constraints.max_cost_dbu is not None and sig.constraints.max_cost_dbu <= 0
     return check
 
