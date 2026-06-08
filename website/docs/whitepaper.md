@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# CFA v0.1.7 Whitepaper
+# CFA v0.1.8 Whitepaper
 
 Contextual Flux Architecture — Governed execution for AI agents and data systems.
 
@@ -197,7 +197,7 @@ Comprehensive test coverage across governance, resolution, lifecycle, kernel, ad
 
 ## 9. Conclusion
 
-CFA v0.1.7 establishes a governance kernel that bridges the gap between AI agent flexibility and production-grade safety. By formalizing intent, enforcing policy before execution, generating deterministic code, sandboxing runtime, projecting state, and maintaining tamper-evident audit trails, CFA provides the guardrails that AI-native data systems require to operate in regulated, high-stakes environments.
+CFA v0.1.8 establishes a governance kernel that bridges the gap between AI agent flexibility and production-grade safety. By formalizing intent, enforcing policy before execution, generating deterministic code, sandboxing runtime, projecting state, and maintaining tamper-evident audit trails, CFA provides the guardrails that AI-native data systems require to operate in regulated, high-stakes environments.
 
 The architecture is designed for **progressive adoption**: start with a single policy gate before an existing pipeline, then expand to full kernel orchestration as confidence grows. Every component is pluggable, every decision is auditable, and every state transition is recorded.
 

@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Whitepaper CFA v0.1.7
+# Whitepaper CFA v0.1.8
 
 Contextual Flux Architecture — Execução governada para agentes de IA e sistemas de dados.
 

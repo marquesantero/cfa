@@ -68,8 +68,8 @@ Invariant I4: after every execution (success, partial, or failure), the `StatePr
 
 ## Can CFA handle streaming data?
 
-CFA v0.1.7 targets batch and micro-batch execution. Streaming support is planned for a future version. The architecture's concurrency model assumes `single_active_intent_per_target_scope`.
+CFA v0.1.8 targets batch and micro-batch execution. Streaming support is planned for a future version. The architecture's concurrency model assumes `single_active_intent_per_target_scope`.
 
 ## Is CFA production-ready?
 
-CFA v0.1.7 has 343 passing tests, a full CLI, MCP server, rich reporting, and framework adapters. It is designed for production governance gates. The core has been battle-tested through multiple refactors. As with any governance tool, deploy with monitoring and start with `cfa evaluate` in CI before moving to runtime gates.
+CFA v0.1.8 has 343 passing tests, a full CLI, MCP server, rich reporting, and framework adapters. It is designed for production governance gates. The core has been battle-tested through multiple refactors. As with any governance tool, deploy with monitoring and start with `cfa evaluate` in CI before moving to runtime gates.
