@@ -55,6 +55,26 @@ external packages that the kernel discovers via Python entry points.
   `ConditionRegistry.register(..., overwrite=True)` to make the
   intent explicit.
 
+### Strategy — dual-track from 1.2.0 forward
+
+[ADR-0013](docs/adr/0013-protocol-over-product.md) formalises CFA's
+strategy from 1.2.0 onward: every release ships **two** deliverables —
+one substrate (spec / portability / stability advance, survives hype
+cycles) and one adoption (integration / demo / case study, useful this
+quarter). Cadence: 6-8 weeks per minor.
+
+The protocol becomes the product. `cfa-kernel` is *one* implementation;
+the JSON Schemas and audit chain format live in a separate `cfa-protocol`
+repo from 1.2.0 onward and are versioned independently of the Python
+library. Other languages (Go for `cfa-verify` in 1.3, TypeScript in 1.4)
+will ship as conformance proofs.
+
+The strategy and the operational expression (release-by-release
+substrate + adoption pairing through 2.0.0) live in
+[`drafts/ROADMAP.md`](drafts/ROADMAP.md), which was substantially
+rewritten to drop the "Movement I/II/III" framing in favor of paired
+deliverables per release.
+
 ### Added — phase 1b: hybrid generic surface on `StateSignature`
 
 Implements the [ADR-0008](docs/adr/0008-generic-signature.md) contract

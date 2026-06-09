@@ -7,13 +7,35 @@
 
 ## 0. Sumário executivo
 
-CFA chegou a **1.0.0** numa "API freeze" prematura, mas com **zero adoção real** (nenhum download externo, nenhuma issue de usuário, nenhum import em código de terceiros). Tem código de qualidade acima da média (534 testes, 83% cobertura, tipos imutáveis, hash chain real, zero deps no core), mas está em rota de colisão com OPA, LangSmith e Unity Catalog porque o pitch tenta cobrir os três simultaneamente sem vencer nenhum.
+CFA é uma camada de governança entre **intenção** e **execução** — tipada,
+determinística, com remediação estruturada e audit chain SHA-256
+verificável offline. Em 2026 (versão 1.1.0 no PyPI) o projeto consolidou
+sua arquitetura como **plug-shaped**: kernel fechado, extensão por
+contrato (`Vertical`, `Integration`, `DecisionSink` — ADR-0007 a 0012).
 
-Dado o vácuo de adoção, tratamos a 1.0.0 como **prática**: a próxima release (`1.1.0`) faz consolidação direta de pacotes e remove o que não deveria existir, **sem shims de deprecação**. Quando houver adoção real (Movimento I → Movimento II), passamos a respeitar semver estrito. Até lá, prevalecer pragmatismo.
+A pergunta estratégica não é "como viramos referência em 18 meses?" —
+a janela de adoção da era IA fechou esse modelo. Frameworks viram febre
+em meses e somem no semestre seguinte. Quem joga adoção-só morre com o
+framework. Quem joga substrato-só fica invisível.
 
-Este plano organiza a evolução em **três movimentos** (cunha → expansão → plataforma) ao longo de aproximadamente 18 meses, preservando o DNA distintivo e cortando ruído que dilui esse DNA. Cada movimento tem releases concretas, deliveráveis técnicos por release, critérios de saída mensuráveis e riscos identificados.
+A resposta — formalizada em **ADR-0013** — é **dual-track**: toda
+release ship dois deliverables em paralelo, um de **substrato** (algo
+que sobrevive a 5 anos de churn) e um de **relevância** (algo útil neste
+trimestre). A cadência alvo é **6-8 semanas por minor**, compatível com
+o ritmo da era IA.
 
-A próxima release (**1.1.0 — Foco**) faz a limpeza necessária para o DNA ser visível. A release seguinte (**1.2.0 — Primeira integração**) cria o primeiro caso de uso público inegável. A partir daí o projeto ganha direito de expandir.
+A próxima release (**1.2.0 — Protocol + dbt**) entrega:
+- **Substrato:** `cfa-protocol v0.1` em repo separado — JSON Schema da
+  signature, audit chain format, decision shape, conformance suite.
+  Versionado independentemente do kernel. Qualquer linguagem pode
+  implementar a spec.
+- **Relevância:** `cfa dbt check` — lê `manifest.json`, deriva
+  signatures por model, roda o policy bundle em CI. Demo público,
+  GitHub Action, screencast, post.
+
+A partir daí, cada minor segue a mesma estrutura — substrato +
+relevância — até 2.0.0 que congela `cfa-protocol 1.0` como spec
+estável.
 
 ---
 
@@ -54,411 +76,326 @@ Qualquer release que dilua estas (ex.: tornar LLM obrigatório no path crítico,
 
 ---
 
-## 2. Visão dos três movimentos
+## 2. Estratégia: substrato + relevância em paralelo
 
-| Movimento | Releases | Duração | Objetivo |
-|-----------|----------|---------|----------|
-| **I — Cunha** | 1.1.0 → 1.2.x | ~6-9 meses | Ser referência inegável em "pre-execution governance gate" |
-| **II — Expansão lateral** | 1.3.0 → 1.6.x | ~9-12 meses | DNA se expressa nas adjacências (lifecycle, MCP, backends, state projection) |
-| **III — Plataforma** | 2.0.0 → 2.x | 12+ meses | "CFA Protocol" — categoria nomeada, ecossistema, hosted version opcional |
+Em 2026 a janela de adoção encolheu de anos para semanas. Frameworks
+viram febre e são abandonados no mesmo trimestre. Quem joga "vou
+conquistar mindshare em 18 meses" perde o tabuleiro inteiro entre
+turnos. Por outro lado, quem corre só atrás de framework do mês morre
+com o framework.
 
-Cada movimento tem **critério de saída mensurável**. Não se passa para o próximo só porque o calendário virou. Se Movimento I não atingiu o critério em 9 meses, revisitamos a tese antes de seguir.
+A resposta — formalizada em [ADR-0013](../docs/adr/0013-protocol-over-product.md) —
+é trabalhar dois eixos em cada release:
 
----
+### Eixo Substrato (sobrevive a 5 anos)
 
-## 3. Movimento I — Cunha
+O que sobrevive a ciclos de febre é **protocolo**, não framework.
+SQLite, Postgres, Markdown, OAuth, HTTP, MCP — cada um é uma camada
+que produtos implementam. Nenhum deles é o produto que ganhou.
 
-### 3.1. Goal narrativo
+O substrato de CFA é:
 
-Quando alguém perguntar "qual ferramenta usar para validar tipadamente uma escrita governada em Silver/Gold *antes* dela acontecer?" — a resposta padrão é CFA.
+- **CFA Protocol spec** — JSON Schema da signature, formato da audit
+  chain, schema da decisão, schema do policy bundle.
+- **Versionamento independente** do código — `cfa-protocol 0.4` pode
+  estar em uso enquanto `cfa-kernel-py 1.4.x` é uma implementação.
+- **Implementações de referência em múltiplas linguagens** — Python
+  (`cfa-kernel`), Go (`cfa-verify` para validar chains offline),
+  TypeScript (signature builder para o ecossistema agent).
+- **Estabilidade do kernel** — código escrito contra CFA em 2026
+  continua rodando em 2030.
 
-### 3.2. Critério de saída
+### Eixo Relevância (mostra valor neste trimestre)
 
-Pelo menos **uma das seguintes** acontece publicamente:
-- Issue de terceiro relatando uso em produção.
-- Comparação em blog/post de terceiro que cita CFA ao lado de OPA/GE.
-- PR não-trivial de contribuidor externo.
-- ≥3 menções orgânicas (LinkedIn, X, Reddit, HN).
-- ≥500 downloads/mês no PyPI por 2 meses consecutivos.
+O que coloca CFA na frente de gente real são **integrações úteis
+agora**: dbt check em CI, Airflow operator, GitHub Action, MCP
+authority pattern, dashboard live. Cada uma é manifestação do
+substrato, descartável quando o framework morrer, sem afetar o core.
 
----
+### Casamento dos dois eixos
 
-### 3.3. Release 1.1.0 — Foco
+Toda release ship as duas peças. A relevância traz pessoas. O
+substrato dá motivo pra ficar:
 
-**Objetivo:** remover tudo que dilui o DNA. Reescrever pitch. Consolidar pacotes. Sem features novas.
+| Release | Substrato | Relevância |
+|---------|-----------|------------|
+| 1.2.0 | CFA Protocol v0.1 spec publicado em repo separado | `cfa dbt check` em CI, demo público |
+| 1.3.0 | Go binary `cfa-verify` standalone | Vertical `agent` + demo LLM via MCP |
+| 1.4.0 | TypeScript signature builder | Airflow `CFAGateOperator` + DecisionSinks (Slack/OTel/PR) |
+| 1.5.0 | Catalog Hub de verticais/integrações + conformance badge | Live dashboard polido + 2-3 case studies |
+| 2.0.0 | CFA Protocol v1.0 stable + spec freeze + governance | Lifecycle indices produtizados, multi-vertical em produção |
 
-**Duração estimada:** 1-2 semanas de trabalho dedicado.
+Cadência **6 a 8 semanas por minor**. Em vez de "vai para o próximo
+movimento depois de 9 meses", é "cada release entrega substrato +
+relevância em 2 meses". Compatível com janela de adoção da era IA.
 
-#### 3.3.1. Trilha A — Cortes editoriais
+### Métricas
 
-| Item | Ação | Arquivo/local |
-|------|------|---------------|
-| Adapters falsos | Remover `langgraph.py`, `crewai.py`, `autogen.py`, `dspy.py`, `openai_agents.py`. Criar `docs/integrations/use-cfa-guard-with-frameworks.md` único, mostrando padrão de uso. | `src/cfa/adapters/` |
-| Hero "Whitepaper" | Hero passa a ser demo de 20s em ASCII/code + CTA para Getting Started. Whitepaper vira link secundário. | `website/src/pages/index.tsx` |
-| Letras gregas no marketing | Remover `(Φ, Γ, Π, Ω, Σ)` do whitepaper público (renomear para "Architecture Notes"). Mantém versão interna em `docs/internal/`. | `website/docs/whitepaper.md` |
-| Versão "v1.0.0" no site | Padronizar tudo com `__version__` lido do package. Adicionar build hook no Docusaurus. | `website/src/`, `website/docs/api.md` |
-| Tabela "✅/❌ Others" | Já removida no README, remover também em `website/docs/intro.md`. | `website/docs/intro.md:85-97` |
-| Blog template Docusaurus | Apagar `website/blog/` inteiro. Substituir por 1 release notes da 1.1.0. | `website/blog/` |
-| Docs de planejamento na raiz | Mover `CFA_IMPLEMENTATION_PLAN.md`, `CFA_MARKET_RESEARCH_2026.md`, `MANUAL_TESTING_GUIDE.md` para `drafts/`. Adicionar `.gitignore` para `cfa_test_results_*/`. | raiz do repo |
-| Keywords PT-BR/fiscal hardcoded | Tirar `_DOMAIN_KEYWORDS` específicos do `RuleBasedNormalizerBackend`. Criar `examples/fiscal_pt_br_normalizer.py` mostrando como estender. | `src/cfa/normalizer/base.py:82-93` |
-| Status alpha no site | Banner persistente "Alpha — APIs may change" em todas as páginas. | `website/src/theme/` |
+A métrica deixa de ser "stars no GitHub" e vira:
 
-#### 3.3.2. Trilha B — Consolidação de pacotes
+| Métrica antiga | Métrica nova |
+|----------------|--------------|
+| Downloads no PyPI | Implementações do protocolo em outras linguagens |
+| Stars | Sistemas externos emitindo audit chains CFA-formatadas |
+| Mentions em blogs | Citação em specs de outros projetos |
+| Adopters nomeados | Verticais terceiros publicados |
 
-Reduzir de **20 subpacotes para ~13**. Sem shims — 1.0.0 não tem usuários reais, então renames são diretos e o histórico do git serve como registro do que mudou.
-
-```text
-ANTES (atual)                  →  DEPOIS (1.1.0)
-─────────────────────────────────────────────────────────
-core/                          →  core/                 (kernel + phases + types)
-governance/                    →  REMOVIDO              (absorvido por policy/)
-policy/                        →  policy/               (engine + bundle + rules + catalog)
-validation/                    →  validate/             (renomeado, mais curto)
-resolution/                    →  REMOVIDO              (absorvido por resolve/)
-normalizer/                    →  resolve/              (renomeado: intent→signature)
-audit/                         →  audit/                (sem mudança)
-observability/                 →  obs/                  (renomeado, mais curto)
-lifecycle/                     →  lifecycle/            (sem mudança)
-execution/                     →  execution/            (sem mudança)
-adapters/                      →  REMOVIDO              (vira pasta de docs)
-backends/                      →  backends/             (sem mudança)
-sandbox/                       →  sandbox/              (sem mudança)
-cli/                           →  cli/                  (sem mudança)
-storage/                       →  storage/              (sem mudança)
-mcp/                           →  mcp/                  (sem mudança)
-reporting/                     →  reporting/            (sem mudança)
-runtime/                       →  runtime/              (sem mudança)
-testing/                       →  testing/              (sem mudança)
-behavior/                      →  behavior/             (sem mudança, candidato a fundir com resolve em 1.3)
-```
-
-Implementação: remover o pacote antigo, atualizar imports internos, registrar no CHANGELOG. Sem shim — não há usuário externo para proteger e shim acumula débito.
-
-#### 3.3.3. Trilha C — Reescrita de narrativa
-
-Substituir README, `intro.md`, e homepage por linguagem operacional, sem letras gregas, sem "kernel para tudo". Modelo:
-
-> **CFA** valida intenções de escrita governada antes da execução.
->
-> Você descreve o que vai fazer como uma `StateSignature` tipada. CFA responde com `approve`, `replan(remediations)` ou `block(reason)`. Cada decisão entra numa cadeia SHA-256 verificável offline.
->
-> Funciona como decorator Python, CLI, MCP tool, e integrações com dbt e Airflow (em breve).
->
-> Não precisa de LLM. Não precisa de rede. Não substitui OPA — completa em casos dataset-aware.
-
-Adicionar seção **"What CFA is not"** explícita:
-
-- Não é um observability tool — use LangSmith/Phoenix para isso.
-- Não é um catalog — use Unity Catalog/Atlan/DataHub para isso, e plugue catalog no CFA.
-- Não é um data quality tool em repouso — use Great Expectations/Soda para isso.
-- Não substitui OPA em casos genéricos de policy-as-code.
-
-Adicionar página comparativa: `website/docs/compare.md`.
-
-#### 3.3.4. Trilha D — Cache no decorator
-
-[`CFAGuard._check`](src/cfa/adapters/__init__.py) instancia kernel completo a cada chamada. Corrigir:
-
-```python
-class CFAGuard:
-    def __init__(self, ...):
-        self._kernel: KernelOrchestrator | None = None
-        ...
-
-    def _get_kernel(self) -> KernelOrchestrator:
-        if self._kernel is None:
-            self._kernel = KernelOrchestrator(...)
-        return self._kernel
-
-    def _check(self, intent: str) -> None:
-        result = self._get_kernel().process(intent)
-        ...
-```
-
-Adicionar benchmark micro em `tests/perf/test_guard_overhead.py`: chamada decorada ≤ 5ms p99 com normalizer rule-based.
-
-#### 3.3.5. Trilha E — ADRs
-
-Criar `docs/adr/` com formato MADR:
-
-- `0001-typed-signature-as-contract.md`
-- `0002-sha256-hash-chain-offline-verifiable.md`
-- `0003-replan-as-first-class.md`
-- `0004-deterministic-by-default-llm-as-extra.md`
-- `0005-package-consolidation-1.1.0.md`
-- `0006-no-fake-adapters.md`
-
-Cada ADR ≤2 páginas: contexto, decisão, consequências, alternativas consideradas.
-
-#### 3.3.6. Critério de release 1.1.0
-
-- [ ] Pacotes consolidados, todos os testes passando (mantém 534+).
-- [ ] Adapters falsos removidos, doc honesto no lugar.
-- [ ] README + intro + homepage reescritos.
-- [ ] Site limpo: blog template removido, versão consistente, banner alpha.
-- [ ] 6 ADRs publicados.
-- [ ] CHANGELOG.md com migration notes (breaking + deprecations).
-- [ ] Tag `v1.1.0` no GitHub, release no PyPI.
-- [ ] Release notes em blog do site.
+Não se "passa pro próximo movimento" — se **avança o número da versão
+do protocolo** sem quebrar implementadores. Isso é a definição de
+substrato funcionando.
 
 ---
 
-### 3.4. Release 1.2.0 — Primeira integração real
+## 3. Releases (cadência 6-8 semanas, cada uma com substrato + relevância)
 
-**Objetivo:** o primeiro caso de uso público inegável. Escolher **uma** integração e fazê-la com qualidade de referência.
+### 3.1. Onde estamos hoje
 
-**Duração estimada:** 2-4 semanas.
+**1.1.0** já no PyPI. **Phase 0** (contratos de plugin) e **Phase 1a/1b**
+(vertical de referência + signature genérica) na main, sem release nova
+ainda — entrarão como **1.1.1** quando convier, ou direto na 1.2.0.
 
-#### 3.4.1. A escolha: dbt check
+A partir daqui, **cada minor (1.2 → 2.0) entrega substrato + relevância
+em paralelo**.
 
-dbt é a escolha racional para a primeira integração porque:
+---
 
-1. Tem manifest determinístico (`target/manifest.json`) → fácil derivar `StateSignature`.
-2. CI-friendly (todo time dbt já tem CI).
-3. Resolve dor real (dbt contracts cobrem schema, não governance).
-4. ICP coincide com o que CFA já assume (lakehouse-shape, layers, partitions).
-5. Não requer infra (Airflow exige rodar Airflow, Databricks exige cluster).
+### 3.2. Release 1.2.0 — "Protocol + dbt"
 
-#### 3.4.2. Escopo técnico
+**Janela:** ~6 semanas.
 
-**Novo módulo:** `src/cfa/integrations/dbt/`
+#### Substrate deliverable: `cfa-protocol` v0.1
 
-```
-src/cfa/integrations/dbt/
-├── __init__.py          # API pública: check(), derive_signature()
-├── manifest.py          # Parser do target/manifest.json
-├── signature.py         # ModelNode → StateSignature
-├── cli.py               # Subcomando `cfa dbt check`
-└── runner.py            # Orquestra: ler manifest → gerar sigs → policy → relatório
-```
+Repo separado `marquesantero/cfa-protocol` contendo:
 
-**CLI:**
+- `signature.schema.json` — JSON Schema canonical de `StateSignature`
+  na forma vertical-aware (ADR-0008). Versionado independentemente
+  de `cfa-kernel`.
+- `audit-event.schema.json` — schema dos eventos da audit chain, com
+  o algoritmo de canonicalização documentado (ADR-0002).
+- `decision.schema.json` — formato do resultado da decisão
+  (approve/replan/block + faults + interventions).
+- `policy-bundle.schema.json` — formato do YAML policy bundle.
+- `verticals/data.payload.schema.json` e
+  `verticals/data.constraints.schema.json` — schemas do vertical
+  data, importáveis por qualquer implementação.
+- `conformance/` — suite de fixtures (~30 casos) que qualquer
+  implementação roda para se declarar CFA-conformant.
+- `examples/` — JSON canônico de uma signature + audit chain em
+  cada vertical.
+- README explicando: "Este repo é a spec. cfa-kernel é uma
+  implementação. Qualquer linguagem pode implementar a spec."
+
+Tag `v0.1.0` no `cfa-protocol`; spec viva mas não congelada.
+
+#### Adoption deliverable: `cfa dbt check`
+
+Módulo `cfa.integrations.dbt` shipped dentro do `cfa-kernel 1.2.0`,
+implementando o contrato `Integration` da ADR-0010:
 
 ```bash
 cfa dbt check --project-dir ./my_dbt_project \
               --policy-bundle policies/prod-v1.yaml \
               --catalog .cfa/catalog.json \
               --fail-on block \
-              --format json
+              --format junit > test-results.xml
 ```
 
-**Comportamento:**
-1. Lê `target/manifest.json` (executar `dbt parse` antes se não existe).
-2. Para cada `node` materializado (table/incremental), deriva `StateSignature`:
-   - `domain` ← schema do model
-   - `intent` ← materialization type
-   - `target_layer` ← inferido por convenção configurável (`mart_` → gold, `int_` → silver, etc.)
-   - `datasets` ← refs + sources do model, casados com catálogo CFA
-   - `constraints.partition_by` ← `partition_by` config do dbt
-   - `constraints.merge_key_required` ← `unique_key` config
-3. Roda `PolicyEngine.evaluate(sig)` em cada.
-4. Emite relatório agregado (table/json/junit).
-5. Exit code conforme `--fail-on`.
+Lê `target/manifest.json`, deriva uma `StateSignature` (data vertical)
+por model materializado, roda o policy bundle, emite resultado em
+JUnit/JSON para CI. Saída zero-exit em approve, não-zero em block.
 
-**Detalhes de qualidade:**
-- Mapping configurável via `cfa.yaml` (`dbt.layer_mapping`).
-- Suporte a `dbt-core` 1.7+ (manifest schema versionado).
-- Cache de decisão por `model_hash` (se model não mudou, decisão reusada via signature_hash).
-- Output formato JUnit XML para CI.
+Inclui:
 
-**Demo end-to-end:** `examples/dbt_demo/` com projeto dbt mínimo que provoca todos os 3 outcomes (approve, replan, block) + GitHub Action.
+- Demo project público em `examples/dbt_demo/` que provoca os 3
+  outcomes (approve, replan, block).
+- GitHub Action template (`.github/workflows/cfa-check.yml`) que
+  roda `cfa dbt check` em todo PR.
+- Screencast 3min no homepage.
+- Post de release no blog: "How to govern your dbt project with
+  CFA in 5 minutes".
 
-#### 3.4.3. Trilha paralela — Catalog auto-discovery
+#### Critério de release
 
-Para dbt check funcionar bem, CFA precisa entender catalog de fontes externas. Adicionar:
+- [ ] `cfa-protocol` v0.1.0 publicado, README explicando spec vs
+  implementação.
+- [ ] `cfa-kernel 1.2.0` no PyPI; `cfa dbt check` rodando no demo
+  project sem erro.
+- [ ] Pelo menos um projeto público (mesmo que pessoal/sintético)
+  com badge "Governed by CFA" e link para o action.
+- [ ] Post no LinkedIn + 1 post no HN ou Reddit r/dataengineering.
 
-```python
-from cfa.policy.catalog import Catalog
+---
 
-cat = Catalog.from_dbt_manifest("target/manifest.json")
-cat = Catalog.from_unity_catalog(workspace_url=..., catalog_name=...)
-cat = Catalog.from_json(".cfa/catalog.json")
-cat = Catalog.merge(cat_a, cat_b)
+### 3.3. Release 1.3.0 — "Portability + Agent Vertical"
+
+**Janela:** ~6 semanas após 1.2.0.
+
+#### Substrate deliverable: `cfa-verify` em Go
+
+Binário standalone, ~5MB, sem dependência de Python ou rede:
+
+```bash
+cfa-verify audit-chain ./audit.jsonl
+# OK · 1 274 events verified · last_hash=a4f3…6c01
+# protocol_version=0.1
+
+cfa-verify signature ./signature.json
+# OK · vertical=data · hash matches
 ```
 
-Implementação só do `from_dbt_manifest` e `from_json` em 1.2.0. UC fica para 0.4+.
+Implementa o protocolo `cfa-protocol 0.1` em Go. Distribuído como:
 
-#### 3.4.4. Documentação
+- GitHub release com binários para linux/darwin/windows
+  (`cfa-verify-linux-amd64`, etc.)
+- Single-file Homebrew formula.
+- Imagem Docker `marquesantero/cfa-verify`.
 
-- `website/docs/integrations/dbt.md` — guia completo, 1500-2000 palavras.
-- `website/docs/tutorials/governance-for-dbt-projects.md` — tutorial end-to-end.
-- Atualizar README com seção "Use CFA in your dbt project".
-- Screencast de 3min mostrando block → replan → approve.
+Prova de portabilidade: você não precisa de Python para consumir
+decisões CFA. Sobrevive ao dia que Python sair de moda.
 
-#### 3.4.5. Critério de release 1.2.0
+#### Adoption deliverable: `cfa.verticals.agent` + demo LLM real
 
-- [ ] `cfa dbt check` funcional em projeto dbt real (criar um para demo).
-- [ ] ≥30 testes específicos do módulo dbt, ≥85% cobertura.
-- [ ] Demo público no `examples/dbt_demo/`.
-- [ ] GitHub Action funcionando no demo.
-- [ ] Página de docs publicada.
-- [ ] Post de release com video/gif demonstrativo.
+Vertical para tool calls de agente:
 
----
+- `cfa.verticals.agent.AgentVertical` com payload
+  `{"tool", "args", "caller", "session_id"}` e constraints
+  `{"allowed_tools", "rate_limit_per_minute", "sensitive_fields"}`.
+- Condições: `agent.tool_not_in_allowlist`,
+  `agent.rate_limit_exceeded`, `agent.sensitive_field_in_args`.
+- Bundle padrão `policies/agent-prod-v1.yaml`.
 
-### 3.5. Releases 1.2.x — Hardening
+Plus demo end-to-end:
 
-Pequenas releases de polish. Não introduzem categoria nova.
+- Agente Claude (ou GPT) construído com LangGraph que usa CFA via
+  MCP para validar **toda chamada de ferramenta** antes de
+  executar.
+- Cenário: "agente tenta deletar tabela em prod" → CFA `block`
+  com remediation → audit event.
+- Screencast 5min + blog post: "Stopping LLM agents from
+  deleting production with CFA".
 
-| Release | Conteúdo principal |
-|---------|-------------------|
-| 1.2.1 | Bug fixes pós-1.2.0; cobertura ≥85% global |
-| 1.2.2 | Performance: bench p99 ≤5ms para gate path; profile e otimizar hot paths |
-| 1.2.3 | Standalone audit verifier: binário Python `cfa-verify` que verifica chain sem dependência do resto. Útil para auditoria offline. |
-| 1.2.4 | Catalog federation MVP: `Catalog.merge()` + suporte a UC (`from_unity_catalog`) |
-| 1.2.5 | Estabilidade: 60 dias sem bug crítico aberto |
+#### Critério de release
 
-#### 3.5.1. Critério para fechar Movimento I
-
-- Movimento I termina quando o **critério de saída de 3.2** é atingido.
-- Antes disso, todas as releases ficam em 1.2.x. Não há 1.3.0 sem cunha plantada.
-
----
-
-## 4. Movimento II — Expansão lateral
-
-### 4.1. Goal narrativo
-
-CFA deixa de ser "ferramenta para dbt check" e vira "categoria de governance pré-execução com 4 superfícies: CLI, decorator, MCP, integrações nativas (dbt, Airflow, Databricks)". DNA distintivo passa a se expressar fora do escopo inicial.
-
-### 4.2. Critério de saída
-
-Pelo menos **três das seguintes**:
-- ≥1 contribuidor externo com 5+ PRs aceitos.
-- Aparece em comparação publicada por terceiro (Galileo, Maxim, Patronus blog, etc.).
-- ≥5.000 downloads/mês no PyPI por 3 meses.
-- ≥3 estudos de caso de empresas usando (mesmo que anonimizados).
-- 2 integrações nativas em produção (dbt + Airflow ou dbt + Databricks).
+- [ ] `cfa-verify` rodando em Linux/macOS/Windows. Hash verification
+  passa em audit chains geradas pelo Python kernel.
+- [ ] `cfa.verticals.agent` registrado, condições disponíveis no
+  registry, bundle de exemplo funcional.
+- [ ] Demo agent + MCP + CFA gravado e publicado.
 
 ---
 
-### 4.3. Release 1.3.0 — Airflow operator
+### 3.4. Release 1.4.0 — "Ecosystem + Infra Vertical"
 
-**Objetivo:** segunda integração nativa. Trazer de volta o que foi removido, agora bem feito.
+**Janela:** ~6-8 semanas após 1.3.0.
 
-**Escopo técnico:**
+#### Substrate deliverable: TypeScript signature builder + Catalog Hub MVP
 
-```python
-# src/cfa/integrations/airflow/operators.py
+- `npm install @cfa/protocol` — biblioteca TS que constroi e valida
+  `StateSignature` contra os JSON Schemas. Sem dependência de
+  servidor; trabalha contra `cfa-protocol 0.x`.
+- `cfa-hub` (repo) — registry público de:
+  - Verticais (data, agent, infra, third-party publicados).
+  - Policy bundles compartilháveis (analogia com dbt packages).
+  - DecisionSinks publicados.
+- Site simples gerando catálogo navegável.
 
-from airflow.models import BaseOperator
-from cfa.policy import PolicyEngine
-from cfa.types import StateSignature
+#### Adoption deliverable: Airflow operator + Slack/OTel/PR sinks
 
-class CFAGateOperator(BaseOperator):
-    """Gate de governance antes de executar tarefa downstream.
+Pacote separado `apache-airflow-providers-cfa` ou
+`cfa-int-airflow`:
 
-    Usage:
-        gate = CFAGateOperator(
-            task_id="govern_silver_join",
-            signature_path="signatures/silver_join.json",
-            policy_bundle="policies/prod-v1.yaml",
-            catalog_path=".cfa/catalog.json",
-            on_block="fail",  # fail | skip | warn
-        )
-        gate >> spark_job >> validation
-    """
-    ...
+- `CFAGateOperator` — bloqueia DAG quando o policy bundle dá block.
+- `CFAAuditEmitterOperator` — emite audit event para o sink
+  configurado.
+- Hook de conexão + provider metadata.
 
-class CFAAuditEmitterOperator(BaseOperator):
-    """Emite evento de audit após execução."""
-    ...
-```
+Sinks publicados como pacotes separados:
 
-**Inclui:**
-- Provider package `apache-airflow-providers-cfa` (publicado em paralelo no PyPI).
-- Hooks para conexão CFA (`CFAHook` usando `airflow connections`).
-- 2 operators + 1 sensor (`CFAAuditChainSensor` para esperar decisão).
-- Documentação completa em `website/docs/integrations/airflow.md`.
-- Demo: DAG completo em `examples/airflow_demo/`.
+- `cfa-sink-slack` — webhook Slack quando block/replan acontecem.
+- `cfa-sink-otel` — spans OTel para Datadog/Honeycomb/Grafana.
+- `cfa-sink-github-pr` — comenta no PR.
 
-**Compatibilidade:** Airflow 2.7+, 3.0+.
+Plus `cfa.verticals.infra` com Terraform plan support:
 
-### 4.4. Release 1.4.0 — Lifecycle como diferencial
+- `cfa terraform check tfplan.json` — lê output JSON do `terraform
+  plan` e roda o policy bundle.
 
-**Objetivo:** lifecycle indices (IFo/IFs/IFg/IDI) deixam de ser feature obscura e viram diferencial documentado.
+#### Critério de release
 
-**Trabalho:**
-
-1. **Storage SQLite consolidado.** Hoje em `cfa.storage.sqlite`. Polir:
-   - Schema migrations versionadas (`cfa storage migrate`).
-   - Backup/restore commands.
-   - Métricas: tamanho, query perf, retention status.
-
-2. **Promotion engine produtizado.** Hoje em `cfa.observability.promotion`. Tornar:
-   - Configurável por policy bundle (não só por código).
-   - CLI: `cfa lifecycle promote`, `cfa lifecycle demote`, `cfa lifecycle list --state=watchlist`.
-   - Dashboard HTML em `cfa report lifecycle`.
-
-3. **Documentação formal dos índices.** Hoje fragmentado. Criar:
-   - `website/docs/concepts/lifecycle-indices.md` — definição matemática + exemplo numérico.
-   - ADR justificando cada índice.
-
-4. **Métricas comparáveis.** Adicionar exemplo: "Como medir se sua pipeline X é promotable" com dados sintéticos.
-
-**Critério:** alguém na comunidade entender o que IFo significa e como usar em produção sem precisar perguntar.
-
-### 4.5. Release 1.5.0 — MCP como autoridade governante
-
-**Objetivo:** o MCP server vira o **caso de uso definitivo para LLM agents**. Não como "CFA é uma tool que o agente usa", mas como "CFA é a autoridade que o agente consulta antes de agir".
-
-**Trabalho:**
-
-1. **Polish do MCP server existente.** Hoje em `cfa.mcp`. Adicionar:
-   - Tool `cfa_propose_signature` — agente descreve em NL, CFA devolve signature tipada + confidence.
-   - Tool `cfa_request_approval` — agente envia signature, CFA decide. Resposta inclui audit_event_hash.
-   - Tool `cfa_verify_decision` — agente verifica se decisão prévia ainda é válida (hash chain check).
-   - Streaming de eventos via MCP notifications.
-
-2. **Padrão de uso documentado.** "Como construir um agente LangGraph que sempre pede aprovação CFA antes de escrita."
-
-3. **Reference implementation.** `examples/llm_agent_with_cfa_gate/` com agente real (Claude/GPT) usando CFA via MCP.
-
-4. **Server hosting docs.** Como rodar o MCP server em produção (uvicorn, gunicorn, Docker).
-
-### 4.6. Release 1.6.0 — Backends estendidos
-
-**Objetivo:** mostrar que arquitetura pluggable é séria.
-
-**Trabalho:**
-
-1. Backend Snowflake (SQL dialect-aware).
-2. Backend BigQuery (SQL dialect-aware).
-3. Backend Iceberg (via PySpark com Iceberg).
-4. Refator do `BackendRegistry` para suportar versionamento de capabilities.
-5. Documentação: "How to write your own backend" + ADR sobre contract.
-
-### 4.7. Tracks paralelas no Movimento II
-
-- **OpenLineage emit.** Audit events também emitidos como OpenLineage. Plug direto em Marquez, DataHub, Atlan.
-- **Catalog federation completa.** UC, DataHub, Atlan como fontes.
-- **State projection produtizada.** API para queries: "qual foi o estado da pipeline X em 2026-05-20?".
-- **i18n real.** Documentação em pt-BR completa (não só fragmentos).
+- [ ] TS package no npm; signature roundtrip Python ⇄ TypeScript
+  bate hash.
+- [ ] `cfa-hub` no ar com pelo menos 3 verticais e 5 sinks
+  catalogados.
+- [ ] Airflow operator funcional em DAG real.
+- [ ] `cfa terraform check` block em plan que viola política.
 
 ---
 
-## 5. Movimento III — Plataforma
+### 3.5. Release 1.5.0 — "Dashboard + Conformance"
 
-### 5.1. Goal narrativo
+**Janela:** ~6-8 semanas após 1.4.0.
 
-CFA vira **categoria nomeada**. Quando alguém escreve um post sobre AI governance em 2027, CFA aparece junto com OPA, LangSmith, Unity Catalog — não como alternativa, como peça complementar reconhecida.
+#### Substrate deliverable: Conformance badge + protocol v0.5
 
-### 5.2. Releases 2.0+ — esboço
+- Repo `cfa-protocol` ganha runner standalone da conformance suite.
+- Implementações que passam ganham badge:
+  - `cfa-kernel-py` ✅ Conformance Level 3
+  - `cfa-verify-go` ✅ Conformance Level 1 (verifier only)
+  - `@cfa/protocol-ts` ✅ Conformance Level 2 (build + verify)
+- Spec bump para `cfa-protocol 0.5` com estabilizações ganhas até aqui.
 
-| Marco | Conteúdo |
-|-------|----------|
-| **2.0.0** | Re-API freeze (agora real). Remoção dos shims de deprecação herdados de 1.x. Migration guide 1.x → 2.0. Audit do código por terceiro. |
-| **2.1+** | **CFA Protocol** — spec versionada (JSON Schema + OpenAPI) que outras ferramentas podem implementar. Repo separado `cfa-protocol`. |
-| **2.2+** | SDKs em outras linguagens. Go primeiro (alinha com OPA), TypeScript depois (alinha com agent frameworks). |
-| **2.3+** | Hosted version opcional (`cfa.cloud` — nome a definir). Multi-tenant, RBAC, dashboard, alerting. Self-hostable também. |
-| **2.4+** | CFA Catalog Hub — registry público de policy bundles compartilháveis (analogia com dbt packages, Helm charts). |
+#### Adoption deliverable: Live dashboard + lifecycle produtizado
 
-### 5.3. Como decidir se vai para Movimento III
+- `cfa serve --dashboard --port 8080` abre dashboard local:
+  - Audit chain viewer (timeline + hash verification).
+  - Decision metrics (replan rate por bundle, block reasons,
+    latência p50/p99).
+  - Lifecycle scoreboard (IFo/IFs/IFg/IDI por pipeline).
+  - Policy rule explainer com remediação.
+- `cfa lifecycle promote` / `demote` / `list` com bundle de promoção
+  configurável.
+- 2-3 case studies escritos (mesmo que pessoais/sintéticos
+  inicialmente).
 
-Critério: Movimento II atingiu seu critério de saída + projeto tem **time** ou **comunidade ativa** que substitui time. Solo não fecha Movimento III com qualidade.
+#### Critério de release
+
+- [ ] Conformance badge implementado, ao menos 2 implementações
+  certificadas.
+- [ ] Dashboard rodando local com audit chain real.
+- [ ] Lifecycle CLI funcional em pelo menos 1 projeto exemplo.
 
 ---
 
+### 3.6. Release 2.0.0 — "Spec freeze + ecosystem"
+
+**Janela:** ~6 meses após 1.5.0 (ou quando 5 implementações
+terceiras existirem, o que vier primeiro).
+
+#### Substrate deliverable: `cfa-protocol 1.0` stable
+
+- Spec freeze. A partir daqui breaking changes só com `cfa-protocol
+  2.0`.
+- Governance lightweight: RFC process no repo `cfa-protocol`,
+  janela de comentário de 14 dias por proposta.
+- Third-party security audit do `cfa-kernel`.
+- Migration guide 1.x → 2.0 para implementadores.
+
+#### Adoption deliverable: ecossistema declarado
+
+- Multi-vertical em produção (mínimo data + agent ou data + infra
+  em projeto real).
+- 3+ verticais terceiros publicados no Catalog Hub.
+- Hosted version opcional (`cfa.cloud` — nome a definir) — não
+  obrigatório para nada; quem quer self-host roda o mesmo binário.
+- Reference de "como ferramenta X usa CFA": pelo menos 1 caso
+  publicado de fora.
+
+#### Critério de release
+
+- [ ] `cfa-protocol 1.0.0` tag estável.
+- [ ] Auditoria externa concluída.
+- [ ] Ao menos 5 implementações da spec (Python kernel, Go verifier,
+  TS builder, mais 2 — internas ou externas).
 ## 6. Trilhas transversais (todos os movimentos)
 
 ### 6.1. Testing
@@ -595,13 +532,14 @@ Sem shims: 1.0.0 não tem usuário externo, então renames diretos.
 
 | Risco | Probabilidade | Impacto | Mitigação |
 |-------|--------------|---------|-----------|
-| Mantenedor solo perde tração antes do critério de saída do Movimento I | Alta | Alto | Calendário público de releases força disciplina. Cortes do 1.1.0 reduzem superfície sustentável. |
-| Adopters externos não aparecem mesmo após 1.2.0 | Média | Alto | Revisitar tese antes de Movimento II. Talvez nicho seja menor do que se imagina. |
-| OPA/UC lança feature que sobrepõe CFA | Média | Médio | DNA distintivo (REPLAN + signature hash + audit offline) protege. Diferencial vai além de feature list. |
-| LangChain/Databricks copia ideia em produto deles | Baixa | Alto | Já estamos em open source MIT. Mover rápido para CFA Protocol em 1.0 ajuda. |
-| Refator de consolidação quebra usuários existentes | Muito baixa hoje | Médio | 1.0.0 não tem adopters externos — janela atual permite renames diretos. Política passa a ser estrita assim que houver sinal de uso. CHANGELOG sempre explícito. |
-| Performance regression no path crítico | Baixa | Alto | Benchmarks em CI a partir do 1.2.0. PRs com regressão >10% bloqueadas. |
-| Churn de API entre 1.x perde first adopters | Média | Médio | Deprecation policy clara. Migration scripts quando viável. |
+| Mantenedor solo perde tração antes de 1.4.0 | Alta | Alto | Cadência 6-8 semanas pública. Em release de baixa energia, ship apenas a peça de substrato (não a de adoção); o protocolo continua avançando. |
+| Adoption deliverable (cfa dbt check etc.) não traz adopters | Média | Alto | O substrato deliverable da mesma release segue valendo. Re-segmentar adoção para outro framework no próximo ciclo sem mudar protocolo. |
+| OPA/UC lança feature que sobrepõe CFA | Média | Médio | Substrato (protocolo aberto) é defesa estrutural. Quando feature copiada vira commodity, o que sobra é o formato compartilhado. |
+| LangChain/Databricks/MCP-server-da-vez muda spec ou desaparece | Alta | Médio | Integrações são plug-shaped (ADR-0010). Quando o framework morre só morre a integration, não o kernel. |
+| Refator quebra implementadores do protocolo após 1.5.0 | Média | Alto | Conformance suite + versionamento independente do protocolo. Qualquer breaking change vira `cfa-protocol 2.0`, kernel continua na faixa anterior por overlap. |
+| Performance regression no path crítico | Baixa | Alto | Benchmarks em CI; regressão >10% bloqueia PR. |
+| Spec não atrai segunda implementação | Média | Médio | Ship Go + TS implementations a partir da 1.3/1.4 nós mesmos. Provar portabilidade não pode depender de terceiros aparecerem. |
+| Janela de adoção AI-era fecha antes da 1.3.0 | Média | Médio | Cada release entrega substrato útil mesmo se a adoção for zero. Substrato sobrevive ao fim de qualquer onda. |
 
 ---
 

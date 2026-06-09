@@ -411,42 +411,35 @@ Full guide: [Extending CFA](https://marquesantero.github.io/cfa/docs/extending).
 
 ## Roadmap
 
-CFA is built around one idea: **a typed layer between intent and
-execution.** Data writes were the first vertical because the maintainer
-is a data engineer with primitives that were easy to test. The kernel
-itself is domain-agnostic — every additional vertical (infrastructure,
-agent tool calls, financial transactions, schema migrations, ML deploys)
-plugs in as an external package via the
+CFA is a typed layer between **intent** and **execution**. Data writes
+were the first vertical because the maintainer is a data engineer with
+primitives that were easy to test. The kernel itself is domain-agnostic —
+every additional vertical (infrastructure, agent tool calls, financial
+transactions, schema migrations, ML model deploys) plugs in as an
+external package via the
 [Vertical](docs/adr/0009-vertical-protocol.md) contract.
 
-The full plan lives in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). The
-short version:
+The strategy from 1.2.0 forward — formalised in
+[ADR-0013](docs/adr/0013-protocol-over-product.md) — is **dual-track**:
+every release ships one substrate deliverable (something that survives
+multiple hype cycles) and one adoption deliverable (something useful
+this quarter). Cadence: 6–8 weeks per minor.
 
-- **1.1.0 (current)** — five distinctive primitives recorded as ADRs;
-  layout consolidated; perf baselines landed; site rewritten.
-- **1.1.x (in progress)** — Phase 0 plugin contracts:
-  [Vertical](docs/adr/0009-vertical-protocol.md),
-  [Integration + DecisionSink](docs/adr/0010-integration-protocol.md),
-  [ConditionRegistry](docs/adr/0011-condition-registry.md),
-  [per-vertical backends](docs/adr/0012-per-vertical-backends.md).
-- **1.2.0 (next)** — first-party `data` vertical extracted into
-  `cfa.verticals.data` (no breaking changes for end users); marquee
-  integration `cfa dbt check` reads `target/manifest.json`, derives a
-  signature per model, runs the policy bundle in CI.
-- **1.3.0** — `cfa.verticals.agent` (LLM tool calls); reference
-  LangGraph + Claude demo; MCP server positioned as the authority every
-  agent consults before acting.
-- **1.4.0** — `cfa.verticals.infra` (Terraform / Pulumi plans);
-  marquee integration `cfa terraform check`.
-- **1.5.0** — Live dashboard + `cfa serve` polish; Airflow
-  `CFAGateOperator` (provider package); Slack / OTel / GitHub PR
-  DecisionSinks shipped.
-- **1.6.0** — Lifecycle indices (IFo / IFs / IFg / IDI) produtized as a
-  promotion/demotion dashboard; Snowflake / BigQuery / Iceberg backends
-  in the data vertical.
-- **2.0.0** — semver-strict API freeze; removal of 1.x compatibility
-  shims; third-party security audit; CFA Protocol spec and
-  cross-language SDKs (Go first, TypeScript next).
+Full plan in [`drafts/ROADMAP.md`](drafts/ROADMAP.md). Headline picks:
+
+| Release | Substrate | Adoption |
+|---------|-----------|----------|
+| **1.1.0** (current) | Plug contracts (ADR-0007 → 0012), vertical-aware `StateSignature`, 599 tests, perf baselines | Honest positioning, MCP server, `compare.md`, ADRs |
+| **1.2.0** (next) | `cfa-protocol v0.1` in a separate repo — JSON Schema for signature, audit chain, decision, policy bundle; conformance suite | `cfa dbt check` — reads `manifest.json`, runs the policy bundle in CI; GitHub Action template; demo project |
+| **1.3.0** | Standalone Go binary `cfa-verify` — validates audit chains and signatures without Python | `cfa.verticals.agent` + reference LangGraph + Claude demo: agent tries to delete prod, CFA blocks with remediation |
+| **1.4.0** | TypeScript signature builder (`@cfa/protocol`); `cfa-hub` catalog of verticals/bundles/sinks | Airflow `CFAGateOperator`; Slack / OTel / GitHub PR DecisionSinks; `cfa.verticals.infra` + `cfa terraform check` |
+| **1.5.0** | Conformance badge + `cfa-protocol v0.5`; spec stability milestones | Live dashboard, lifecycle CLI, 2-3 case studies |
+| **2.0.0** | `cfa-protocol 1.0` stable; third-party security audit; governance process | Multi-vertical in real production; 5+ implementations (Python + Go + TS + 2 others) |
+
+The protocol becomes the product. The Python kernel is *one*
+implementation. Verticals, integrations, decision sinks are shipped or
+maintained externally. The substrate survives whatever framework wins
+in 2027.
 
 ## Contributing
 

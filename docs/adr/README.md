@@ -39,6 +39,7 @@ having to dig through commits.
 | [0010](./0010-integration-protocol.md) | Integration protocol and DecisionSink | accepted |
 | [0011](./0011-condition-registry.md) | `ConditionRegistry` as the canonical way to attach policy rules | accepted |
 | [0012](./0012-per-vertical-backends.md) | Backends scoped per-vertical | accepted |
+| [0013](./0013-protocol-over-product.md) | Protocol over product — dual-track substrate + relevance | accepted |
 
 ## Adding a new ADR
 
